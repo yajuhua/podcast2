@@ -1,5 +1,6 @@
 package com.podcast.Servlet;
 
+import com.google.gson.Gson;
 import com.podcast.Type.Type;
 import com.podcast.Utils.TimeFormat;
 import com.podcast.loader.PluginLoader;
@@ -7,6 +8,7 @@ import com.podcast.pojo.ChannelDate;
 import com.podcast.service.ChannelService;
 import com.podcast.service.PodcastUserService;
 import com.podcast.update.Update;
+import org.podcast2.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +52,16 @@ public class XmlFactoryServlet extends HttpServlet {
             String requestUrl = protocol + "://" + serverName + ":" + serverPort + contextPath;
             LOGGER.debug("requestUrl:"+requestUrl);
 
+            //获取自定义剧集
+            String episodesStr = request.getParameter("episodes");
+            String[] episodesArray = episodesStr.split(",");
+            List<Integer> episodes = new ArrayList<>();
+            for (int i = 0; i < episodesArray.length; i++) {
+                episodes.add(Integer.parseInt(episodesArray[i]));
+            }
+
+            LOGGER.debug("episodes:"+episodes);
+
             //更新IP地址
             service.UpdateIP(requestUrl);
             LOGGER.info("开始创建！");
@@ -58,7 +70,7 @@ public class XmlFactoryServlet extends HttpServlet {
             response.getWriter().write("ok");
             LOGGER.info("进入首次更新！");
             //开启一个线程进行首次更新
-            Update update = new Update(uuid);
+            Update update = new Update(uuid,episodes);
             update.start();
         } catch (Exception e) {
             LOGGER.error("创建失败 "+request.getParameter("url"));
@@ -199,35 +211,41 @@ public class XmlFactoryServlet extends HttpServlet {
         Constructor constructor = plugin.getConstructor(String.class,String.class);
         Object o = constructor.newInstance(url,type.name());
 
-        //2.获取所有方法
+       /* //2.获取所有方法
         Method[] methods = plugin.getDeclaredMethods();
 
         //3.执行方法，把返回结果存入Map集合
         Map<String,Object> methodResult = new HashMap<>();
         for (Method method : methods) {
             methodResult.put(method.getName(),method.invoke(o));
-        }
+        }*/
+
+        //获取channel
+        Method methodChannel = plugin.getMethod("channel");
+        String channelStr = (String) methodChannel.invoke(o);
+        Gson gson = new Gson();
+        Channel channel = gson.fromJson(channelStr, Channel.class);
 
         //4.以uuid命名，保存到webapp/xml/UUID.xml
         String uuid = UUID.randomUUID().toString();
         String savePath = webappPath+ "xml"+File.separator+uuid+".xml";
         PrintStream ps = new PrintStream(new File(savePath));
 
-        Integer getCount = (Integer)methodResult.get("getCount");
+        Integer getCount = 0;
 
         //5.将频道信息写入xml文件中
         StringBuffer xml = new StringBuffer();
         xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<rss version=\"2.0\" encoding=\"UTF-8\" xmlns:atom=\"http://www.w3.org/2005/Atom\" xmlns:itunes=\"http://www.itunes.com/dtds/podcast-1.0.dtd\">\n");
         xml.append("\t<channel>\n");
-        xml.append("\t\t<title>").append(methodResult.get("getChannelTitle")).append("</title>\n");
+        xml.append("\t\t<title>").append(channel.getTitle()).append("</title>\n");
         xml.append("\t\t<pubDate>").append(TimeFormat.now()).append("</pubDate>\n");
         xml.append("\t\t<language>").append("zh-CN").append("</language>\n");
-        xml.append("\t\t<link>").append(methodResult.get("getChannelLink")).append("</link>\n");
-        xml.append("\t\t<itunes:image href=\"").append(methodResult.get("getChannelImage")).append("\"/>\n");
-        xml.append("\t\t<description>").append(methodResult.get("getChannelDescription")).append("</description>\n");
-        xml.append("\t\t<itunes:author>").append(methodResult.get("getChannelTitle")).append("</itunes:author>\n");
-        xml.append("\t\t<itunes:category text=\"").append(methodResult.get("getChannelCategory")).append("\"/>\n");
+        xml.append("\t\t<link>").append(channel.getLink()).append("</link>\n");
+        xml.append("\t\t<itunes:image href=\"").append(channel.getImage()).append("\"/>\n");
+        xml.append("\t\t<description>").append(channel.getDescription()).append("</description>\n");
+        xml.append("\t\t<itunes:author>").append(channel.getAuthor()).append("</itunes:author>\n");
+        xml.append("\t\t<itunes:category text=\"").append(channel.getCategory()).append("\"/>\n");
         xml.append("\t\t<type>").append(type.name()).append("</type>\n");//为创建完成后就更新，在totalCount上减一
         xml.append("\t\t<totalCount>").append(getCount-1).append("</totalCount>\n");
         xml.append("\t\t<plugin>").append(usePluginName).append("</plugin>\n");
@@ -244,12 +262,12 @@ public class XmlFactoryServlet extends HttpServlet {
 
         ChannelDate channelDate = new ChannelDate();
         channelDate.setUuid(uuid);
-        channelDate.setChannelTitle((String) methodResult.get("getChannelTitle"));
+        channelDate.setChannelTitle(channel.getTitle());
         channelDate.setUpdateTimestamp(System.currentTimeMillis()/1000);//时间秒数
         int i = Integer.parseInt(frequency);
         channelDate.setFrequency((long) i);
         channelDate.setLatestCheckTimestamp(System.currentTimeMillis()/1000);
-        channelDate.setChannelFace((String) methodResult.get("getChannelImage"));
+        channelDate.setChannelFace(channel.getImage());
         channelDate.setSurvival(survivalTime);
         ChannelService service1 = new ChannelService();
         service1.add(channelDate);

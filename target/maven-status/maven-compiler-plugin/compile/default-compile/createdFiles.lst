@@ -8,6 +8,7 @@ com\podcast\mapper\PodcastUserMapper.class
 com\podcast\pojo\ChannelDate.class
 com\podcast\Servlet\DeleteServlet.class
 com\podcast\Utils\Clear.class
+com\podcast\update\Test.class
 com\podcast\mapper\ChannelMapper.class
 com\podcast\Utils\N_m3u8DL_RE.class
 com\podcast\Utils\Aria2c.class

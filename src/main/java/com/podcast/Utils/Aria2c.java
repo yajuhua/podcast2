@@ -87,10 +87,10 @@ public class Aria2c {
 
     @Test
     public void t1() throws Exception {
-        String url = "https://video.31dm.com/2023/2023年7月/绫岛奇谭/绫岛奇谭_第10集.mp4?sign=f2dcf9c80e68d84e6dce8be72b3197cb&t=1693731512";
+        String url = "https://video.31dm.com/sda1/pikpak%20y/1-7补/星期一的丰满%20第二季/星期一的丰满%20第二季%20%2013.mp4?sign=1a09dd24d4a7d920c66cae7a29a3b007&t=1696080678";
         String name = "t100";
         String path = "D:/Download/Aria2/t1";
-        Aria2c aria2c = new Aria2c(url,name,path);
+        Aria2c aria2c = new Aria2c(url,name,"/opt/");
         aria2c.startDownload();
     }
 
