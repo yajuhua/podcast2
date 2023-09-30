@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:v-bind="http://www.w3.org/1999/xhtml" xmlns:v-on="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>订阅列表</title>
+    <style>
+        .footer {
+            position: fixed;
+            bottom: 20px; /* 上提的距离 */
+            left: 0;
+            width: 100%;
+            text-align: center;
+        }
+
+        .footer a {
+            /*color: #01A2FF;*/
+            margin-right: 10px; /* 右边距的设置 */
+            text-decoration: none; /* 去除下划线 */
+            font-size: 20px; /* 字体大小设置为25像素 */
+            font-weight: bold; /* 字体加粗 */
+        }
+
+        .footer .separator {
+            /*color: #01A2FF; !* 分隔符的颜色与字体颜色一样 *!*/
+            font-size: 20px; /* 分隔符的字体大小 */
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <a href="add.html"><input type="button" value="添加订阅"></a><br>
+    <hr>
+    <table id="brandTable" border="1" cellspacing="0" width="100%">
+        <tr>
+            <th>序号</th>
+            <th>频道名称</th>
+            <th>更新时间</th>
+            <th>操作</th>
+        </tr>
+        <!--
+            使用v-for遍历tr
+        -->
+        <tr v-for="(tableDate,i) in tableDates" align="center">
+            <td>{{i + 1}}</td>
+            <td>{{tableDate.channelTitle}}</td>
+            <td>{{tableDate.updateTimestamp}}</td>
+            <td><a target="_blank" v-bind:href="'https://api.pwmqr.com/qrcode/create/?url='+ host + tableDate.uuid + '.xml'"  >二维码</a>
+                <button v-on:click="dele(tableDate.uuid)">删除</button>
+            </td>
+        </tr>
+    </table>
+</div>
+<div class="footer">
+    <a href="./manage.html">管理</a>
+    <span class="separator">|</span>
+    <button id="btn" type="button">退出</button>
+</div>
+<!--    引入axios-->
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<!--引入vue.js-->
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+<script>
+    new Vue({
+        el: "#app",
+        data(){
+            return{
+                tableDates:[],
+                host:"http://"+window.location.host+"/podcast2/xml/"
+            }
+        },
+        mounted(){
+            // 页面加载完成后，发送异步请求，查询数据
+            var _this = this;
+            axios({
+                method:"get",
+                url:"./selectAllServlet"
+            }).then(function (resp) {
+                _this.tableDates = resp.data;
+            })
+        },
+        methods: {
+            dele(uuid) {
+                axios({
+                    method: "post",
+                    url: "./deleteServlet",
+                    data: "uuid="+uuid
+                });
+                window.location.reload();
+            }
+        }
+
+    })
+
+    function dele(uuid) {
+        axios({
+            method:"post",
+            url:"./deleteServlet",
+            data:"uuid="+uuid
+        })
+    }
+
+
+    window.document.getElementById("btn").onclick = function (){
+        axios({
+            method:"post",
+            url:"./exitServlet"
+        }).then(function (resp) {
+            if (resp.data==="ok"){
+                window.location.href = "login.html";
+            }else{
+                alert("添加失败！")
+            }
+        })
+    }
+</script>
+</body>
+</html>
