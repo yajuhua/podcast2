@@ -1,6 +1,7 @@
 package com.podcast.update;
 
 import com.google.gson.Gson;
+import com.podcast.Servlet.XmlFactoryServlet;
 import com.podcast.Utils.Mode;
 import com.podcast.Utils.TimeFormat;
 import com.podcast.loader.PluginLoader;
@@ -93,6 +94,8 @@ public class Update extends Thread{
                     //写入最新检查更新的时间
                     channelService.UpdateForChannel(System.currentTimeMillis()/1000,uuid);
                     LOGGER.info("新内容已更新完成！");
+                    XmlFactoryServlet.CREATE_STATUS = 0;
+                    LOGGER.info("createStatus:"+XmlFactoryServlet.CREATE_STATUS);
                 }else {
                     //写入最新检查更新的时间
                     channelService.UpdateLatestCheckTimestampByUuid(System.currentTimeMillis()/1000,uuid);
@@ -102,6 +105,7 @@ public class Update extends Thread{
 
         } catch (Exception e) {
             LOGGER.error("检查更新失败！"+"uuid:"+ uuid +" 详细:"+e);
+            XmlFactoryServlet.CREATE_STATUS = 0;
         }
 
     }
@@ -231,6 +235,13 @@ public class Update extends Thread{
                 }
             }
         }
+
+        //更新status
+        Method methodChannel = plugin.getMethod("channel");
+        String channelStr = (String) methodChannel.invoke(o);
+        Channel channel = gson.fromJson(channelStr, Channel.class);
+        int getChannelStatus = channel.getStatus();
+        channelService.UpdateForStatus(getChannelStatus,uuid);
 
         return true;
     }

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>实时日志</title>
+    <style>
+        body {
+            font-family: "JetBrains Mono", monospace;
+            background-color: #fef;
+            padding: 10px;
+        }
+
+        h1 {
+            margin-top: 0px;
+        }
+
+        #log-container {
+            width: 100%;
+            height: 500px;
+            overflow: scroll;
+            border: 1px solid #ccc;
+            padding: 1px;
+            background-color: black;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+<h1>实时日志</h1>
+<div id="log-container"></div>
+
+<script>
+    var socket = new WebSocket("ws://"+window.location.host+"/podcast2/websocket/logs");
+
+    socket.onopen = function(event) {
+        console.log("WebSocket connection established.");
+    };
+
+    socket.onmessage = function(event) {
+        var message = event.data;
+        var logContainer = document.getElementById("log-container");
+        logContainer.innerHTML += "<p>" + message + "</p>";
+        logContainer.scrollTop = logContainer.scrollHeight; // 滚动到底部
+    };
+
+    socket.onclose = function(event) {
+        console.log("WebSocket connection closed.");
+    };
+</script>
+</body>
+</html>

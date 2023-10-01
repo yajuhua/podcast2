@@ -8,6 +8,7 @@ import com.podcast.pojo.ChannelDate;
 import com.podcast.service.ChannelService;
 import com.podcast.service.PodcastUserService;
 import com.podcast.update.Update;
+import com.podcast.update.UpdateInit;
 import org.podcast2.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,7 @@ import java.util.*;
 @WebServlet("/xmlFactoryServlet")
 public class XmlFactoryServlet extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger("XmlFactoryServlet");
+    public static Integer CREATE_STATUS;
     private PodcastUserService service = new PodcastUserService();
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -69,6 +71,8 @@ public class XmlFactoryServlet extends HttpServlet {
             LOGGER.info("创建完成！"+uuid);
             response.getWriter().write("ok");
             LOGGER.info("进入首次更新！");
+
+            CREATE_STATUS = 1;
             //开启一个线程进行首次更新
             Update update = new Update(uuid,episodes);
             update.start();

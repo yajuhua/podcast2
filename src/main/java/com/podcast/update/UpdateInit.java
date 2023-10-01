@@ -1,5 +1,6 @@
 package com.podcast.update;
 
+import com.podcast.Servlet.XmlFactoryServlet;
 import com.podcast.service.ChannelService;
 import com.podcast.service.PodcastUserService;
 import org.slf4j.Logger;
@@ -21,6 +22,7 @@ public class UpdateInit implements ServletContextListener {
     private static final Logger LOGGER = LoggerFactory.getLogger("UpdateInit");
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
+        XmlFactoryServlet.CREATE_STATUS = 0;
         PodcastUserService service = new PodcastUserService();
         // 获取ServletContext对象
         ServletContext context = servletContextEvent.getServletContext();
@@ -40,15 +42,14 @@ public class UpdateInit implements ServletContextListener {
 
         //定时任务
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-        Runnable task = new Target();
+        Runnable checkForUpdateTarget = new Target();
         // 在0分钟后开始执行任务，每隔一分钟重复执行
-        executor.scheduleAtFixedRate(task, 0, 1, TimeUnit.MINUTES);
-
+        executor.scheduleAtFixedRate(checkForUpdateTarget, 0, 1, TimeUnit.MINUTES);
 
 
         //改成定时任务
         ChannelService channelService = new ChannelService();
-        Runnable target2 = new CheckForSurvival(channelService.getAllUuid());
+        Runnable checkForSurvivalTarget = new CheckForSurvival(channelService.getAllUuid());
 
         // 在0秒钟后开始执行任务，每隔x秒钟重复执行，根据配置信息
         Properties properties = new Properties();
@@ -63,7 +64,7 @@ public class UpdateInit implements ServletContextListener {
         //读取检查间隔时间
         long checkForSurvival = Long.parseLong((String) properties.get("checkForSurvival"));
         LOGGER.info("开始检查item存活,间隔：" + checkForSurvival+"s");
-        executor.scheduleAtFixedRate(target2, 0, checkForSurvival, TimeUnit.SECONDS);
+        executor.scheduleAtFixedRate(checkForSurvivalTarget, 0, checkForSurvival, TimeUnit.SECONDS);
     }
 
     @Override
