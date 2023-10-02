@@ -87,7 +87,7 @@ public class XmlFactoryServlet extends HttpServlet {
         this.doGet(request, response);
     }
 
-    private static Map<String,Class> scanerPlugin(String webappPath) throws Exception {
+    public static Map<String,Class> scanerPlugin(String webappPath) throws Exception {
         //配置文件的名称
         String PROPERTIES_NAME = "plugin.properties";
 
@@ -129,7 +129,7 @@ public class XmlFactoryServlet extends HttpServlet {
      * @return
      * @throws IOException
      */
-    private static Properties getProperties(ClassLoader classLoader, String propertiesName) throws IOException {
+    public static Properties getProperties(ClassLoader classLoader, String propertiesName) throws IOException {
         InputStream propertiesStream = classLoader.getResourceAsStream(propertiesName);
         Properties properties = new Properties();
         properties.load(propertiesStream);
@@ -144,7 +144,7 @@ public class XmlFactoryServlet extends HttpServlet {
      * @return
      * @throws MalformedURLException
      */
-    private static final ClassLoader getClassLoader(String jarFilePath) throws MalformedURLException {
+    public static final ClassLoader getClassLoader(String jarFilePath) throws MalformedURLException {
         File jarFile = new File(jarFilePath);
         if (!jarFile.exists()) {
             return null;
@@ -207,7 +207,7 @@ public class XmlFactoryServlet extends HttpServlet {
         }else {
             //找不到
             LOGGER.error("找不到该插件！");
-            return null;
+           throw new Exception("找不到插件");
         }
 
 

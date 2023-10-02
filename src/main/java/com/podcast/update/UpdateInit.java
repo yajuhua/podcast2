@@ -20,14 +20,19 @@ import java.util.concurrent.TimeUnit;
 
 public class UpdateInit implements ServletContextListener {
     private static final Logger LOGGER = LoggerFactory.getLogger("UpdateInit");
+    public static Long SYSYTEM_START_TIME = System.currentTimeMillis();
+    public static String WEBAPP_PATH;
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
+        //系统开机时间
+
         XmlFactoryServlet.CREATE_STATUS = 0;
         PodcastUserService service = new PodcastUserService();
         // 获取ServletContext对象
         ServletContext context = servletContextEvent.getServletContext();
         // 获取webapp目录的绝对路径
         String webappPath = context.getRealPath("/");
+        WEBAPP_PATH = webappPath;
         //存入数据库
         service.updateWebappPath(webappPath);
 

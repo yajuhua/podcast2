@@ -623,7 +623,7 @@ public class Update extends Thread{
      * @throws IOException*/
 
 
-    private static Properties getProperties(ClassLoader classLoader, String propertiesName) throws IOException {
+    public static Properties getProperties(ClassLoader classLoader, String propertiesName) throws IOException {
         InputStream propertiesStream = classLoader.getResourceAsStream(propertiesName);
         Properties properties = new Properties();
         properties.load(propertiesStream);
