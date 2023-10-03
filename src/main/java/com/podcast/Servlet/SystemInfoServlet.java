@@ -46,7 +46,8 @@ public class SystemInfoServlet extends HttpServlet {
             Properties pluginProperties = XmlFactoryServlet.getProperties(pluginClass.getClassLoader(), PROPERTIES_NAME);
             String name = (String) pluginProperties.get("name");
             String version = (String) pluginProperties.get("version");
-            Plugin plugin1 = new Plugin(name,version,"暂无");
+            String update = (String) pluginProperties.get("update");
+            Plugin plugin1 = new Plugin(name,version,update);
             pluginList.add(plugin1);
         }
 

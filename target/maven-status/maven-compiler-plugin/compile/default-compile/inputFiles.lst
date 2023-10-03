@@ -1,4 +1,5 @@
 E:\BaiduSyncdisk\Windows\code\JavaCode\podcast\core\podcast2_1\src\main\java\com\podcast\Type\Type.java
+E:\BaiduSyncdisk\Windows\code\JavaCode\podcast\core\podcast2_1\src\main\java\com\podcast\Servlet\UploadServlet.java
 E:\BaiduSyncdisk\Windows\code\JavaCode\podcast\core\podcast2_1\src\main\java\com\podcast\Utils\FFmpeg.java
 E:\BaiduSyncdisk\Windows\code\JavaCode\podcast\core\podcast2_1\src\main\java\com\podcast\logs\WebSocketServerLog.java
 E:\BaiduSyncdisk\Windows\code\JavaCode\podcast\core\podcast2_1\src\main\java\com\podcast\Servlet\DeleteServlet.java
@@ -13,10 +14,12 @@ E:\BaiduSyncdisk\Windows\code\JavaCode\podcast\core\podcast2_1\src\main\java\com
 E:\BaiduSyncdisk\Windows\code\JavaCode\podcast\core\podcast2_1\src\main\java\com\podcast\Utils\Mode.java
 E:\BaiduSyncdisk\Windows\code\JavaCode\podcast\core\podcast2_1\src\main\java\com\podcast\mapper\ChannelMapper.java
 E:\BaiduSyncdisk\Windows\code\JavaCode\podcast\core\podcast2_1\src\main\java\com\podcast\service\PodcastUserService.java
+E:\BaiduSyncdisk\Windows\code\JavaCode\podcast\core\podcast2_1\src\main\java\com\podcast\Servlet\DeletePluginServlet.java
 E:\BaiduSyncdisk\Windows\code\JavaCode\podcast\core\podcast2_1\src\main\java\com\podcast\filter\Filter04.java
 E:\BaiduSyncdisk\Windows\code\JavaCode\podcast\core\podcast2_1\src\main\java\com\podcast\pojo\ChannelDate.java
 E:\BaiduSyncdisk\Windows\code\JavaCode\podcast\core\podcast2_1\src\main\java\com\podcast\Servlet\SystemInfoServlet.java
 E:\BaiduSyncdisk\Windows\code\JavaCode\podcast\core\podcast2_1\src\main\java\com\podcast\filter\Filter01.java
+E:\BaiduSyncdisk\Windows\code\JavaCode\podcast\core\podcast2_1\src\main\java\com\podcast\Servlet\ControlSystemServlet.java
 E:\BaiduSyncdisk\Windows\code\JavaCode\podcast\core\podcast2_1\src\main\java\com\podcast\pojo\ChannelDataShow.java
 E:\BaiduSyncdisk\Windows\code\JavaCode\podcast\core\podcast2_1\src\main\java\com\podcast\filter\Filter03.java
 E:\BaiduSyncdisk\Windows\code\JavaCode\podcast\core\podcast2_1\src\main\java\com\podcast\update\Update.java

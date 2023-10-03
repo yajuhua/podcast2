@@ -101,7 +101,7 @@
 
             <div v-show="activeMenu === 'info'">
                 <h2>系统概况</h2>
-                <el-button type="warning">重启系统</el-button>
+                <el-button type="warning" @click="restart" size="small">重启系统</el-button>
                 <div>
                     <el-table :data="infoData" :row-class-name="tableRowClassName">
                         <el-table-column prop="key"></el-table-column>
@@ -109,25 +109,47 @@
                     </el-table>
 
                     <h2>插件列表</h2>
+                    <el-upload
+                            class="upload-demo"
+                            ref="upload"
+                            action="./uploadServlet"
+                            :on-preview="handlePreview"
+                            :on-remove="handleRemove"
+                            :file-list="fileList"
+                            :auto-upload="false"
+                            :on-success="handleResponse">
+                        <el-button slot="trigger" size="small" type="primary">选取插件</el-button>
+                        <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">上传到服务器</el-button>
+                        <el-button type="danger" size="small" @click="deletePlugins">批量删除</el-button>
+                    </el-upload>
                     <div>
                         <el-table
                                 :data="systemAllData1.pluginList"
                                 style="width: 100%"
-                                :row-class-name="tableRowClassName">
+                                :row-class-name="tableRowClassName"
+                                @selection-change="handleSelectionChange">
                             <el-table-column
-                                    prop="name"
-                                    label="名称"
-                                    width="180">
+                                    type="selection"
+                                    width="55">
                             </el-table-column>
                             <el-table-column
-                                    prop="version"
+                                    label="名称"
+                                    width="180">
+                                <template slot-scope="scope">{{ scope.row.name }}</template>
+                            </el-table-column>
+                            <el-table-column
                                     label="版本"
                                     width="180">
+                                <template slot-scope="scope">{{ scope.row.version }}</template>
                             </el-table-column>
                             <el-table-column
                                     label="更新时间"
                                     prop="update">
                             </el-table-column>
+                            <el-table-column label="操作">
+                                <el-button type="danger" slot-scope="scope" @click="deletePlugin(scope.row)">删除</el-button>
+                            </el-table-column>
+
                         </el-table>
                 </div>
             </div>
@@ -139,7 +161,7 @@
             el: "#app",
             data() {
                 return {
-                    activeMenu: 'home',
+                    activeMenu: 'info',
                     formInline: {
                         user: '',
                         password: ''
@@ -152,7 +174,9 @@
                         { key: "版本", value: "" },
                         { key: "更新时间", value: "" },
                         { key: "代号", value: "" }
-                    ]
+                    ],
+                    fileList: [],
+                    multipleSelection: []
                 };
             }, mounted: function () {
 
@@ -237,6 +261,67 @@
                         return 'success-row';
                     }
                     return '';
+                },submitUpload() {
+                   var rs = this.$refs.upload.submit().data;
+                   alert(rs)
+                },
+                handleRemove(file, fileList) {
+                    console.log(file, fileList);
+                },
+                handlePreview(file) {
+                    console.log(file);
+                },
+                handleResponse(response, file, fileList) {
+                   if (response=="uploadok"){
+                       this.$message({
+                           message: '添加成功！',
+                           type: 'success'
+                       });
+                       window.location.reload();
+                   }else {
+                       this.$message.error('添加失败！');
+                   }
+                },restart(){
+                    //重启系统
+                    axios({
+                        method:"post",
+                        url:"./controlSystemServlet",
+                        data:"controlCode=1"
+                    })
+                },toggleSelection(rows) {
+                    if (rows) {
+                        rows.forEach(row => {
+                            this.$refs.multipleTable.toggleRowSelection(row);
+                        });
+                    } else {
+                        this.$refs.multipleTable.clearSelection();
+                    }
+                },
+                handleSelectionChange(val) {
+                    for (let i = 0; i < val.length; i++) {
+                        var name = val[i].name;
+                        var version = val[i].version;
+                        var info = "name="+name+"&version="+version;
+                        this.multipleSelection[i] = info;
+                    }
+                },
+                deletePlugins(){
+                    //批量删除
+                    for (let i = 0; i < this.multipleSelection.length; i++) {
+                        axios({
+                            method:"post",
+                            url:"./deletePluginServlet",
+                            data:this.multipleSelection[i]
+                        })
+                    }
+                },
+                deletePlugin(row){
+                    //单个删除
+                    axios({
+                        method:"post",
+                        url:"./deletePluginServlet",
+                        data:"name="+row.name+"&version="+row.version
+                    })
                 }
             },
         });

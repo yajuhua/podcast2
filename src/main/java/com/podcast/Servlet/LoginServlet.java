@@ -7,10 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.*;
 import java.io.IOException;
 
 @WebServlet("/loginServlet")
@@ -25,6 +22,7 @@ public class LoginServlet extends HttpServlet {
 
         request.setCharacterEncoding("utf-8");
         HttpSession session = request.getSession();
+
         if (login!=null){
             //提示成功
             response.getWriter().write("ok");

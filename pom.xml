@@ -4,10 +4,19 @@
   <groupId>org.example</groupId>
   <artifactId>podcast2</artifactId>
   <packaging>war</packaging>
-  <version>1.2.1</version>
+  <version>1.2.3</version>
   <name>podcast2</name>
   <url>http://maven.apache.org</url>
   <dependencies>
+
+  <!--  文件上传框架  -->
+    <dependency>
+      <groupId>commons-fileupload</groupId>
+      <artifactId>commons-fileupload</artifactId>
+      <version>1.5</version>
+    </dependency>
+
+
     <!--      xml解析-->
     <!-- https://mvnrepository.com/artifact/org.dom4j/dom4j -->
     <dependency>

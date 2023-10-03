@@ -1,8 +1,10 @@
 package com.podcast.update;
 
 import com.podcast.Servlet.XmlFactoryServlet;
+import com.podcast.Utils.N_m3u8DL_RE;
 import com.podcast.service.ChannelService;
 import com.podcast.service.PodcastUserService;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +14,7 @@ import javax.servlet.ServletContextListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -22,17 +25,39 @@ public class UpdateInit implements ServletContextListener {
     private static final Logger LOGGER = LoggerFactory.getLogger("UpdateInit");
     public static Long SYSYTEM_START_TIME = System.currentTimeMillis();
     public static String WEBAPP_PATH;
+    public static String deletePluginPath;
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
-        //系统开机时间
-
-        XmlFactoryServlet.CREATE_STATUS = 0;
-        PodcastUserService service = new PodcastUserService();
         // 获取ServletContext对象
         ServletContext context = servletContextEvent.getServletContext();
         // 获取webapp目录的绝对路径
         String webappPath = context.getRealPath("/");
         WEBAPP_PATH = webappPath;
+        deletePluginPath = WEBAPP_PATH + "tmp" + File.separator + "deletePlugins";
+
+
+        //1.读取要删除的插件
+        try {
+            List<String> deletePluginList = FileUtils.readLines(new File(deletePluginPath));
+            for (String p : deletePluginList) {
+                //一行一行读取插件绝对路径，然后删除
+                /**
+                 * 用JavaAPI无法删除
+                 */
+                String rmcmd = "rm -rf "+p;
+                LOGGER.info("删除插件："+rmcmd);
+                N_m3u8DL_RE.Cmd(rmcmd);
+            }
+
+            //清空插件删除列表
+            FileUtils.write(new File(deletePluginPath)," ","utf-8");
+
+        } catch (IOException e) {
+            LOGGER.error("插件删除列表无法读取！");
+        }
+        //是否有新创建
+        XmlFactoryServlet.CREATE_STATUS = 0;
+        PodcastUserService service = new PodcastUserService();
         //存入数据库
         service.updateWebappPath(webappPath);
 
@@ -43,6 +68,7 @@ public class UpdateInit implements ServletContextListener {
         new File(directory,"audio").mkdir();
         new File(directory,"plugin").mkdir();
         new File(directory,"xml").mkdir();
+        new File(directory,"tmp").mkdir();
 
 
         //定时任务

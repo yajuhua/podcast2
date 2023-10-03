@@ -63,7 +63,7 @@ public class N_m3u8DL_RE {
      * cmd命令行的操作(字符串类型)
      * @param command 命令
      */
-    private static void Cmd(String command) throws IOException {
+    public static void Cmd(String command) throws IOException {
         try {
             BufferedReader br = null;
             try {
