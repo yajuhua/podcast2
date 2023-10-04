@@ -69,7 +69,7 @@ public class Aria2c {
             options.put("out",rename);
             options.put("dir",paths);
             aria2Client = new Aria2Client(aria2_RPO_URL);
-            String response = aria2Client.addUri(aira2_rpo_secret, Arrays.asList(Aria2Client.URLencode(url)),options);
+            String response = aria2Client.addUri(aira2_rpo_secret, Arrays.asList(url),options);
             System.out.println(response);
 
             String[] keys = {"status"};
@@ -87,8 +87,8 @@ public class Aria2c {
 
     @Test
     public void t1() throws Exception {
-        String url = "https://video.31dm.com/sda1/pikpak%20y/1-7补/星期一的丰满%20第二季/星期一的丰满%20第二季%20%2013.mp4?sign=1a09dd24d4a7d920c66cae7a29a3b007&t=1696080678";
-        String name = "t100";
+        String url = "https://video.31dm.com/sda1/pikpak%20x/补1-7v2/网络胜利组/网络胜利组%2011.mp4?sign=6fb575879ada5a0f3245bf7b89e16a97&t=1696348112";
+        String name = "t200";
         String path = "D:/Download/Aria2/t1";
         Aria2c aria2c = new Aria2c(url,name,"/opt/");
         aria2c.startDownload();

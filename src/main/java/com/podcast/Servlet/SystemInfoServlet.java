@@ -7,6 +7,7 @@ import com.podcast.update.Update;
 import com.podcast.update.UpdateInit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.Test;
 
 import javax.servlet.*;
 import javax.servlet.http.*;
@@ -14,10 +15,7 @@ import javax.servlet.annotation.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.*;
 
 import static com.podcast.Servlet.XmlFactoryServlet.scanerPlugin;
@@ -62,10 +60,15 @@ public class SystemInfoServlet extends HttpServlet {
         systemInfo.setSystemUpdate((String) mainProperties.getProperty("update"));
         systemInfo.setSystemVersion((String) mainProperties.getProperty("version"));
         Long runTime = (System.currentTimeMillis() - UpdateInit.SYSYTEM_START_TIME)/1000;
-        //转换成07时03分这种形式
-        Long hours = runTime / 3600;
-        Long minutes = (runTime % 3600) /60;
-        systemInfo.setSystemRuntime(String.format("%2d时%2d分",hours,minutes));
+
+        //转换成0天07时03分这种形式
+        Instant instant = Instant.ofEpochMilli(UpdateInit.SYSYTEM_START_TIME);
+        LocalDateTime systemStartTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+        Duration between = Duration.between(systemStartTime, LocalDateTime.now());
+        long days = between.toDays();
+        long hours = between.toHours() - between.toDays() * 24;
+        long minutes = between.toMinutes() - (days*24*60) - (hours*60);
+        systemInfo.setSystemRuntime(days+"天"+hours+"时"+minutes+"分");
         systemInfo.setPluginList(pluginList);
 
         //转换成json字符串
@@ -82,6 +85,21 @@ public class SystemInfoServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         this.doGet(request, response);
+    }
+
+    @Test
+    public void t1(){
+        LocalDateTime of = LocalDateTime.of(2023, 10, 1, 10, 5, 1, 1);
+        //Instant instant = Instant.ofEpochMilli(1633311599000L);
+        //LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+        Duration between = Duration.between(of, LocalDateTime.now());
+        long days = between.toDays();
+        long hours = between.toHours() - between.toDays() * 24;
+        long minutes = between.toMinutes() - (days*24*60) - (hours*60);
+        System.out.println(days + "天" + hours + "时" + minutes + "分");
+    /*    System.out.println(days);
+        System.out.println(hours);
+        System.out.println(minutes);*/
     }
 
 
