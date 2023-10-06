@@ -178,6 +178,7 @@ public class XmlFactoryServlet extends HttpServlet {
         Class plugin  = null;
         LOGGER.info("检查更新频率:"+frequency);
 
+        LOGGER.debug("url:"+url);
 
         //判断格式类型
         Type type = Type.video;;
