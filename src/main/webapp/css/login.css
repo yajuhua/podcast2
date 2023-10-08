@@ -1,0 +1,140 @@
+/* 共有样式 */
+body {
+    background-color: #ffffff;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.login-form {
+    width: 300px;
+    height: 300px;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+    border-radius: 25px;
+    zoom: 1.2;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 15px;
+    color: #00A1FF;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group input {
+    width: 100%;
+    height: 55px;
+    padding: 8px;
+    font-size: 15px;
+    color: #D7D2D7;
+    border: 1px solid #ccc;
+    border-radius: 23px;
+    box-sizing: border-box;
+    margin: 0 auto;
+    display: block;
+    aspect-ratio: 1/4;
+    background-color: #ffffff;
+    text-indent: 10px;
+}
+
+.form-group input:focus {
+    color: #00A1FF;
+    border-color: #00A1FF;
+}
+
+.form-group input::placeholder {
+    color: #00A1FF;
+}
+
+.form-group button {
+    width: 100%;
+    height: 55px;
+    padding-top: calc(100% * 1/9);
+    font-size: 14px;
+    color: #fff;
+    background-color: #00A1FF;
+    border: none;
+    border-radius: 23px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.form-group button span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    font-size: 20px;
+}
+
+.bottom-links {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    text-align: center;
+}
+
+button:active {
+    background-color: #0087C0;
+}
+
+.bottom-links a {
+    color: #00A1FF;
+    text-decoration: none;
+    font-size: 14px;
+    flex: 1;
+    text-align: left;
+}
+
+.bottom-links a:last-child {
+    text-align: right;
+}
+
+/* 媒体查询 */
+@media only screen and (max-width: 480px) {
+
+    /* 适配小屏幕手机，宽度小于等于480px */
+    .login-form {
+        width: 90%;
+        height: 250px;
+        zoom: 1;
+    }
+
+    .form-group input {
+        aspect-ratio: 3/4;
+    }
+}
+
+@media only screen and (min-width: 481px) and (max-width: 768px) {
+
+    /* 适配中等屏幕手机，宽度大于480px小于等于768px */
+    .login-form {
+        width: 70%;
+        height: 300px;
+        zoom: 1.2;
+    }
+}
+
+@media only screen and (min-width: 769px) and (max-width: 1024px) {
+
+    /* 适配大屏幕手机，宽度大于768px小于等于1024px */
+    .login-form {
+        width: 50%;
+        height: 350px;
+        zoom: 1.4;
+    }
+}
+
+/* 添加更多媒体查询以适配其他屏幕尺寸 */

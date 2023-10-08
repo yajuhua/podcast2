@@ -1,53 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- vue2 -->
     <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.13/vue.js"></script>
-    <!-- 引入样式 -->
-    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <!-- 引入组件库 -->
     <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <!--引入css  -->
+    <link rel="stylesheet" href="css/manage.css">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <!--    引入axios-->
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <style>
-        #app {
-            display: flex;
-            height: 100vh;
-        }
-
-        .sidebar {
-            width: 200px;
-            background-color: #f0f0f0;
-        }
-
-        .main {
-            flex: 1;
-            padding: 20px;
-        }
-        #logspage {
-            display: flex;
-            height: 100vh;
-            flex-direction: column;
-        }
-
-        .logs {
-            height: 80vh; /* 将高度设置为页面高度的 80% */
-            padding: 20px;
-            overflow-y: scroll;
-            background-color: #f0f0f0;
-        }
-        .el-table .warning-row {
-            background: oldlace;
-        }
-
-        .el-table .success-row {
-            background: #f0f9eb;
-        }
-    </style>
     <title>管理</title>
 </head>
+
 <body>
     <div id="app">
         <div class="sidebar">
@@ -85,19 +54,20 @@
                 </div>
             </div>
 
-            <div v-show="activeMenu === 'changePassword'"><el-form :inline="true" :model="formInline" class="demo-form-inline">
-                <el-form-item label="用户名">
-                    <el-input v-model="formInline.user" placeholder="用户名"></el-input>
-                </el-form-item>
+            <div v-show="activeMenu === 'changePassword'"><el-form :inline="true" :model="formInline"
+                    class="demo-form-inline">
+                    <el-form-item label="用户名">
+                        <el-input v-model="formInline.user" placeholder="用户名"></el-input>
+                    </el-form-item>
 
-                <el-form-item label="密码">
-                    <el-input v-model="formInline.password" placeholder="密码"></el-input>
-                </el-form-item>
-                <el-form-item>
+                    <el-form-item label="密码">
+                        <el-input v-model="formInline.password" placeholder="密码"></el-input>
+                    </el-form-item>
+                    <el-form-item>
 
-                    <el-button type="primary" @click="changeUserPasswd">修改</el-button>
-                </el-form-item>
-            </el-form></div>
+                        <el-button type="primary" @click="changeUserPasswd">修改</el-button>
+                    </el-form-item>
+                </el-form></div>
 
             <div v-show="activeMenu === 'info'">
                 <h2>系统概况</h2>
@@ -109,222 +79,41 @@
                     </el-table>
 
                     <h2>插件列表</h2>
-                    <el-upload
-                            class="upload-demo"
-                            ref="upload"
-                            action="./uploadServlet"
-                            :on-preview="handlePreview"
-                            :on-remove="handleRemove"
-                            :file-list="fileList"
-                            :auto-upload="false"
-                            :on-success="handleResponse">
+                    <el-upload class="upload-demo" ref="upload" action="./uploadServlet" :on-preview="handlePreview"
+                        :on-remove="handleRemove" :file-list="fileList" :auto-upload="false"
+                        :on-success="handleResponse">
                         <el-button slot="trigger" size="small" type="primary">选取插件</el-button>
-                        <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">上传到服务器</el-button>
+                        <el-button style="margin-left: 10px;" size="small" type="success"
+                            @click="submitUpload">上传到服务器</el-button>
                         <el-button type="danger" size="small" @click="deletePlugins">批量删除</el-button>
                     </el-upload>
                     <div>
-                        <el-table
-                                :data="systemAllData1.pluginList"
-                                style="width: 100%"
-                                :row-class-name="tableRowClassName"
-                                @selection-change="handleSelectionChange">
-                            <el-table-column
-                                    type="selection"
-                                    width="55">
+                        <el-table :data="systemAllData1.pluginList" style="width: 100%"
+                            :row-class-name="tableRowClassName" @selection-change="handleSelectionChange">
+                            <el-table-column type="selection" width="55">
                             </el-table-column>
-                            <el-table-column
-                                    label="名称"
-                                    width="180">
+                            <el-table-column label="名称" width="180">
                                 <template slot-scope="scope">{{ scope.row.name }}</template>
                             </el-table-column>
-                            <el-table-column
-                                    label="版本"
-                                    width="180">
+                            <el-table-column label="版本" width="180">
                                 <template slot-scope="scope">{{ scope.row.version }}</template>
                             </el-table-column>
-                            <el-table-column
-                                    label="更新时间"
-                                    prop="update">
+                            <el-table-column label="更新时间" prop="update">
                             </el-table-column>
                             <el-table-column label="操作">
-                                <el-button type="danger" slot-scope="scope" @click="deletePlugin(scope.row)">删除</el-button>
+                                <el-button type="danger" slot-scope="scope"
+                                    @click="deletePlugin(scope.row)">删除</el-button>
                             </el-table-column>
 
                         </el-table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-        </div>
-    <script>
-        new Vue({
-            el: "#app",
-            data() {
-                return {
-                    activeMenu: 'info',
-                    formInline: {
-                        user: '',
-                        password: ''
-                    },
-                    logs: [], // 存储日志信息的数组
-                    systemAllData: [],
-                    systemAllData1: "",
-                    infoData: [
-                        { key: "已运行", value: "" },
-                        { key: "版本", value: "" },
-                        { key: "更新时间", value: "" },
-                        { key: "代号", value: "" }
-                    ],
-                    fileList: [],
-                    multipleSelection: []
-                };
-            }, mounted: function () {
 
-                // 页面加载完成后，发送异步请求，查询数据
-                var _this = this;
-                axios({
-                    method: "get",
-                    url: "./systemInfoServlet"
-                }).then(function (resp) {
-                    //系统信息
-                    _this.systemAllData1 = resp.data;
-                    _this.infoData[0].value = resp.data.systemRuntime;
-                    _this.infoData[1].value = resp.data.systemVersion;
-                    _this.infoData[2].value = resp.data.systemUpdate;
-                    _this.infoData[3].value = resp.data.systemCode;
-
-                })
-            },
-            created() {
-                // 建立 WebSocket 连接
-                const socket = new WebSocket("ws://192.168.123.3:8088/podcast2/websocket/logs");
-
-                // 监听 WebSocket 连接事件
-                socket.onopen = () => {
-                    console.log("WebSocket 连接成功");
-                };
-
-                // 监听 WebSocket 接收消息事件
-                socket.onmessage = (event) => {
-                    const message = event.data;
-                    this.logs.push(message); // 将接收到的日志信息添加到数组中
-                    this.scrollToBottom(); // 滚动到底部
-                };
-
-                // 监听 WebSocket 关闭事件
-                socket.onclose = () => {
-                    console.log("WebSocket 连接关闭");
-                };
-            },
-            methods: {
-                handleMenuSelect(index) {
-                    this.activeMenu = index;
-                },
-                clearLogs() {
-                    this.logs = []; // 清空日志数组
-                },
-                scrollToBottom() {
-                    this.$nextTick(() => {
-                        const logsContainer = this.$el.querySelector(".logs");
-                        logsContainer.scrollTop = logsContainer.scrollHeight;
-                    });
-                },
-                toSubscriptionList(){
-                    window.location.href = "index.html"
-                },
-                exit(){
-                    axios({
-                        method:"post",
-                        url:"./exitServlet"
-                    }).then(function (resp) {
-                        if (resp.data==="ok"){
-                            window.location.href = "login.html";
-                        }
-                    })
-                },
-                //修改用户名和密码
-                changeUserPasswd(){
-                    axios({
-                        method:"post",
-                        url:"./changeServlet",
-                        data:"username="+this.formInline.user+"&password="+this.formInline.password
-                    }).then(function (resp) {
-                        if (resp.data=="ok"){
-                            window.location.href = "login.html";
-                        }
-                    })
-                },
-                tableRowClassName({row, rowIndex}) {
-                    if (rowIndex === 1) {
-                        return 'warning-row';
-                    } else if (rowIndex === 3) {
-                        return 'success-row';
-                    }
-                    return '';
-                },submitUpload() {
-                   var rs = this.$refs.upload.submit().data;
-                   alert(rs)
-                },
-                handleRemove(file, fileList) {
-                    console.log(file, fileList);
-                },
-                handlePreview(file) {
-                    console.log(file);
-                },
-                handleResponse(response, file, fileList) {
-                   if (response=="uploadok"){
-                       this.$message({
-                           message: '添加成功！',
-                           type: 'success'
-                       });
-                       window.location.reload();
-                   }else {
-                       this.$message.error('添加失败！');
-                   }
-                },restart(){
-                    //重启系统
-                    axios({
-                        method:"post",
-                        url:"./controlSystemServlet",
-                        data:"controlCode=1"
-                    })
-                },toggleSelection(rows) {
-                    if (rows) {
-                        rows.forEach(row => {
-                            this.$refs.multipleTable.toggleRowSelection(row);
-                        });
-                    } else {
-                        this.$refs.multipleTable.clearSelection();
-                    }
-                },
-                handleSelectionChange(val) {
-                    for (let i = 0; i < val.length; i++) {
-                        var name = val[i].name;
-                        var version = val[i].version;
-                        var info = "name="+name+"&version="+version;
-                        this.multipleSelection[i] = info;
-                    }
-                },
-                deletePlugins(){
-                    //批量删除
-                    for (let i = 0; i < this.multipleSelection.length; i++) {
-                        axios({
-                            method:"post",
-                            url:"./deletePluginServlet",
-                            data:this.multipleSelection[i]
-                        })
-                    }
-                },
-                deletePlugin(row){
-                    //单个删除
-                    axios({
-                        method:"post",
-                        url:"./deletePluginServlet",
-                        data:"name="+row.name+"&version="+row.version
-                    })
-                }
-            },
-        });
-    </script>
+    <!-- 引入管理页面js-->
+    <script src="js/manage.js"></script>
 </body>
+
 </html>

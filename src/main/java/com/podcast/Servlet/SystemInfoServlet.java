@@ -7,19 +7,20 @@ import com.podcast.update.Update;
 import com.podcast.update.UpdateInit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.Test;
 
 import javax.servlet.*;
 import javax.servlet.http.*;
 import javax.servlet.annotation.*;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
 import java.time.*;
 import java.util.*;
 
 import static com.podcast.Servlet.XmlFactoryServlet.scanerPlugin;
 
+/**
+ * 获取系统信息：插件信息、系统运行时间、系统版本信息
+ */
 @WebServlet("/systemInfoServlet")
 public class SystemInfoServlet extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger("SystemInfoServlet");
@@ -86,21 +87,5 @@ public class SystemInfoServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         this.doGet(request, response);
     }
-
-    @Test
-    public void t1(){
-        LocalDateTime of = LocalDateTime.of(2023, 10, 1, 10, 5, 1, 1);
-        //Instant instant = Instant.ofEpochMilli(1633311599000L);
-        //LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
-        Duration between = Duration.between(of, LocalDateTime.now());
-        long days = between.toDays();
-        long hours = between.toHours() - between.toDays() * 24;
-        long minutes = between.toMinutes() - (days*24*60) - (hours*60);
-        System.out.println(days + "天" + hours + "时" + minutes + "分");
-    /*    System.out.println(days);
-        System.out.println(hours);
-        System.out.println(minutes);*/
-    }
-
 
 }

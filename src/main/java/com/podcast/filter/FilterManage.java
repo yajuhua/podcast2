@@ -19,26 +19,35 @@ public class FilterManage implements Filter {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
 
+        //无条件放行的资源
+        String[] pass = {"css","js","xml","loginServlet"};
+
         //转换成HttpServletRequest已获取资源URI
         HttpServletRequest request = (HttpServletRequest) servletRequest;
-        HttpServletResponse Response = (HttpServletResponse) servletResponse;
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
 
         //获取资源的URI
         String requestedResource = request.getRequestURI();
         LOGGER.debug("URI:"+requestedResource);
 
-        //除了xml其他都拦截
-        if (requestedResource.contains("xml")){
-            LOGGER.debug("放行，xml资源不受限");
-            filterChain.doFilter(request,Response);
-        }else if (request.getSession().getAttribute("user")!=null || requestedResource.contains("loginServlet")){
-            //已登录状态 或 请求登录
-            LOGGER.debug("放行，已登录状态 或 请求登录");
-            filterChain.doFilter(request,Response);
+        for (int i = 0; i < pass.length; i++) {
+            if (requestedResource.contains(pass[i])){
+                //放行
+                LOGGER.debug("放行，必要加载资源");
+                filterChain.doFilter(request,response);
+                return;
+            }
+        }
+
+        //判断是否登录
+       if (request.getSession().getAttribute("user")!=null){
+            //已登录状态
+            LOGGER.debug("放行，已登录状态");
+            filterChain.doFilter(request,response);
         }else {
             //未登录，转发到login.html页面
             LOGGER.debug("未登录，转发到登录页面");
-            request.getRequestDispatcher("login.html").forward(request,Response);
+            request.getRequestDispatcher("login.html").forward(request,response);
         }
     }
 

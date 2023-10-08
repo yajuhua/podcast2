@@ -1,0 +1,36 @@
+#app {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 200px;
+    background-color: #f0f0f0;
+}
+
+.main {
+    flex: 1;
+    padding: 20px;
+}
+
+#logspage {
+    display: flex;
+    height: 100vh;
+    flex-direction: column;
+}
+
+.logs {
+    height: 80vh;
+    /* 将高度设置为页面高度的 80% */
+    padding: 20px;
+    overflow-y: scroll;
+    background-color: #f0f0f0;
+}
+
+.el-table .warning-row {
+    background: oldlace;
+}
+
+.el-table .success-row {
+    background: #f0f9eb;
+}

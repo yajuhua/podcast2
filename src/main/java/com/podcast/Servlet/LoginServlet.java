@@ -21,6 +21,7 @@ public class LoginServlet extends HttpServlet {
         PodcastUser login = podcastUserService.login(username, password);
 
         request.setCharacterEncoding("utf-8");
+//        response.setContentType("text/*;charset=utf-8");
         HttpSession session = request.getSession();
 
         if (login!=null){
@@ -33,6 +34,7 @@ public class LoginServlet extends HttpServlet {
         }else {
             //提示错误，继续在login页面
             response.getWriter().write("error");
+
         }
     }
 
