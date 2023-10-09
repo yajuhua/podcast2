@@ -1,3 +1,4 @@
+
 new Vue({
     el: "#app",
     data() {
@@ -12,7 +13,6 @@ new Vue({
     mounted() {
         // 页面加载完成后，发送异步请求，查询数据
         var _this = this;
-
         axios({
             method: "post",
             url: "./selectAllServlet"
@@ -33,11 +33,14 @@ new Vue({
         handleClose(done) {
             done();
         },
+        //根据uuid拼接成新的url，用于二维码生成和链接复制
         changeUrl(uuid) {
             this.dialogVisible = true;
-            this.qrurl = "https://api.pwmqr.com/qrcode/create/?url=http://" + window.location.host + "/podcast2/xml/" + uuid + ".xml";
+            // this.qrurl = "https://api.pwmqr.com/qrcode/create/?url=http://" + window.location.host + "/podcast2/xml/" + uuid + ".xml";
+            this.qrurl = "http://" + window.location.host + "/podcast2/xml/" + uuid + ".xml";
             this._uuid = uuid;
         },
+        //单个删除
         dele(uuid) {
             axios({
                 method: "post",
@@ -45,7 +48,10 @@ new Vue({
                 data: "uuid=" + uuid
             });
             window.location.reload();
-            this.open3()
+            this.$message({
+                message: '删除成功！',
+                type: 'success'
+            });
         },
         toggleSelection(rows) {
             if (rows) {
@@ -64,8 +70,8 @@ new Vue({
                 this.selecteUuid[i] = selection[i].uuid
             }
         },
+        // 在这里处理用户点击“批量删除”菜单选项的逻辑
         deletes() {
-            // 在这里处理用户点击“批量删除”菜单选项的逻辑
             for (let i = 0; i < this.selecteUuid.length; i++) {
                 axios({
                     method: "post",
@@ -75,6 +81,7 @@ new Vue({
             }
             window.location.reload();
         },
+        //生成OPML文件
         downloadOPML() {
             let text = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
             text += "<opml version=\"1.0\">\n";
@@ -96,8 +103,8 @@ new Vue({
             document.body.appendChild(link);
             link.click();
         },
+        //点击复制URL
         copyToClipboard(uuid) {
-            //点击复制URL
             const textarea = document.createElement('textarea');
             textarea.value = "http://" + window.location.host + "/podcast2/xml/" + uuid + ".xml"
             textarea.setAttribute('readonly', '');
@@ -108,27 +115,43 @@ new Vue({
             document.execCommand('copy');
             document.body.removeChild(textarea);
             //提示复制成功
-            this.open2();
+            this.$message({
+                message: '复制成功！',
+                type: 'success'
+            });
             console.log('内容已成功复制到剪贴板');
         },
+        //复制URL到粘贴板
         dialogCopyURL() {
             //复制URL
             this.copyToClipboard(this._uuid)
             //关闭对话框
             this.dialogVisible = false;
 
-        }, open2() {
-            this.$message({
-                message: '复制成功！',
-                type: 'success'
-            });
-        }, open3() {
-            this.$message({
-                message: '删除成功！',
-                type: 'success'
-            });
-        }, open4() {
-            this.$message.error("删除失败！")
+        },
+        //关闭弹框清除二维码
+        qrCodeHandleClose() {
+            this.dialogVisible = false;
+            this.qrCode = '';
+            document.getElementById('qrCode').innerHTML = '';
+        },
+        //创建二维码
+        qrcode(url) {
+            this.qrCode = new QRCode('qrCode', {
+                text: url,
+                width: 260,
+                height: 250
+            })
+        },
+        //创建二维码
+        qrCodeCreate() {
+            this.$nextTick(() => {
+                this.qrcode(this.qrurl);
+            })
+        },
+        //二维码显示
+        qrCodeOpen(val) {
+            this.dialogVisible = true;
         }
     }
 })

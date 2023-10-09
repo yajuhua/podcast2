@@ -19,6 +19,8 @@
 
 <body>
     <div id="app">
+
+        <!--面包屑-->
         <div class="sidebar">
             <el-menu :default-active="activeMenu" class="el-menu-vertical-demo" @select="handleMenuSelect">
                 <el-submenu index="system">
@@ -36,6 +38,8 @@
                 <el-menu-item index="exit" @click="exit">退出</el-menu-item>
             </el-menu>
         </div>
+
+        <!--查看日志-->
         <div class="main">
             <div v-show="activeMenu === 'logs'">
                 <title>实时日志页面</title>
@@ -54,6 +58,7 @@
                 </div>
             </div>
 
+            <!--修改用户名和密码-->
             <div v-show="activeMenu === 'changePassword'"><el-form :inline="true" :model="formInline"
                     class="demo-form-inline">
                     <el-form-item label="用户名">
@@ -69,6 +74,7 @@
                     </el-form-item>
                 </el-form></div>
 
+            <!--系统概况-->
             <div v-show="activeMenu === 'info'">
                 <h2>系统概况</h2>
                 <el-button type="warning" @click="restart" size="small">重启系统</el-button>
@@ -78,6 +84,7 @@
                         <el-table-column prop="value"></el-table-column>
                     </el-table>
 
+                    <!--插件列表-->
                     <h2>插件列表</h2>
                     <el-upload class="upload-demo" ref="upload" action="./uploadServlet" :on-preview="handlePreview"
                         :on-remove="handleRemove" :file-list="fileList" :auto-upload="false"
