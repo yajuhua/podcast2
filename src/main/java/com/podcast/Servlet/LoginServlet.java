@@ -1,5 +1,6 @@
 package com.podcast.Servlet;
 
+import com.google.gson.Gson;
 import com.podcast.pojo.PodcastUser;
 import com.podcast.service.PodcastUserService;
 import org.slf4j.Logger;
@@ -21,7 +22,8 @@ public class LoginServlet extends HttpServlet {
         PodcastUser login = podcastUserService.login(username, password);
 
         request.setCharacterEncoding("utf-8");
-//        response.setContentType("text/*;charset=utf-8");
+//        response.setContentType("text/json;charset=utf-8");
+        response.setContentType("application/json;charset=utf-8");
         HttpSession session = request.getSession();
 
         if (login!=null){

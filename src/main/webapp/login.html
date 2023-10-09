@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!--引入css  -->
+    <!--引入登录页面css  -->
     <link rel="stylesheet" href="css/login.css">
-    <!--引入js-->
-    <script src="js/login.js"></script>
+    <!-- vue2 -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.13/vue.js"></script>
     <!--    引入axios-->
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <title>登录</title>
@@ -17,15 +17,15 @@
     <div class="container">
         <div class="login-form" id="app">
             <h2>Podcasts</h2>
-            <form action="./loginServlet" method="post">
+            <form>
                 <div class="form-group">
-                    <input type="text" id="username" name="username" placeholder="用户名">
+                    <input type="text" name="username" placeholder="用户名" v-model="username">
                 </div>
                 <div class="form-group">
-                    <input type="password" id="password" name="password" placeholder="密码">
+                    <input type="password" name="password" placeholder="密码" v-model="password">
                 </div>
                 <div class="form-group">
-                    <button id="btn"><span>登录</span></button>
+                    <button @click="submit"><span>登录</span></button>
                 </div>
                 <div class="bottom-links">
                     <a href="#">立即注册</a>
@@ -34,6 +34,8 @@
             </form>
         </div>
     </div>
+    <!--引入登录页面js-->
+    <script src="js/login.js"></script>
 </body>
 
 </html>
