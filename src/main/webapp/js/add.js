@@ -1,35 +1,48 @@
-function handleEpisodesChange(select) {
-    var selectedValue = select.value;
-    var customInputContainer = document.getElementById("customInputContainer");
-
-    if (selectedValue === "1") {
-        customInputContainer.style.display = "block";
-    } else {
-        customInputContainer.style.display = "none";
-    }
-}
-
-window.document.getElementById("btn").onclick = function () {
-    let url = window.document.getElementById("url").value;
-    let type = window.document.getElementById("select-left").value;
-    let frequency = window.document.getElementById("select-right").value;
-    let survival = window.document.getElementById("select-survival_time").value;
-    let episodes = 0;
-    if (window.document.getElementById("select-Episodes").value == "-1") {
-        episodes = -1;
-    } else if (window.document.getElementById("select-Episodes").value == "1") {
-        episodes = document.getElementById("customInput").value;
-    }
-
-    axios({
-        method: "post",
-        url: "./xmlFactoryServlet",
-        data: "url=" + url + "&type=" + type + "&frequency=" + frequency + "&survival=" + survival + "&episodes=" + episodes
-    }).then(function (resp) {
-        if (resp.data === "ok") {
-            window.location.href = "index.html";
-        } else {
-            alert("添加失败！");
+new Vue({
+    el:"#app",
+    data(){
+        return{
+            url:null,
+            type:"audio",
+            frequency:"1200",
+            survival:"604800",
+            episodes:"0",
+            customInput:null,
         }
-    })
-}
+    },methods:{
+        submit(){
+            //正则表达式：检查URL链接格式是否正确
+            const pattern = /(http|https):\/\/([\w.]+\/?)\S*/;
+
+            if (this.url == null || this.episodes == "1" && this.customInput == null ){
+                //数据不全不提交
+                this.$message.error('请填写完整参数！');
+            } else if (!pattern.test(this.url)){
+                this.$message.error('请输入正确主页链接')
+            }else{
+                if (this.episodes == "1"){
+                    this.episodes = this.customInput;
+                }
+
+                var _this = this;
+                //提交
+                axios({
+                    method: "post",
+                    url: "./xmlFactoryServlet",
+                    data: "url=" + _this.url + "&type=" + _this.type + "&frequency=" + _this.frequency + "&survival=" + _this.survival + "&episodes=" + _this.episodes
+                }).then(function (response) {
+                    console.log(response.data)//打印响应数据
+                    if (response.data === "ok") {
+                        _this.$message({
+                            message: '添加成功！',
+                            type: 'success'
+                        });
+                        window.location.href = "index.html";
+                    } else {
+                        _this.$message.error('添加失败！');
+                    }
+                })
+            }
+        }
+    }
+})

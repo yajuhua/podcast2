@@ -122,13 +122,29 @@ new Vue({
             } else {
                 this.$message.error('添加失败！');
             }
-        }, restart() {
-            //重启系统
-            axios({
-                method: "post",
-                url: "./controlSystemServlet",
-                data: "controlCode=1"
-            })
+        },
+        //重启系统
+        restart() {
+            this.$confirm('此操作将重启系统且该页面不会自动刷新, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                axios({
+                    method: "post",
+                    url: "./controlSystemServlet",
+                    data: "controlCode=1"
+                })
+                this.$message({
+                    type: 'success',
+                    message: '正在重启中...该页面不会自动刷新!'
+                });
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消重启'
+                });
+            });
         }, toggleSelection(rows) {
             if (rows) {
                 rows.forEach(row => {
@@ -146,23 +162,53 @@ new Vue({
                 this.multipleSelection[i] = info;
             }
         },
+        //批量删除
         deletePlugins() {
-            //批量删除
-            for (let i = 0; i < this.multipleSelection.length; i++) {
+            this.$confirm('此操作将永久删除选择的插件且系统会重启, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                for (let i = 0; i < this.multipleSelection.length; i++) {
+                    axios({
+                        method: "post",
+                        url: "./deletePluginServlet",
+                        data: this.multipleSelection[i]
+                    })
+                }
+                this.$message({
+                    type: 'success',
+                    message: '插件正在删除中...该页面不会自动刷新'
+                });
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消删除'
+                });
+            });
+        },
+        //单个删除
+        deletePlugin(row) {
+            this.$confirm('此操作将永久删除该订阅, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
                 axios({
                     method: "post",
                     url: "./deletePluginServlet",
-                    data: this.multipleSelection[i]
+                    data: "name=" + row.name + "&version=" + row.version
                 })
-            }
-        },
-        deletePlugin(row) {
-            //单个删除
-            axios({
-                method: "post",
-                url: "./deletePluginServlet",
-                data: "name=" + row.name + "&version=" + row.version
-            })
+                this.$message({
+                    type: 'success',
+                    message: '插件正在删除中...该页面不会自动刷新!'
+                });
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消删除'
+                });
+            });
         }
     },
 });

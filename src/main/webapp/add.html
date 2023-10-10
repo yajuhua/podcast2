@@ -25,11 +25,11 @@
     <form id="form" action="" method="post">
       <div class="form-group">
         <label for="url">主页链接:</label>
-        <input type="text" id="url" name="url" placeholder="输入 URL">
+        <input type="text" id="url" name="url" placeholder="输入 URL" v-model="url">
       </div>
       <div class="form-group">
         <label for="select-left">类型:</label>
-        <select id="select-left" name="select-left">
+        <select id="select-left" name="select-left" v-model="type">
           <option value="" selected disabled>选择类型</option>
           <option value="video" name="type">Video</option>
           <option value="audio" name="type" selected>Audio</option>
@@ -37,7 +37,7 @@
       </div>
       <div class="form-group">
         <label for="select-right">检查更新频率:</label>
-        <select id="select-right" name="frequency">
+        <select id="select-right" name="frequency" v-model="frequency">
           <option value="" selected disabled>选择检查更新频率</option>
           <option value="60">每 1 分钟</option>
           <option value="1200" selected>每 20 分钟</option>
@@ -48,7 +48,7 @@
 
       <div class="form-group">
         <label for="select-survival_time">选择节目存活时间:</label>
-        <select id="select-survival_time" name="survival">
+        <select id="select-survival_time" name="survival" v-model="survival">
           <option value="" selected disabled>选择节目存活时间</option>
           <option value="604800" selected>7天</option>
           <option value="1209600">14天</option>
@@ -58,7 +58,7 @@
 
       <div class="form-group">
         <label for="select-Episodes">选择剧集:</label>
-        <select id="select-Episodes" name="Episodes" onchange="handleEpisodesChange(this)">
+        <select id="select-Episodes" name="Episodes" onchange="handleEpisodesChange(this)" v-model="episodes">
           <option value="" selected disabled>选择剧集</option>
           <option value="0" selected>最新一集</option>
           <option value="-1">最近30集</option>
@@ -66,13 +66,18 @@
         </select>
       </div>
 
-      <div id="customInputContainer" class="form-group" style="display: none;">
+<!--      <div id="customInputContainer" class="form-group" style="display: none;">
         <label for="customInput">自定义剧集:</label>
-        <input type="text" id="customInput" name="customInput">
+        <input type="text" id="customInput" name="customInput" v-model="customInput">
+      </div>-->
+
+      <div id="customInputContainer" class="form-group" v-if="episodes==1">
+        <label for="customInput">自定义剧集:</label>
+        <input type="text" id="customInput" name="customInput" v-model="customInput">
       </div>
 
       <div class="form-group">
-        <button id="btn" type="button">Add</button>
+        <button id="btn" type="button" @click="submit">Add</button>
       </div>
     </form>
   </div>

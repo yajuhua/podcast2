@@ -20,7 +20,7 @@ public class FilterManage implements Filter {
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
 
         //无条件放行的资源
-        String[] pass = {"css","js","xml","loginServlet"};
+        String[] pass = {"css","js","xml","loginServlet","imgs"};
 
         //转换成HttpServletRequest已获取资源URI
         HttpServletRequest request = (HttpServletRequest) servletRequest;

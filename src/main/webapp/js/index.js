@@ -42,15 +42,28 @@ new Vue({
         },
         //单个删除
         dele(uuid) {
-            axios({
-                method: "post",
-                url: "./deleteServlet",
-                data: "uuid=" + uuid
-            });
-            window.location.reload();
-            this.$message({
-                message: '删除成功！',
-                type: 'success'
+            //确认删除提示框
+            this.$confirm('此操作将永久删除该订阅, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                //发送post请求到服务器删除
+                axios({
+                    method: "post",
+                    url: "./deleteServlet",
+                    data: "uuid=" + uuid
+                });
+                window.location.reload();
+                this.$message({
+                    type: 'success',
+                    message: '删除成功!'
+                });
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消删除'
+                });
             });
         },
         toggleSelection(rows) {
@@ -72,14 +85,31 @@ new Vue({
         },
         // 在这里处理用户点击“批量删除”菜单选项的逻辑
         deletes() {
-            for (let i = 0; i < this.selecteUuid.length; i++) {
-                axios({
-                    method: "post",
-                    url: "./deleteServlet",
-                    data: "uuid=" + this.selecteUuid[i]
+                this.$confirm('此操作将永久删除选择的订阅, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    //循环批量删除
+                    for (let i = 0; i < this.selecteUuid.length; i++) {
+                        axios({
+                            method: "post",
+                            url: "./deleteServlet",
+                            data: "uuid=" + this.selecteUuid[i]
+                        });
+                    }
+                    //刷新页面
+                    window.location.reload();
+                    this.$message({
+                        type: 'success',
+                        message: '删除成功!'
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
                 });
-            }
-            window.location.reload();
         },
         //生成OPML文件
         downloadOPML() {
