@@ -28,7 +28,7 @@ new Vue({
                 //提交
                 axios({
                     method: "post",
-                    url: "./xmlFactoryServlet",
+                    url: "./user/xmlFactoryServlet",
                     data: "url=" + _this.url + "&type=" + _this.type + "&frequency=" + _this.frequency + "&survival=" + _this.survival + "&episodes=" + _this.episodes
                 }).then(function (response) {
                     console.log(response.data)//打印响应数据

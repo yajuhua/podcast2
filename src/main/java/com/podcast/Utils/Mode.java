@@ -12,16 +12,33 @@ import java.lang.reflect.Method;
  */
 public class Mode {
     private static final Logger LOGGER = LoggerFactory.getLogger("Mode");
+    /**
+     * 资源地址
+     */
     private String Enclosure;
+    /**
+     * web服务器资源的根目录
+     */
     private String webappPath;
+    /**
+     * 下载器
+     */
     private Class downloader;
-    private String uuid;//资源的uuid
+    /**
+     * 资源的UUID
+     */
+    private String uuid;
+    /**
+     * 资源类型
+     */
     private String type;
+    /**
+     * 服务器IP地址
+     */
     private String IP;
 
     /**
-     * 参数：
-     *      资源链接、保存位置：webapp 、 下载器 、 uuid 、type
+     * 参数：资源链接、保存位置：webapp 、 下载器 、 uuid 、type
      */
     public Mode(String enclosure, String webappPath, Class downloader, String uuid, String type, String IP) {
         Enclosure = enclosure;
@@ -69,8 +86,8 @@ public class Mode {
 
     /**
      *  0.getFileName
-     *             提供UUID获取文件名和格式的字符串，用于格式转换和删除
-     *             参数：this.UUID
+     * 提供UUID获取文件名和格式的字符串，用于格式转换和删除
+     * 参数：this.UUID
      * @return 文件的绝对路径
      */
     private String getFileName(){
@@ -88,7 +105,7 @@ public class Mode {
 
     /**
      * 下载后进行格式转换
-     * @return
+     * @return 返回web服务器资源路径的URL
      */
     public String A1(){
         //1.下载
@@ -111,7 +128,7 @@ public class Mode {
 
     /**
      * 直接提供原链接
-     * @return
+     * @return 返回原链接
      */
     public String A2(){
         return this.Enclosure;
@@ -119,7 +136,7 @@ public class Mode {
 
     /**
      * 下载后进行格式转换
-     * @return
+     * @return 返回web服务器资源路径的URL
      */
     public String V1(){
         //1.下载
@@ -144,7 +161,7 @@ public class Mode {
 
     /**
      *  直接提供原链接
-     * @return
+     * @return 返回原链接
      */
     public String V2(){
         return this.Enclosure;

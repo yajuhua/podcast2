@@ -1,5 +1,8 @@
 package com.podcast.pojo;
 
+/**
+ * 对插件信息进行封装
+ */
 public class Plugin {
     private String name;
     private String version;

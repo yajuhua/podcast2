@@ -25,7 +25,7 @@ new Vue({
         var _this = this;
         axios({
             method: "get",
-            url: "./systemInfoServlet"
+            url: "./system/systemInfoServlet"
         }).then(function (resp) {
             //系统信息
             _this.systemAllData1 = resp.data;
@@ -76,7 +76,7 @@ new Vue({
         exit() {
             axios({
                 method: "post",
-                url: "./exitServlet"
+                url: "./user/exitServlet"
             }).then(function (resp) {
                 if (resp.data === "ok") {
                     window.location.href = "login.html";
@@ -87,7 +87,7 @@ new Vue({
         changeUserPasswd() {
             axios({
                 method: "post",
-                url: "./changeServlet",
+                url: "./user/changeServlet",
                 data: "username=" + this.formInline.user + "&password=" + this.formInline.password
             }).then(function (resp) {
                 if (resp.data == "ok") {
@@ -132,7 +132,7 @@ new Vue({
             }).then(() => {
                 axios({
                     method: "post",
-                    url: "./controlSystemServlet",
+                    url: "./system/controlSystemServlet",
                     data: "controlCode=1"
                 })
                 this.$message({
@@ -172,7 +172,7 @@ new Vue({
                 for (let i = 0; i < this.multipleSelection.length; i++) {
                     axios({
                         method: "post",
-                        url: "./deletePluginServlet",
+                        url: "./system/deletePluginServlet",
                         data: this.multipleSelection[i]
                     })
                 }

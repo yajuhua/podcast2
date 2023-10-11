@@ -28,7 +28,7 @@ public class TimeFormat {
     /**
      * 当前时间
      * @param
-     * @return
+     * @return 返回以EEE, dd MMM yyyy H:m:s ZZZ为格式的时间
      */
     public static String now(){
         SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy H:m:s ZZZ", Locale.ENGLISH);
@@ -36,6 +36,12 @@ public class TimeFormat {
         String date = dateFormat.format(new Date(Long.parseLong(String.valueOf(System.currentTimeMillis()))));
         return date;
     }
+
+    /**
+     * 将秒数转换成 00:24:01这种时长形式的字符串
+     * @param s 秒数
+     * @return
+     */
     public static String duration(int s){
 
         // 创建一个Duration对象，表示1200秒

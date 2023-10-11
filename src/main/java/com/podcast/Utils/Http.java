@@ -12,21 +12,24 @@ import java.net.Proxy;
 import java.net.URL;
 
 public class Http {
+    /**
+     * 日志
+     */
     private static final Logger LOGGER = LoggerFactory.getLogger("Http");
     /**
      * 获取网页内容
-     * @param url
-     * @return
+     * @param url 访问的URL地址
+     * @return 返回GET请求响应数据
      */
     public static String getHttpContent(String url){
         return WebContentP(url);
     }
 
     /**
-     * 代理版获取网页内容
-     * @param URL
+     * 代理版获取网页内容(GET请求)
+     * @param URL 访问的URL地址
      * 配置proxyHost和proxyPort即可
-     * @return
+     * @return 返回GET请求响应数据
      * @throws Exception
      */
     public static String WebContentP(String URL){

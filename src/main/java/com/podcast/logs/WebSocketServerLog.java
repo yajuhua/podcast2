@@ -1,6 +1,5 @@
 package com.podcast.logs;
 
-import com.podcast.update.Update;
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
 import org.slf4j.Logger;
@@ -13,13 +12,12 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
 
 /**
- * websocket
+ * 通过websocket向前端发送系统日志信息
  */
 @ServerEndpoint("/websocket/logs")
 @Component

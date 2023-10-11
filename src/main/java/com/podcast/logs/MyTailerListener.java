@@ -9,9 +9,13 @@ import java.io.IOException;
 
 /**
  * 继承 TailerListenerAdapter
+ * 用于监听文件的改动
  */
 public class MyTailerListener extends TailerListenerAdapter {
 
+    /**
+     * 日志
+     */
     private static Logger LOG = LoggerFactory.getLogger(MyTailerListener.class);
 
     private Session session;

@@ -1,6 +1,6 @@
 package com.podcast.update;
 
-import com.podcast.Servlet.XmlFactoryServlet;
+import com.podcast.Servlet.UserServlet;
 import com.podcast.service.ChannelService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,14 +16,14 @@ public class Target implements Runnable{
     @Override
     public void run() {
             LOGGER.info("系统开始扫描！");
-            LOGGER.info("createStatus:"+XmlFactoryServlet.CREATE_STATUS);
+            LOGGER.info("createStatus:"+ UserServlet.CREATE_STATUS);
             ChannelService service = new ChannelService();
             List<String> list = service.checkForUpdate(System.currentTimeMillis() / 1000);
             for (String u : list) {
                 try {
                     //要等待12秒，不然容易风控
                     Thread.sleep(12*1000);
-                    while (XmlFactoryServlet.CREATE_STATUS==1){
+                    while (UserServlet.CREATE_STATUS==1){
                         Thread.sleep(10*1000);//等待10秒
                         LOGGER.info("有多集正在更新,扫描更新等待10秒");
                     }
@@ -34,7 +34,7 @@ public class Target implements Runnable{
                 }
             }
             LOGGER.info("系统扫描完成！");
-            LOGGER.info("createStatus:"+XmlFactoryServlet.CREATE_STATUS);
+            LOGGER.info("createStatus:"+UserServlet.CREATE_STATUS);
 
     }
 }

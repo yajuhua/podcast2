@@ -15,7 +15,7 @@ new Vue({
                 var _this = this;
                 axios({
                     method: "post",
-                    url: "./loginServlet",
+                    url: "./user/loginServlet",
                     data: "username=" + _this.username + "&password=" + _this.password
                 }).then(function(response) {
                     console.log(response.data)//打印响应数据

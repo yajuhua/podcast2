@@ -8,6 +8,9 @@ import org.apache.ibatis.session.SqlSessionFactory;
 
 import java.util.List;
 
+/**
+ * 对用户频道数据进行操作
+ */
 public class ChannelService {
     SqlSessionFactory factory = SqlSessionFactoryUtils.getSqlSessionFactory();
 

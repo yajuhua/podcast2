@@ -1,6 +1,6 @@
 package com.podcast.update;
 
-import com.podcast.Servlet.XmlFactoryServlet;
+import com.podcast.Servlet.UserServlet;
 import com.podcast.Utils.N_m3u8DL_RE;
 import com.podcast.service.ChannelService;
 import com.podcast.service.PodcastUserService;
@@ -56,7 +56,7 @@ public class UpdateInit implements ServletContextListener {
             LOGGER.error("插件删除列表无法读取！");
         }
         //是否有新创建
-        XmlFactoryServlet.CREATE_STATUS = 0;
+        UserServlet.CREATE_STATUS = 0;
         PodcastUserService service = new PodcastUserService();
         //存入数据库
         service.updateWebappPath(webappPath);

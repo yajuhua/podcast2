@@ -21,24 +21,48 @@ import java.util.UUID;
  */
 public class Aria2Client {
 
+    /**
+     *id可以自定义，用于程序辨识
+     */
     private String id;
+    /**
+     * Aria2开启RPO接口的URL地址
+     */
     private String Aria2_RPO_URL;
+    /**
+     * GID（或 gid）是管理每次下载的关键。 每次下载都将分配一个唯一的 GID
+     */
     private String gid;
+    /**
+     * RPC 授权机密令牌
+     */
     private String secret;
 
+    /**
+     * Aria2RPOClient构造器
+     * @param Aria2_RPO_URL
+     */
     public Aria2Client(String Aria2_RPO_URL) {
         this.Aria2_RPO_URL = Aria2_RPO_URL;
         this.id = UUID.randomUUID().toString();
     }
 
+    /**
+     * 将封装好的数据通过POST请求发送到Aria2下载器
+     * @param url 要下载的链接地址
+     * @param method 调用下载器的方法，如addUrl、getOption。详细看Aria2官方文档：https://uaoao.github.io/docs/aria2-chs-docs/aria2c
+     * @param params 下载参数设置
+     * @return 返回POST请求的响应结果，也就是Aria2的响应数据
+     * @throws Exception
+     */
     public  String invoke(String url, String method, Object... params) throws Exception {
         return sendPost(url,create_aria2RPO_Data(method,params));
     }
     /**
      * 生成Aria2  RPO的POST数据
-     * @param method
-     * @param params
-     * @return
+     * @param method 调用下载器的方法，如addUrl、getOption。详细看Aria2官方文档：https://uaoao.github.io/docs/aria2-chs-docs/aria2c
+     * @param params 下载参数设置
+     * @return 返回拼接好的json字符串
      * @throws Exception
      */
     public String create_aria2RPO_Data(String method,Object... params) throws Exception {
@@ -56,9 +80,9 @@ public class Aria2Client {
 
     /**
      * 发送post请求
-     * @param url
-     * @param data
-     * @return
+     * @param url 要发送POST请求的URL
+     * @param data 请求数据
+     * @return 返回响应数据
      * @throws Exception
      */
     public static String sendPost(String url,String data) throws Exception {
@@ -102,8 +126,8 @@ public class Aria2Client {
 
     /**
      * 将中文资源路径进行URL编码
-     * @param url
-     * @return
+     * @param url 进行URL编码的URL字符串
+     * @return 返回编码的URL字符串
      */
     public static String URLencode(String url){
         //编码后的URL
@@ -141,7 +165,7 @@ public class Aria2Client {
     /**
      * 此方法添加一个新的下载。
      * 此方法返回新注册下载的 GID。
-     * @param params
+     * @param params 下载链接和下载参数设置
      * @return
      * @throws Exception
      */

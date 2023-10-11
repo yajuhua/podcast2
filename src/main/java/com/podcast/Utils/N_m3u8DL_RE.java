@@ -8,13 +8,34 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class N_m3u8DL_RE {
+    /**
+     * 日志
+     */
     private static final Logger LOGGER = LoggerFactory.getLogger("N_m3u8DL_RE");
+    /**
+     * 下载器名称
+     */
     private final String TOOLNAME = " N_m3u8DL-RE ";
+    /**
+     * 保存路径
+     */
     private final String PATHS = " --save-dir ";
+    /**
+     * 保存名称
+     */
     private final String RENAME = " --save-name ";
 
+    /**
+     * 下载链接
+     */
     private String url;
+    /**
+     * 重命名
+     */
     private String rename;
+    /**
+     * 保存路径
+     */
     private String paths;
 
     public N_m3u8DL_RE() {
@@ -42,6 +63,10 @@ public class N_m3u8DL_RE {
         this.paths = PATHS+paths;
     }
 
+    /**
+     * 获取最终下载的cmd命令
+     * @return
+     */
     public String getDownloadCmd(){
         String[] options = {this.url,this.paths,this.rename};
         String[] optionCmd = {this.TOOLNAME,this.PATHS,this.RENAME};
@@ -55,6 +80,10 @@ public class N_m3u8DL_RE {
         return cmd;
     }
 
+    /**
+     * 开始下载
+     * @throws Exception
+     */
     public void startDownload() throws Exception {
         Cmd(getDownloadCmd());
     }

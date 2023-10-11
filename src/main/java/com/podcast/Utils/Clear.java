@@ -20,12 +20,14 @@ import java.util.Map;
  * 清除类
  */
 public class Clear {
+    /**
+     * 日志
+     */
     private static final Logger LOGGER = LoggerFactory.getLogger("Clear");
 
     /**
      * 清除xml文件中过期的item和相关资源
-     * @param
-     * @param
+     * @param uuid xml文件的UUID
      */
     public static void clearPastDue(String uuid) {
 

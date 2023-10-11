@@ -12,23 +12,38 @@ import java.util.Map;
 import java.util.Properties;
 
 public class Aria2c {
-    private static final Logger LOGGER = LoggerFactory.getLogger("Aria2c");
     /**
-     * 1.重命名
-     * 2.格式选择
-     * 3.保存路径
-     * 4.下载范围
+     * 日志
      */
+    private static final Logger LOGGER = LoggerFactory.getLogger("Aria2c");
 
+    /**
+     * 重命名
+     */
     private String rename;
+    /**
+     * 保存路径
+     */
     private String paths;
 
+    /**
+     * 下载URL链接
+     */
     private String url;
 
+    /**
+     * 构造器
+     */
     public Aria2c() {
     }
 
 
+    /**
+     *
+     * @param url 下载链接
+     * @param rename 重命名
+     * @param paths 保存路径
+     */
     public Aria2c(String url, String rename, String paths) {
         this.rename = rename+".format";
         this.paths = paths;
@@ -85,6 +100,10 @@ public class Aria2c {
        return status;
     }
 
+    /**
+     * 测试用
+     * @throws Exception
+     */
     @Test
     public void t1() throws Exception {
         String url = "https://video.31dm.com/sda1/pikpak%20x/补1-7v2/网络胜利组/网络胜利组%2011.mp4?sign=6fb575879ada5a0f3245bf7b89e16a97&t=1696348112";

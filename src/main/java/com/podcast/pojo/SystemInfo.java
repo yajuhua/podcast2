@@ -3,7 +3,7 @@ package com.podcast.pojo;
 import java.util.List;
 
 /**
- * 获取系统信息
+ * 封装系统信息
  */
 public class SystemInfo {
         private String systemRuntime;

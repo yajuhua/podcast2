@@ -6,6 +6,9 @@ import com.podcast.pojo.PodcastUser;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
+/**
+ * 对Podcast用户的用户名和密码设置
+ */
 public class PodcastUserService {
     SqlSessionFactory factory = SqlSessionFactoryUtils.getSqlSessionFactory();
 

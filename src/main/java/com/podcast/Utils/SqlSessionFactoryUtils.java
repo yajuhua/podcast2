@@ -9,6 +9,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * sqlSession工厂工具类
+ */
 public class SqlSessionFactoryUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger("SqlSessionFactoryUtils");
 

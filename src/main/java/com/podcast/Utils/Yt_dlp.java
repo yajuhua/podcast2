@@ -8,19 +8,37 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class Yt_dlp {
+    /**
+     * 日志
+     */
     private static final Logger LOGGER = LoggerFactory.getLogger("Yt_dlp");
     /**
-     * 1.重命名
-     * 2.格式选择
-     * 3.保存路径
-     * 4.下载范围
+     * 下载器名称
      */
     private final String TOOLNAME = " yt-dlp ";
+    /**
+     * 下载格式
+     */
     private final String FORMAT = " --format ";
+    /**
+     * 保存路径
+     */
     private final String PATHS = " --paths ";
+    /**
+     * 一个空格
+     */
     private final String SPACE = " ";
+    /**
+     * 输出设置
+     */
     private final String OUTPUT = " --output ";
+    /**
+     * 下载视频列表开始
+     */
     private final String PLAYLIST_START = " --playlist-start ";
+    /**
+     * 下载视频列表结束
+     */
     private final String PLAYLIST_END = " --playlist-end ";
 
     private String playlistStart;

@@ -15,7 +15,7 @@ new Vue({
         var _this = this;
         axios({
             method: "post",
-            url: "./selectAllServlet"
+            url: "./user/selectAllServlet"
         }).then(function (resp) {
             _this.tableData = resp.data;
         })
@@ -51,7 +51,7 @@ new Vue({
                 //发送post请求到服务器删除
                 axios({
                     method: "post",
-                    url: "./deleteServlet",
+                    url: "./user/deleteServlet",
                     data: "uuid=" + uuid
                 });
                 window.location.reload();

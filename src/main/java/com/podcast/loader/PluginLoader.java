@@ -8,9 +8,19 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Properties;
 
+/**
+ * 插件加载器
+ */
 public class PluginLoader {
 
+
+    /**
+     * 插件的配置文件名称
+     */
     private final static String PROPERTIES_NAME = "plugin.properties";
+    /**
+     * 插件的程序入口
+     */
     private final static String MAIN_CLASS = "mainClass";
 
     /**

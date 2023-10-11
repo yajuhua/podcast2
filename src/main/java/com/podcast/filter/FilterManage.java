@@ -14,6 +14,9 @@ import java.io.IOException;
  */
 @WebFilter("/*")
 public class FilterManage implements Filter {
+    /**
+     * 日志
+     */
     private static final Logger LOGGER = LoggerFactory.getLogger("FilterManage");
 
     @Override

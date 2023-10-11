@@ -1,14 +1,17 @@
 package com.podcast.Servlet;
 
+import com.alibaba.fastjson.JSON;
 import com.google.gson.Gson;
 import com.podcast.Type.Type;
 import com.podcast.Utils.TimeFormat;
 import com.podcast.loader.PluginLoader;
+import com.podcast.pojo.ChannelDataShow;
 import com.podcast.pojo.ChannelDate;
+import com.podcast.pojo.PodcastUser;
 import com.podcast.service.ChannelService;
 import com.podcast.service.PodcastUserService;
 import com.podcast.update.Update;
-import com.podcast.update.UpdateInit;
+import org.apache.commons.io.FileUtils;
 import org.podcast2.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,9 +19,9 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,13 +33,167 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
 
-@WebServlet("/xmlFactoryServlet")
-public class XmlFactoryServlet extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger("XmlFactoryServlet");
-    public static Integer CREATE_STATUS;
+/**
+ * 关于用户的，如用户名和密码的设置
+ * 6
+ */
+@WebServlet("/user/*")
+public class UserServlet  extends BaseServlet{
     private PodcastUserService service = new PodcastUserService();
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private ChannelService channelService = new ChannelService();
+    public static Integer CREATE_STATUS;
+    private static final Logger LOGGER = LoggerFactory.getLogger("UserServlet");
+
+    /**
+     * 修改用户名和密码
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    public void changeServlet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        PodcastUserService service = new PodcastUserService();
+
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+        service.changeAll(username,password);
+
+        HttpSession session = request.getSession();
+        //销毁session
+        session.invalidate();
+        response.getWriter().write("ok");
+    }
+
+    /**
+     * 删除订阅
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    public void deleteServlet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String uuid = request.getParameter("uuid");
+
+        //也要删除xml文件
+        String webappPath = service.getWebappPath();
+        String xmlSavePath = webappPath+ "xml"+ File.separator+uuid+".xml";
+        File file = new File(xmlSavePath);
+        if (FileUtils.deleteQuietly(file)){
+            channelService.deleteByUuid(uuid);
+            LOGGER.info(xmlSavePath+"删除成功！");
+        }else {
+            LOGGER.info(xmlSavePath+"删除失败！");
+        }
+
+        //删除该频道下的资源
+        String videoResourceSavePath = webappPath+ "video"+ File.separator;
+        String audioResourceSavePath = webappPath+ "audio"+ File.separator;
+        List<String> resourceUuidByXmlUuid = channelService.getResourceUuidByXmlUuid(uuid);
+        File videoresourceFile = new File(videoResourceSavePath);
+        List<File> vides = Arrays.stream(videoresourceFile.listFiles()).toList();
+        File audioresourceFile = new File(audioResourceSavePath);
+        List<File> audios = Arrays.stream(audioresourceFile.listFiles()).toList();
+
+        //获取所有资源的文件
+        List<File> resources = new ArrayList<>();
+        resources.addAll(vides);
+        resources.addAll(audios);
+        //遍历所有的资源文件
+        for (File resource : resources) {
+            for (String rUuid : resourceUuidByXmlUuid) {
+                if (resource.getName().contains(rUuid)){
+                    //删除特定uuid的资源
+                    FileUtils.deleteQuietly(resource);
+                    //删除数据库
+                    channelService.deleteByResourceUuid(rUuid);
+                }
+            }
+        }
+
+        request.getRequestDispatcher("/index.html").forward(request,response);
+    }
+
+    /**
+     * 退出登录
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    public void exitServlet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        //销毁
+        session.invalidate();
+        response.getWriter().write("ok");
+    }
+
+    /**
+     * 登录
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    public void loginServlet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+        PodcastUserService podcastUserService = new PodcastUserService();
+        PodcastUser login = podcastUserService.login(username, password);
+
+        request.setCharacterEncoding("utf-8");
+        response.setContentType("application/json;charset=utf-8");
+        HttpSession session = request.getSession();
+
+        if (login!=null){
+            //提示成功
+            response.getWriter().write("ok");
+
+            session.setAttribute("user",login);
+
+            LOGGER.debug("登录状态:"+login);
+        }else {
+            //提示错误，继续在login页面
+            response.getWriter().write("error");
+
+        }
+    }
+
+    /**
+     * 查询所有
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    public void selectAllServlet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        ChannelService service = new ChannelService();
+        response.setCharacterEncoding("utf-8");
+        List<ChannelDate> channelDates = service.seletAll();
+
+        //存入新的集合
+        List<ChannelDataShow> channelDataShows = new ArrayList<>();
+        for (int i = 0; i < channelDates.size(); i++) {
+            ChannelDataShow channelDataShow = new ChannelDataShow();
+            channelDataShow.setChannelTitle(channelDates.get(i).getChannelTitle());
+            channelDataShow.setUuid(channelDates.get(i).getUuid());
+            channelDataShow.setUpdateTimestamp(TimeFormat.formatDate(channelDates.get(i).getUpdateTimestamp()));
+            channelDataShow.setChannelFace(channelDates.get(i).getChannelFace());
+            channelDataShows.add(channelDataShow);
+        }
+
+        String jsonString = JSON.toJSONString(channelDataShows);
+        response.setContentType("text/json;charset=utf-8");
+        response.getWriter().write(jsonString);
+    }
+
+    /**
+     * xml创建工厂，用于频道xml文件的生成
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    public void xmlFactoryServlet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             // 获取请求协议（http 或 https）
             String protocol = request.getScheme();
@@ -80,11 +237,6 @@ public class XmlFactoryServlet extends HttpServlet {
             LOGGER.error("创建失败 "+request.getParameter("url"));
             request.getRequestDispatcher("add.html").forward(request,response);
         }
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        this.doGet(request, response);
     }
 
     public static Map<String,Class> scanerPlugin(String webappPath) throws Exception {
@@ -183,7 +335,7 @@ public class XmlFactoryServlet extends HttpServlet {
         //判断格式类型
         Type type = Type.video;;
         if ("audio".equals(typeStr)){
-           type =  Type.audio;
+            type =  Type.audio;
         }
 
         //根据插件名称去匹配url中有没有包含，在进入这里之前，先判断url是否可通
@@ -208,22 +360,13 @@ public class XmlFactoryServlet extends HttpServlet {
         }else {
             //找不到
             LOGGER.error("找不到该插件！");
-           throw new Exception("找不到插件");
+            throw new Exception("找不到插件");
         }
 
 
         //1.根据插件获取构造器
         Constructor constructor = plugin.getConstructor(String.class,String.class);
         Object o = constructor.newInstance(url,type.name());
-
-       /* //2.获取所有方法
-        Method[] methods = plugin.getDeclaredMethods();
-
-        //3.执行方法，把返回结果存入Map集合
-        Map<String,Object> methodResult = new HashMap<>();
-        for (Method method : methods) {
-            methodResult.put(method.getName(),method.invoke(o));
-        }*/
 
         //获取channel
         Method methodChannel = plugin.getMethod("channel");
@@ -258,12 +401,9 @@ public class XmlFactoryServlet extends HttpServlet {
         xml.append("\t<update>update</update>\n");
         xml.append("</rss>");
 
-
-
         //6.写入xml文件
         ps.print(xml);
         ps.close();
-
 
         ChannelDate channelDate = new ChannelDate();
         channelDate.setUuid(uuid);
@@ -276,7 +416,6 @@ public class XmlFactoryServlet extends HttpServlet {
         channelDate.setSurvival(survivalTime);
         ChannelService service1 = new ChannelService();
         service1.add(channelDate);
-
 
         //6.返回uuid
         return uuid;
