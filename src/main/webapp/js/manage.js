@@ -85,15 +85,62 @@ new Vue({
         },
         //修改用户名和密码
         changeUserPasswd() {
-            axios({
-                method: "post",
-                url: "./user/changeServlet",
-                data: "username=" + this.formInline.user + "&password=" + this.formInline.password
-            }).then(function (resp) {
-                if (resp.data == "ok") {
-                    window.location.href = "login.html";
-                }
-            })
+            _this = this;
+            if (this.formInline.user != '' || this.formInline.password != ''){
+                //避免全部传入空值
+               if (this.formInline.user != '' && this.formInline.password == ''){
+                   //修改用户名
+                   axios({
+                       method: "post",
+                       url: "./user/changeServlet",
+                       data: "username=" + this.formInline.user
+                   }).then(function (resp) {
+                       if (resp.data == "ok") {
+                           //提示
+                           _this.$message({
+                               message: '修改用户名成功！',
+                               type: 'success'
+                           });
+                           window.location.href = "login.html";
+                       }
+                   })
+               }else if (this.formInline.user == '' && this.formInline.password != ''){
+                   //修改密码
+                   axios({
+                       method: "post",
+                       url: "./user/changeServlet",
+                       data: "password=" + this.formInline.password
+                   }).then(function (resp) {
+                       if (resp.data == "ok") {
+                           //提示
+                           _this.$message({
+                               message: '修改密码成功！',
+                               type: 'success'
+                           });
+                           window.location.href = "login.html";
+                       }
+                   })
+               }else if (this.formInline.user != '' && this.formInline.password != ''){
+                   //修改用户名和密码
+                   axios({
+                       method: "post",
+                       url: "./user/changeServlet",
+                       data: "username=" + this.formInline.user + "&password=" + this.formInline.password
+                   }).then(function (resp) {
+                       if (resp.data == "ok") {
+                           //提示
+                           _this.$message({
+                               message: '用户名和密码修改成功！',
+                               type: 'success'
+                           });
+                           window.location.href = "login.html";
+                       }
+                   })
+               }
+            }else {
+                //提示错误
+                _this.$message.error('请输入要修改的用户名或密码');
+            }
         },
         tableRowClassName({ row, rowIndex }) {
             if (rowIndex === 1) {
@@ -196,7 +243,7 @@ new Vue({
             }).then(() => {
                 axios({
                     method: "post",
-                    url: "./deletePluginServlet",
+                    url: "./system/deletePluginServlet",
                     data: "name=" + row.name + "&version=" + row.version
                 })
                 this.$message({

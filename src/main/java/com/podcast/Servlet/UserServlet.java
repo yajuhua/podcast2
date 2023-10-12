@@ -54,9 +54,28 @@ public class UserServlet  extends BaseServlet{
     public void changeServlet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         PodcastUserService service = new PodcastUserService();
 
+        //获取参数
         String username = request.getParameter("username");
         String password = request.getParameter("password");
-        service.changeAll(username,password);
+
+        //debug
+        LOGGER.debug("username:"+username);
+        LOGGER.debug("password:"+password);
+
+        //根据参数进行选择修改
+        if (username != null && password == null){
+            LOGGER.debug("修改用户名:"+username);
+            //修改用户名
+            service.changeUsername(username);
+        }else if (username == null && password != null){
+            LOGGER.debug("修改密码:"+password);
+            //修改密码
+            service.changePassword(password);
+        }else if (username != null && password != null){
+            LOGGER.debug("修改用户名:"+username+";修改密码:"+password);
+            //修改用户名和密码
+            service.changeAll(username,password);
+        }
 
         HttpSession session = request.getSession();
         //销毁session
