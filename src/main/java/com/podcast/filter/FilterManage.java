@@ -8,6 +8,7 @@ import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * 对资源访问进行管理，xml目录下不限制
@@ -24,6 +25,9 @@ public class FilterManage implements Filter {
 
         //无条件放行的资源
         String[] pass = {"css","js","xml","loginServlet","imgs"};
+
+        //debug
+        LOGGER.debug("pass:"+ Arrays.toString(pass));
 
         //转换成HttpServletRequest已获取资源URI
         HttpServletRequest request = (HttpServletRequest) servletRequest;

@@ -9,6 +9,7 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.Test;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -37,6 +38,11 @@ public class Clear {
         Long survivalTime = channelService.getChannelSurvivalTime(uuid);
         String webappPath = service.getWebappPath();
         String xmlPath = webappPath+ "xml"+ File.separator+uuid+".xml";
+
+        //debug
+        LOGGER.debug("survivalTime:"+survivalTime);
+        LOGGER.debug("传入的uuid:"+uuid);
+        LOGGER.debug("xmlPath:"+xmlPath);
 
 
         Document document = null;
@@ -68,6 +74,7 @@ public class Clear {
         List<String> uuids = new ArrayList<>();
         //如果为null说明没有过期item
         if (number!=null){
+            LOGGER.debug("number!=null");
             for (int i = number; i < items.size(); i++) {
                 String url = items.get(i).element("enclosure").attributeValue("url");
                 String type = items.get(i).element("enclosure").attributeValue("type").equals("audio/x-m4a")?"audio":"video";
@@ -81,6 +88,7 @@ public class Clear {
 
         //删除资源
         for (String uuid_ : uuids) {
+            LOGGER.debug("开始删除资源");
             String resourcePath = webappPath+ uuidAndType.get(uuid_)+File.separator+uuid_+((uuidAndType.get(uuid_).equals("audio"))?".m4a":".mp4");
             if (FileUtils.deleteQuietly(new File(resourcePath))){
                 LOGGER.info("删除成功:" + resourcePath);
@@ -93,6 +101,8 @@ public class Clear {
 
         //如果找到过期字符串，则进行清除
         if (pastItemPubDate!=null){
+
+            LOGGER.debug("如果找到过期字符串，则进行清除");
 
             //记录行数
             int line = 1;

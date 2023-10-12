@@ -77,6 +77,8 @@ public class N_m3u8DL_RE {
                 cmd += optionCmd[i]+options[i];
             }
         }
+        //debug
+        LOGGER.debug("getDownloadCmd:"+cmd);
         return cmd;
     }
 

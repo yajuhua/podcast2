@@ -27,7 +27,7 @@ new Vue({
                         window.location.href = "index.html";//跳转到订阅列表
                     } else if (response.data === "error"){
                         _this.$message.error('密码或用户名错误！');
-                        window.location.href = "login.html";//跳转到订阅列表
+                        //window.location.href = "login.html";//跳转到订阅列表
                     }
                 }).catch(function(error) {
                     console.error(error); // 处理错误情况

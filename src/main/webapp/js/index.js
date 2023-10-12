@@ -94,7 +94,7 @@ new Vue({
                     for (let i = 0; i < this.selecteUuid.length; i++) {
                         axios({
                             method: "post",
-                            url: "./deleteServlet",
+                            url: "./user/deleteServlet",
                             data: "uuid=" + this.selecteUuid[i]
                         });
                     }

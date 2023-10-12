@@ -33,6 +33,7 @@ public class Http {
      * @throws Exception
      */
     public static String WebContentP(String URL){
+        LOGGER.debug("URL:"+URL);
         String Content = null;
         try {
             String proxyHost = "127.0.0.1";
@@ -46,6 +47,11 @@ public class Http {
             connection.setRequestProperty("User-Agent", "Mozilla/5.0");
             connection.setRequestProperty("Accept-Charset", "UTF-8");
             connection.setRequestMethod("GET");
+
+            //debug
+            LOGGER.debug("proxy:"+proxy);
+            LOGGER.debug("proxyHost:"+proxyHost);
+            LOGGER.debug("proxyPort:"+proxyPort);
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(),"UTF-8"));
             String line;

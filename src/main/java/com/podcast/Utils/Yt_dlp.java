@@ -132,17 +132,15 @@ public class Yt_dlp {
         String[] options = {this.format,this.paths,this.rename,this.playlistStart,this.playlistEnd};
         String[] optionsCmd = {this.FORMAT,this.PATHS,"",this.PLAYLIST_START,this.PLAYLIST_END};
         String info = TOOLNAME;
-      /*  for (String option : options) {
-            if (option!=null){
-                info+=option;
-            }
-        }*/
 
         for (int i = 0; i < options.length; i++) {
             if (options[i] != null){
                 info += optionsCmd[i]+options[i];
             }
         }
+
+        //debug
+        LOGGER.debug("getDownloadCmd:"+(info+" "+url).trim());
         return (info+" "+url).trim();
     }
     /**

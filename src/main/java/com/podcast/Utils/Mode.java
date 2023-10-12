@@ -63,7 +63,6 @@ public class Mode {
             Constructor downLoderConstructor = downLoderClass.getConstructor(String.class, String.class, String.class);
 
             //资源保存位置
-//            String enclosureSavePath = this.webappPath+File.separator+this.type+File.separator;
             String enclosureSavePath = this.webappPath+this.type+File.separator;
             //aria2 目前只支持斜杠，不支持反斜杠
             enclosureSavePath = enclosureSavePath.replaceAll("\\\\","/");
@@ -73,7 +72,10 @@ public class Mode {
             //获取startDownload方法
             Method startDownload = downLoderClass.getMethod("startDownload");
             Method getDownloadCmd = downLoderClass.getMethod("getDownloadCmd");
+
+            //debug
             LOGGER.debug("cmd:"+getDownloadCmd.invoke(o1));
+            LOGGER.debug("enclosureSavePath:"+enclosureSavePath);
 
             //执行startDownload方法
             startDownload.invoke(o1);
@@ -123,6 +125,8 @@ public class Mode {
         }
         //3.返回资源URL
         String url = this.IP+"/"+this.type+"/"+this.uuid+".m4a";
+        //debug
+        LOGGER.debug("资源url(A1):"+url);
         return url;
     }
 
@@ -131,6 +135,8 @@ public class Mode {
      * @return 返回原链接
      */
     public String A2(){
+        //debug
+        LOGGER.debug("资源url(A2):"+this.Enclosure);
         return this.Enclosure;
     }
 
@@ -155,6 +161,8 @@ public class Mode {
         }
         //3.返回资源URL
         String url = this.IP+"/"+this.type+"/"+this.uuid+".mp4";
+        //debug
+        LOGGER.debug("资源url(V1):"+url);
         return url;
     }
 
@@ -164,6 +172,8 @@ public class Mode {
      * @return 返回原链接
      */
     public String V2(){
+        //debug
+        LOGGER.debug("资源url(V2):"+this.Enclosure);
         return this.Enclosure;
     }
 }

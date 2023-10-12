@@ -39,7 +39,7 @@
         <label for="select-right">检查更新频率:</label>
         <select id="select-right" name="frequency" v-model="frequency">
           <option value="" selected disabled>选择检查更新频率</option>
-          <option value="60">每 1 分钟</option>
+          <option value="60">每 1 分钟(测试)</option>
           <option value="1200" selected>每 20 分钟</option>
           <option value="1800">每 30 分钟</option>
           <option value="3600">每 60 分钟</option>
@@ -50,6 +50,7 @@
         <label for="select-survival_time">选择节目存活时间:</label>
         <select id="select-survival_time" name="survival" v-model="survival">
           <option value="" selected disabled>选择节目存活时间</option>
+          <option value="60">1分钟(测试)</option>
           <option value="604800" selected>7天</option>
           <option value="1209600">14天</option>
           <option value="2592000">30天</option>
@@ -66,10 +67,6 @@
         </select>
       </div>
 
-<!--      <div id="customInputContainer" class="form-group" style="display: none;">
-        <label for="customInput">自定义剧集:</label>
-        <input type="text" id="customInput" name="customInput" v-model="customInput">
-      </div>-->
 
       <div id="customInputContainer" class="form-group" v-if="episodes==1">
         <label for="customInput">自定义剧集:</label>

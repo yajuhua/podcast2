@@ -39,6 +39,8 @@ public class WebSocketServerLog {
             Properties mainProperties = new Properties();
             mainProperties.load(inputStream);
             logsPath = mainProperties.getProperty("logsPath");
+            //debug
+            LOG.debug("losPath:"+logsPath);
         } catch (Exception e) {
             LOG.error("读取日志位置时出错！详细："+e.toString());
         }
