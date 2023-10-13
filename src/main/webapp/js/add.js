@@ -13,13 +13,17 @@ new Vue({
         submit(){
             //正则表达式：检查URL链接格式是否正确
             const pattern = /(http|https):\/\/([\w.]+\/?)\S*/;
+            //正则表达式：检查自定义剧集格式是否正确，格式1,2,3,4
+            const patternCustomEpisodes = /^([1-9])(?!.*\b\1\b)(?:[0-9]{0,2}|[1-9])(?!,$)/;
 
             if (this.url == null || this.episodes == "1" && this.customInput == null ){
                 //数据不全不提交
                 this.$message.error('请填写完整参数！');
             } else if (!pattern.test(this.url)){
                 this.$message.error('请输入正确主页链接')
-            }else{
+            }else if (!patternCustomEpisodes.test(this.customInput)){
+                this.$message.error('请输入正确自定义剧集数')
+            } else{
                 //判断是否有该插件
                 var _this = this;
                 var pluginList;

@@ -50,6 +50,7 @@ public class SystemServlet extends BaseServlet {
          * 控制码:controlCode
          *       0:关机
          *       1:重启
+         *       2:更新系统，执行updateSystem.sh脚本
          */
         String controlCode = request.getParameter("controlCode");
         if (controlCode.equals("0")){
@@ -58,6 +59,10 @@ public class SystemServlet extends BaseServlet {
             //重启
             LOGGER.info("系统重启");
             N_m3u8DL_RE.Cmd("/restartTomat.sh");
+        }else if (controlCode.equals("2")){
+            //更新系统
+            LOGGER.info("更新系统");
+            N_m3u8DL_RE.Cmd("/updateSystem.sh");
         }
     }
 
@@ -171,6 +176,7 @@ public class SystemServlet extends BaseServlet {
         N_m3u8DL_RE.Cmd("/restartTomat.sh");
     }
 
+
     /**
      * 获取系统信息：插件信息、系统运行时间、系统版本信息
      */
@@ -231,6 +237,56 @@ public class SystemServlet extends BaseServlet {
     }
 
     /**
+     * 上传war包的服务器用于更新系统
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    public void uploadWarServlet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
+        String warPath = UpdateInit.WEBAPP_PATH+"tmp"+File.separator;
+        //先删除之前的war包
+        File war = new File(warPath + "podcast2.war");
+
+        //判断是否存在war包
+        if (war.exists()){
+            //
+            boolean deleteWar = FileUtils.deleteQuietly(new File(warPath + "podcast2.war"));
+            if (deleteWar){
+                LOGGER.error("war包删除失败！");
+                return;
+            }else {
+                LOGGER.debug("war删除成功！");
+            }
+        }
+
+        //上传插件
+        LOGGER.debug("warPath:"+warPath);
+        upload(request,response,warPath);
+    }
+
+    /**
+     * 通过war包更新系统
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    public void updateSystem (HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
+        String warPath = UpdateInit.WEBAPP_PATH+"tmp"+File.separator;
+        File war = new File(warPath + "podcast2.war");
+        //判断是否存在war包
+        if (!war.exists()) {
+            //找不到war包
+            LOGGER.error("找不到war包！");
+        }
+
+        //执行系统更新脚本
+        N_m3u8DL_RE.Cmd("/updateSystem.sh");
+
+    }
+
+    /**
      * 插件上传
      * @param request
      * @param response
@@ -240,7 +296,7 @@ public class SystemServlet extends BaseServlet {
     public void uploadServlet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         //上传插件
         String pluginsPath = UpdateInit.WEBAPP_PATH+"plugin"+File.separator;
-        System.out.println(pluginsPath);
+        LOGGER.debug("pluginsPath:"+pluginsPath);
         upload(request,response,pluginsPath);
     }
 

@@ -77,7 +77,17 @@
             <!--系统概况-->
             <div v-show="activeMenu === 'info'">
                 <h2>系统概况</h2>
-                <el-button type="warning" @click="restart" size="small">重启系统</el-button>
+                <el-upload  class="upload-demo" ref="upload2" action="./system/uploadWarServlet" :on-preview="handlePreview2"
+                           :on-remove="handleRemove2" :file-list="fileList" :auto-upload="false"
+                           :on-success="handleResponse2">
+                    <el-button slot="trigger" size="small" type="primary">选取war包</el-button>
+                    <el-button style="margin-left: 10px;" size="small" type="success"
+                               @click="submitUpload2">上传到服务器</el-button>
+                    <el-button type="warning" @click="restart" size="small">重启系统</el-button>
+                    <el-button type="danger" size="small" @click="updateSystem" v-if="preparingForUpdates==true">更新系统</el-button>
+
+                </el-upload>
+
                 <div>
                     <el-table :data="infoData" :row-class-name="tableRowClassName">
                         <el-table-column prop="key"></el-table-column>
@@ -86,7 +96,7 @@
 
                     <!--插件列表-->
                     <h2>插件列表</h2>
-                    <el-upload class="upload-demo" ref="upload" action="./system/uploadServlet" :on-preview="handlePreview"
+                    <el-upload class="upload-demo" ref="upload1" action="./system/uploadServlet" :on-preview="handlePreview"
                         :on-remove="handleRemove" :file-list="fileList" :auto-upload="false"
                         :on-success="handleResponse">
                         <el-button slot="trigger" size="small" type="primary">选取插件</el-button>

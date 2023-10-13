@@ -17,7 +17,8 @@ new Vue({
                 { key: "代号", value: "" }
             ],
             fileList: [],
-            multipleSelection: []
+            multipleSelection: [],
+            preparingForUpdates:false
         };
     }, mounted: function () {
 
@@ -38,7 +39,7 @@ new Vue({
     },
     created() {
         // 建立 WebSocket 连接
-        const socket = new WebSocket("ws://192.168.123.3:8088/podcast2/websocket/logs");
+        const socket = new WebSocket("ws://"+ window.location.host +"/podcast2/websocket/logs");
 
         // 监听 WebSocket 连接事件
         socket.onopen = () => {
@@ -149,9 +150,20 @@ new Vue({
                 return 'success-row';
             }
             return '';
-        }, submitUpload() {
-            var rs = this.$refs.upload.submit().data;
+        },
+        //上传插件
+        submitUpload() {
+            var rs = this.$refs.upload1.submit().data;
             alert(rs)
+        },
+        //上传war包
+        submitUpload2() {
+            var rs = this.$refs.upload2.submit().data;
+            alert(rs);
+        },
+        //更新系统
+        updateSystem(){
+
         },
         handleRemove(file, fileList) {
             console.log(file, fileList);
@@ -166,6 +178,23 @@ new Vue({
                     type: 'success'
                 });
                 window.location.reload();
+            } else {
+                this.$message.error('添加失败！');
+            }
+        },
+        handleRemove2(file, fileList) {
+            console.log(file, fileList);
+        },
+        handlePreview2(file) {
+            console.log(file);
+        },
+        handleResponse2(response, file, fileList) {
+            if (response == "uploadok") {
+                this.preparingForUpdates = !this.preparingForUpdates;
+                this.$message({
+                    message: '添加成功！',
+                    type: 'success'
+                });
             } else {
                 this.$message.error('添加失败！');
             }
@@ -192,7 +221,31 @@ new Vue({
                     message: '已取消重启'
                 });
             });
-        }, toggleSelection(rows) {
+        },
+        //更新系统
+        updateSystem() {
+            this.$confirm('此操作将更新系统且该页面不会自动刷新, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                axios({
+                    method: "post",
+                    url: "./system/controlSystemServlet",
+                    data: "controlCode=2"
+                })
+                this.$message({
+                    type: 'success',
+                    message: '正在更新系统中...该页面不会自动刷新!'
+                });
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消重启'
+                });
+            });
+        },
+        toggleSelection(rows) {
             if (rows) {
                 rows.forEach(row => {
                     this.$refs.multipleTable.toggleRowSelection(row);

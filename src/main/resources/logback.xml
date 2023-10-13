@@ -34,7 +34,7 @@
     <!--
         1、控制日志的输出情况：如，开启日志，取消日志
     -->
-    <root level="debug">
+    <root level="info">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE" />
     </root>
