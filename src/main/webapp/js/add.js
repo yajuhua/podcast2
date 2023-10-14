@@ -6,8 +6,9 @@ new Vue({
             type:"audio",
             frequency:"1200",
             survival:"604800",
-            episodes:"0",
             customInput:null,
+            episodes:"0",
+            finalEpisodes:null
         }
     },methods:{
         submit(){
@@ -21,12 +22,61 @@ new Vue({
                 this.$message.error('请填写完整参数！');
             } else if (!pattern.test(this.url)){
                 this.$message.error('请输入正确主页链接')
-            }else if (!patternCustomEpisodes.test(this.customInput)){
-                this.$message.error('请输入正确自定义剧集数')
-            } else{
-                //判断是否有该插件
+            }else if (this.customInput!=null){
+                if (!patternCustomEpisodes.test(this.customInput)){
+                    this.$message.error('请输入正确自定义剧集数')
+                }else {
+
+                //自定义剧集
+                    this.finalEpisodes = this.customInput;
+
+                    var _this = this;
+
+                 //提交
+                axios({
+                    method: "get",
+                    url: "./system/systemInfoServlet",
+                }).then(function (response) {
+                    //获取插件信息
+                    pluginList = response.data.pluginList;
+                    console.log(pluginList)
+
+                    //判断是否包含插件
+                    for (let i = 0; i < pluginList.length; i++) {
+                        if (_this.url.includes(pluginList[i].name)){
+
+                            //提交表单
+                            axios({
+                                method: "post",
+                                url: "./user/xmlFactoryServlet",
+                                data: "url=" + _this.url + "&type=" + _this.type + "&frequency=" + _this.frequency + "&survival=" + _this.survival + "&episodes=" + _this.finalEpisodes
+                            }).then(function (response) {
+                                console.log(response.data)//打印响应数据
+                                if (response.data === "ok") {
+                                    _this.$message({
+                                        message: '添加成功！',
+                                        type: 'success'
+                                    });
+                                    window.location.href = "index.html";
+                                } else {
+                                    _this.$message.error('添加失败！');
+                                }
+                            })
+                            //找到插件后结束循环
+                            return;
+                        }
+                    }
+
+                    //找不到插件
+                    _this.$message.error('找不到该插件!');
+                })
+                }
+            } else {
+
+                //默认值
+                this.finalEpisodes = this.episodes;
                 var _this = this;
-                var pluginList;
+
                 //提交
                 axios({
                     method: "get",
@@ -39,11 +89,12 @@ new Vue({
                     //判断是否包含插件
                     for (let i = 0; i < pluginList.length; i++) {
                         if (_this.url.includes(pluginList[i].name)){
+
                             //提交表单
                             axios({
                                 method: "post",
                                 url: "./user/xmlFactoryServlet",
-                                data: "url=" + _this.url + "&type=" + _this.type + "&frequency=" + _this.frequency + "&survival=" + _this.survival + "&episodes=" + _this.episodes
+                                data: "url=" + _this.url + "&type=" + _this.type + "&frequency=" + _this.frequency + "&survival=" + _this.survival + "&episodes=" + _this.finalEpisodes
                             }).then(function (response) {
                                 console.log(response.data)//打印响应数据
                                 if (response.data === "ok") {

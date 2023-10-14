@@ -24,7 +24,7 @@ public class FilterManage implements Filter {
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
 
         //无条件放行的资源
-        String[] pass = {"css","js","xml","loginServlet","imgs"};
+        String[] pass = {"css","js","xml","loginServlet","imgs","video","audio"};
 
         //debug
         LOGGER.debug("pass:"+ Arrays.toString(pass));

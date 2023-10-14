@@ -335,6 +335,7 @@ public class UserServlet  extends BaseServlet{
         //获取参数
         String typeStr = request.getParameter("type");
         String url = request.getParameter("url");
+        String episodes = request.getParameter("episodes");
         //频道类型："Video、Live、News、Shorts、Post
         String frequency = request.getParameter("frequency");
         ServletContext servletContext = request.getServletContext();
@@ -348,7 +349,7 @@ public class UserServlet  extends BaseServlet{
         service.updateWebappPath(webappPath);
         Class plugin  = null;
         LOGGER.info("检查更新频率:"+frequency);
-
+        LOGGER.info("episodes:"+episodes);
         LOGGER.debug("url:"+url);
 
         //判断格式类型
