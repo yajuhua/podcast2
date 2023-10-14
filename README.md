@@ -10,6 +10,7 @@ curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh && system
 
 ```shell
 #防火墙放行端口：8088
+以下是centos7，其他系统自行搜索。
 firewall-cmd --add-port=8088/tcp --permanent
 firewall-cmd --reload
 
