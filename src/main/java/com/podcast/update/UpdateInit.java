@@ -26,6 +26,7 @@ public class UpdateInit implements ServletContextListener {
     public static Long SYSYTEM_START_TIME = System.currentTimeMillis();
     public static String WEBAPP_PATH;
     public static String deletePluginPath;
+    public static Properties confProperties;
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
         // 获取ServletContext对象
@@ -84,6 +85,7 @@ public class UpdateInit implements ServletContextListener {
 
         // 在0秒钟后开始执行任务，每隔x秒钟重复执行，根据配置信息
         Properties properties = new Properties();
+        confProperties = properties;
         try {
             // 使用ClassLoader加载Properties文件
             InputStream inputStream = CheckForSurvival.class.getClassLoader().getResourceAsStream("conf.properties");
@@ -96,6 +98,13 @@ public class UpdateInit implements ServletContextListener {
         long checkForSurvival = Long.parseLong((String) properties.get("checkForSurvival"));
         LOGGER.info("开始检查item存活,间隔：" + checkForSurvival+"s");
         executor.scheduleAtFixedRate(checkForSurvivalTarget, 0, checkForSurvival, TimeUnit.SECONDS);
+
+        //定期删除日志文件
+        ScheduledExecutorService executor2 = Executors.newScheduledThreadPool(1);
+        Runnable deleteLogsTarget = new DeleteLogsTarget();
+        // 在0分钟后开始执行任务，每隔一个小时重复执行
+        executor2.scheduleAtFixedRate(deleteLogsTarget, 0, 1, TimeUnit.HOURS);
+
     }
 
     @Override
