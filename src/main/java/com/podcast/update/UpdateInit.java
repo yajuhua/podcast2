@@ -79,10 +79,6 @@ public class UpdateInit implements ServletContextListener {
         executor.scheduleAtFixedRate(checkForUpdateTarget, 0, 1, TimeUnit.MINUTES);
 
 
-        //改成定时任务
-        ChannelService channelService = new ChannelService();
-        Runnable checkForSurvivalTarget = new CheckForSurvival(channelService.getAllUuid());
-
         // 在0秒钟后开始执行任务，每隔x秒钟重复执行，根据配置信息
         Properties properties = new Properties();
         confProperties = properties;
@@ -97,6 +93,7 @@ public class UpdateInit implements ServletContextListener {
         //读取检查间隔时间
         long checkForSurvival = Long.parseLong((String) properties.get("checkForSurvival"));
         LOGGER.info("开始检查item存活,间隔：" + checkForSurvival+"s");
+        Runnable checkForSurvivalTarget = new CheckForSurvival();
         executor.scheduleAtFixedRate(checkForSurvivalTarget, 0, checkForSurvival, TimeUnit.SECONDS);
 
         //定期删除日志文件

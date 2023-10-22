@@ -1,6 +1,7 @@
 package com.podcast.update;
 
 import com.podcast.Utils.Clear;
+import com.podcast.service.ChannelService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,8 +23,9 @@ public class CheckForSurvival implements Runnable{
 
     @Override
     public void run() {
-
-
+        ChannelService channelService = new ChannelService();
+        this.allUuid = channelService.getAllUuid();
+        LOGGER.debug("allUuid:"+this.allUuid);
         for (String uuid : allUuid) {
             Clear.clearPastDue(uuid);
         }
