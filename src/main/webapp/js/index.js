@@ -85,6 +85,8 @@ new Vue({
         },
         // 在这里处理用户点击“批量删除”菜单选项的逻辑
         deletes() {
+            //不能为空
+            if (this.selecteUuid.length!=0){
                 this.$confirm('此操作将永久删除选择的订阅, 是否继续?', '提示', {
                     confirmButtonText: '确定',
                     cancelButtonText: '取消',
@@ -110,28 +112,37 @@ new Vue({
                         message: '已取消删除'
                     });
                 });
+            }else {
+                this.$message.error('不能为空！请先选择！');
+            }
         },
         //生成OPML文件
         downloadOPML() {
-            let text = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-            text += "<opml version=\"1.0\">\n";
-            text += "  <head>\n";
-            text += "    <title>OPML</title>\n";
-            text += "  </head>\n";
-            text += "  <body>\n";
-            for (let i = 0; i < this.selecteUuid.length; i++) {
-                text += "    <outline type=\"rss\"  xmlUrl=\"" + "http://" + window.location.host + "/podcast2/xml/" + this.selecteUuid[i] + ".xml\" />\n"
-            }
-            text += "  </body>\n";
-            text += "</opml>\n";
+            //选择不能为空
+            if (this.selecteUuid.length!=0) {
+                //生成
+                let text = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+                text += "<opml version=\"1.0\">\n";
+                text += "  <head>\n";
+                text += "    <title>OPML</title>\n";
+                text += "  </head>\n";
+                text += "  <body>\n";
+                for (let i = 0; i < this.selecteUuid.length; i++) {
+                    text += "    <outline type=\"rss\"  xmlUrl=\"" + "http://" + window.location.host + "/podcast2/xml/" + this.selecteUuid[i] + ".xml\" />\n"
+                }
+                text += "  </body>\n";
+                text += "</opml>\n";
 
-            const blob = new Blob([text], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', 'opml.opml');
-            document.body.appendChild(link);
-            link.click();
+                const blob = new Blob([text], {type: 'text/plain'});
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'opml.opml');
+                document.body.appendChild(link);
+                link.click();
+            }else {
+                this.$message.error('不能为空！请先选择！');
+            }
         },
         //点击复制URL
         copyToClipboard(uuid) {
