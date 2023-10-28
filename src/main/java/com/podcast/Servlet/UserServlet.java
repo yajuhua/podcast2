@@ -417,8 +417,8 @@ public class UserServlet  extends BaseServlet{
         xml.append("\t\t<type>").append(type.name()).append("</type>\n");//为创建完成后就更新，在totalCount上减一
         xml.append("\t\t<totalCount>").append(getCount-1).append("</totalCount>\n");
         xml.append("\t\t<plugin>").append(usePluginName).append("</plugin>\n");
-        xml.append("\t</channel>\n");
         xml.append("\t<update>update</update>\n");
+        xml.append("\t</channel>\n");
         xml.append("</rss>");
 
         //6.写入xml文件

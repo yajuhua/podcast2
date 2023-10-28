@@ -53,7 +53,8 @@ public class Clear {
             LOGGER.error("读取xml文件时出错！"+" 详细:"+e);
         }
         Element rootElement = document.getRootElement();
-        List<Element> items = rootElement.elements("item");
+        Element channel = rootElement.element("channel");
+        List<Element> items = channel.elements("item");
 
         //获取首个item过期的时间字符串
         Integer number = null;//用于获取问下item中的uuid
@@ -127,6 +128,7 @@ public class Clear {
                     bw.newLine();//换行
                 }
 
+                bw.write("\t</channel>\n");
                 bw.write("</rss>");
                 bw.close();
                 writerStream.close();
