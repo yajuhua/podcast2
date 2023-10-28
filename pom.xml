@@ -4,11 +4,17 @@
   <groupId>org.example</groupId>
   <artifactId>podcast2</artifactId>
   <packaging>war</packaging>
-  <version>1.2.6</version>
+  <version>1.2.8</version>
   <name>podcast2</name>
-  <url>http://maven.apache.org</url>
-  <dependencies>
+  <url>https://github.com/yajuhua/podcast2_1</url>
 
+  <properties>
+    <update>2023-10-28</update>
+    <code>October</code>
+  </properties>
+
+
+  <dependencies>
   <!--  文件上传框架  -->
     <dependency>
       <groupId>commons-fileupload</groupId>
@@ -158,5 +164,14 @@
         </configuration>
       </plugin>
     </plugins>
+
+    <!--配置资源文件对应的信息-->
+    <resources>
+      <resource>
+        <directory>${project.basedir}/src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+
   </build>
 </project>
