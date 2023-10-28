@@ -62,9 +62,9 @@ public class Yt_dlp {
     }
 
     public Yt_dlp(String url, String rename, String paths) {
-        this.rename =  OUTPUT+ "\"" +rename+".%(ext)s\"";
-        this.paths = paths;
-        this.url = "\""+url+"\"";
+        this.rename =  OUTPUT+rename+".mp4";
+        this.paths = paths +" -f mp4";
+        this.url = url;
     }
 
     public Yt_dlp(String playlistStart, String playlistEnd, String format, String rename, String paths, String url) {
@@ -160,9 +160,7 @@ public class Yt_dlp {
                 String line = null;
 
                 while ((line = br.readLine()) != null) {
-                    //如果命令输出行数小于等于2，说明错误
                     LOGGER.debug(line);
-                    lineCount++;
                 }
             } catch (Exception e) {
                 e.printStackTrace();

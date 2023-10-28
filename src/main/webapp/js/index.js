@@ -168,6 +168,8 @@ new Vue({
             this.copyToClipboard(this._uuid)
             //关闭对话框
             this.dialogVisible = false;
+            //清除二维码
+            this.qrCodeHandleClose();
 
         },
         //关闭弹框清除二维码
