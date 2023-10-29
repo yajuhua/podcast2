@@ -1,18 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.example</groupId>
+  <groupId>io.github.yajuhua</groupId>
   <artifactId>podcast2</artifactId>
   <packaging>war</packaging>
   <version>1.2.8</version>
   <name>podcast2</name>
   <url>https://github.com/yajuhua/podcast2_1</url>
-
-  <properties>
-    <update>2023-10-28</update>
-    <code>October</code>
-  </properties>
-
 
   <dependencies>
   <!--  文件上传框架  -->
@@ -164,14 +158,5 @@
         </configuration>
       </plugin>
     </plugins>
-
-    <!--配置资源文件对应的信息-->
-    <resources>
-      <resource>
-        <directory>${project.basedir}/src/main/resources</directory>
-        <filtering>true</filtering>
-      </resource>
-    </resources>
-
   </build>
 </project>
