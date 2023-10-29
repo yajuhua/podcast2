@@ -7,11 +7,6 @@ curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh && system
 ### 2.创建并启动容器
 
 ```shell
-#防火墙放行端口：8088
-以下是centos7，其他系统自行搜索。
-firewall-cmd --add-port=8088/tcp --permanent
-firewall-cmd --reload
-
 mkdir  ~/podcast2
 cd ~/podcast2
 docker run -id --name=podcast2 \
@@ -23,7 +18,16 @@ docker run -id --name=podcast2 \
 -v ~/podcast2/plugin:/opt/tomcat/tomcat8/webapps/podcast2/plugin/ \
 -v ~/podcast2/logs:/logs \
 yajuhua/podcast2:1.2.8
-
+```
+### 3.防火墙放行8088端口
+````shell
+#以下是centos7，其他系统自行搜索。
+firewall-cmd --add-port=8088/tcp --permanent
+firewall-cmd --reload
+````
+### 4.进入面板
+```shell
+http://IP地址:8088/podcast2
 ```
 
 
