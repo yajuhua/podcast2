@@ -60,10 +60,10 @@ firewall-cmd --reload
 
 #### 1.下载插件
 
-| 网站 <img width=200/>            | 名称<img width=200/> | 版本<img width=200/> | 下载地址<img width=200/>                                     |
-| :------------------------------- | -------------------- | -------------------- | ------------------------------------------------------------ |
-| [干净世界](https://ganjing.com/) | ganjing              | 1.2.1                | [点击下载](https://raw.githubusercontent.com/yajuhua/plugin/master/ganjing/Ganjing3-1.2.1-jar-with-dependencies.jar) |
-| [ntdm](https://www.ntdm.tv)              | ntdm8                | 1.2.1                | [点击下载](https://github.com/yajuhua/plugin/raw/master/ntdm8/ntdm8-1.2.1-jar-with-dependencies.jar) |
+| 网站 <img width=200/>            | 名称<img width=200/> | 版本<img width=200/> | 下载地址<img width=200/>                                                                                  |
+| :------------------------------- | -------------------- | -------------------- |-------------------------------------------------------------------------------------------------------|
+| [干净世界](https://ganjing.com/) | ganjing              | 1.2.1                | [点击下载](https://github.com/yajuhua/plugin/raw/master/ganjing/Ganjing3-1.2.1-jar-with-dependencies.jar) |
+| [ntdm](https://www.ntdm.tv)              | ntdm8                | 1.2.1                | [点击下载](https://github.com/yajuhua/plugin/raw/master/ntdm8/ntdm8-1.2.1-jar-with-dependencies.jar)      |
 
 #### 2.进入管理页面
 
