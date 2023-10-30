@@ -1,3 +1,7 @@
+/* 隐藏滚动条 */
+body {
+    overflow: hidden;
+}
 #app {
     display: flex;
     height: 100vh;
