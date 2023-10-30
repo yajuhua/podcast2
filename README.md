@@ -63,7 +63,7 @@ firewall-cmd --reload
 | 网站 <img width=200/>            | 名称<img width=200/> | 版本<img width=200/> | 下载地址<img width=200/>                                     |
 | :------------------------------- | -------------------- | -------------------- | ------------------------------------------------------------ |
 | [干净世界](https://ganjing.com/) | ganjing              | 1.2.1                | [点击下载](https://raw.githubusercontent.com/yajuhua/plugin/master/ganjing/Ganjing3-1.2.1-jar-with-dependencies.jar) |
-| [ntdm](https://www.ntdm.tv)              | ntdm8                | 1.2.1                | [点击下载](blob:https://github.com/e2ad0b0e-d240-4a17-a04a-dd6ada162b46) |
+| [ntdm](https://www.ntdm.tv)              | ntdm8                | 1.2.1                | [点击下载](https://github.com/yajuhua/plugin/raw/master/ntdm8/ntdm8-1.2.1-jar-with-dependencies.jar) |
 
 #### 2.进入管理页面
 
@@ -99,7 +99,7 @@ firewall-cmd --reload
 
 #### 4.扫描二维码添加到播客APP（如：AntennaPod）
 
-<img src="https://yajuhua.github.io/images/AntennaPod-1.jpg" alt="链接地址" style="zoom:25%;" /><img src="https://yajuhua.github.io/images/AntennaPod-2.jpg" alt="AntennaPod-2" style="zoom:25%;" />
+<img width="500" src="https://yajuhua.github.io/images/AntennaPod-1.jpg" alt="链接地址" style="zoom:25%;" /><img width="500" src="https://yajuhua.github.io/images/AntennaPod-2.jpg" alt="AntennaPod-2" style="zoom:25%;" />
 
 ## 播客APP
 
