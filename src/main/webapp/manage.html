@@ -60,6 +60,17 @@
                 </div>
             </div>
 
+
+            <!--显示项目介绍-->
+            <div v-show="activeMenu === 'about'">
+                <el-menu>
+                    <el-menu-item>
+                        <iframe src="https://yajuhua.github.io" width="100%" height="1080" frameborder="0"></iframe>
+                    </el-menu-item>
+                </el-menu>
+            </div>
+
+
             <!--修改用户名和密码-->
             <div v-show="activeMenu === 'changePassword'"><el-form :inline="true" :model="formInline"
                     class="demo-form-inline">
