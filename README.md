@@ -7,6 +7,8 @@
 <img src="https://img.shields.io/badge/JDK-17-blue.svg" alt="JDK" />
 <img src="https://img.shields.io/badge/Tomcat-8.5.68-blue.svg" alt="Tomcat" />
 <img src="https://img.shields.io/badge/license-Apache2.0-green.svg" alt="apache-licenses" />
+<img src="https://img.shields.io/badge/Vue-2.6.13-blue.svg" alt="Vue" />
+<img src="https://img.shields.io/badge/element_ui-2.15.14-blue.svg" alt="Vue" />
 </p>
 
 <h2 align=center><p>Podcast2</p></h2>
