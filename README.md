@@ -1,7 +1,6 @@
 <div align=center><img width = "200" height = "200" src="./images/975x975-logo.001.png"></div>
 
-
-
+<br>
 <p align="center">
 <img src="https://img.shields.io/badge/Release-1.2.8-<COLOR>.svg" alt="Release" />
 <img src="https://img.shields.io/badge/JDK-17-blue.svg" alt="JDK" />
@@ -10,7 +9,6 @@
 <img src="https://img.shields.io/badge/Vue-2.6.13-blue.svg" alt="Vue" />
 <img src="https://img.shields.io/badge/element_ui-2.15.14-blue.svg" alt="Vue" />
 </p>
-
 <h2 align=center><p>Podcast2</p></h2>
 <hr>
 
