@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.podcast.Progress.WebSocketServerDownload;
 import com.podcast.pojo.Download;
+import com.podcast.service.ChannelService;
 import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,7 @@ public class Aria2c {
      * 日志
      */
     private static final Logger LOGGER = LoggerFactory.getLogger("Aria2c");
+    private ChannelService channelService = new ChannelService();
 
     /**
      * 重命名
@@ -122,6 +124,9 @@ public class Aria2c {
                         if (WebSocketServerDownload._session!=null && WebSocketServerDownload._session.isOpen()){
                             download.setPercentage(100.0);
                             WebSocketServerDownload._session.getBasicRemote().sendText(gson.toJson(download));
+                            //将记录存入数据库
+                            download.setStatus(1);
+                            channelService.completeDownload(download);
                         }
                         return true;
                     }
@@ -167,6 +172,9 @@ public class Aria2c {
 
 
                 }else {
+                    //将记录存入数据库
+                    download.setStatus(0);
+                    channelService.completeDownload(download);
                     return false;
                 }
             }

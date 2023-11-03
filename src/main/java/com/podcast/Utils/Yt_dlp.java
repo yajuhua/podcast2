@@ -3,6 +3,7 @@ package com.podcast.Utils;
 import com.google.gson.Gson;
 import com.podcast.Progress.WebSocketServerDownload;
 import com.podcast.pojo.Download;
+import com.podcast.service.ChannelService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +23,7 @@ public class Yt_dlp {
      * 日志
      */
     private static final Logger LOGGER = LoggerFactory.getLogger("Yt_dlp");
+    private ChannelService channelService = new ChannelService();
     /**
      * 下载器名称
      */
@@ -166,7 +168,7 @@ public class Yt_dlp {
      * 解析yt-dlp日志信息
      * @param command 命令
      */
-    public static void ytDlpCmd(String command) throws IOException {
+    public void ytDlpCmd(String command) throws IOException {
         try {
             BufferedReader br = null;
             try {
@@ -255,12 +257,30 @@ public class Yt_dlp {
                             download.setETA(ETA);
                         }
 
+                        if (download.getPercentage() == 100.0){
+                            //通过WS推送到前端
+                            if (WebSocketServerDownload._session!=null && WebSocketServerDownload._session.isOpen()){
+                                WebSocketServerDownload._session.getBasicRemote().sendText(gson.toJson(download));
+                            }
+
+                            //将记录存入数据库
+                            download.setStatus(1);
+                            channelService.completeDownload(download);
+
+                            //结束
+                            return;
+                        }
+
                         //通过WS推送到前端
                         if (WebSocketServerDownload._session!=null && WebSocketServerDownload._session.isOpen()){
                             WebSocketServerDownload._session.getBasicRemote().sendText(gson.toJson(download));
                         }
                     }
                 }
+
+                //将记录存入数据库
+                download.setStatus(0);
+                channelService.completeDownload(download);
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
