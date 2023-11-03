@@ -28,6 +28,8 @@
             <fileNamePattern>/logs/podcast2-data-%i-%d{yyyy-MM-dd}-.log.gz</fileNamePattern>
             <!--文件拆分大小-->
             <maxFileSize>1MB</maxFileSize>
+            <!--保留7天-->
+            <maxHistory>7</maxHistory>
         </rollingPolicy>
     </appender>
 
@@ -38,4 +40,13 @@
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE" />
     </root>
+
+<!--
+    &lt;!&ndash;获取下载器输出的日志&ndash;&gt;
+    <logger name="download" level="warn" additivity="false">
+        <appender-ref ref="DOWNLOAD" />
+    </logger>
+-->
+
+
 </configuration>
