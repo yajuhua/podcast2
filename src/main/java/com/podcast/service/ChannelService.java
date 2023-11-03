@@ -3,6 +3,7 @@ package com.podcast.service;
 import com.podcast.Utils.SqlSessionFactoryUtils;
 import com.podcast.mapper.ChannelMapper;
 import com.podcast.pojo.ChannelDate;
+import com.podcast.pojo.Download;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
@@ -162,5 +163,28 @@ public class ChannelService {
         mapper.UpdateForStatus(status,uuid);
         sqlSession.commit();
         sqlSession.close();
+    }
+
+    /**
+     * 添加已完成下载的数据
+     */
+    public void completeDownload(Download download){
+        SqlSession sqlSession = factory.openSession();
+        ChannelMapper mapper = sqlSession.getMapper(ChannelMapper.class);
+        mapper.completeDownload(download);
+        sqlSession.commit();
+        sqlSession.close();
+    }
+
+    /**
+     * 查询已经完成的下载记录
+     * @return
+     */
+     public List<Download> selectCompleteDownload(){
+        SqlSession sqlSession = factory.openSession();
+        ChannelMapper mapper = sqlSession.getMapper(ChannelMapper.class);
+        List<Download> completeDownload = mapper.selectCompleteDownload();
+        sqlSession.close();
+        return completeDownload;
     }
 }

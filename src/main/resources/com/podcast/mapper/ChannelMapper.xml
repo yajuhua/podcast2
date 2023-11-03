@@ -12,4 +12,12 @@
         <result column="latest_check_timestamp" property="latestCheckTimestamp"></result>
         <result column="channel_face" property="channelFace"></result>
     </resultMap>
+
+    <resultMap id="DownloadResultMap" type="Download">
+        <result column="downloader_name" property="downloaderName"></result>
+        <result column="total_size" property="totalSize"></result>
+        <result column="current_speed" property="currentSpeed"></result>
+        <result column="final_at" property="finalAt"></result>
+        <result column="eta" property="ETA"></result>
+    </resultMap>
 </mapper>

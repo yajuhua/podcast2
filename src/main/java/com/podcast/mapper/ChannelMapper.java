@@ -1,6 +1,7 @@
 package com.podcast.mapper;
 
 import com.podcast.pojo.ChannelDate;
+import com.podcast.pojo.Download;
 import org.apache.ibatis.annotations.ResultMap;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.*;
@@ -11,7 +12,7 @@ public interface ChannelMapper {
 
 
 
-/**
+    /**
      * 查询所有
      * @return
      */
@@ -110,4 +111,21 @@ public interface ChannelMapper {
      */
     @Update("UPDATE channel SET status = #{status} WHERE uuid = #{uuid}")
     void UpdateForStatus(@Param("status") int status, @Param("uuid") String uuid);
+
+
+    /**
+     * 添加已完成下载的数据
+     */
+    @Insert("INSERT INTO download (id,downloader_name,description,total_size,percentage,current_speed,eta,status) " +
+            "VALUES (#{id}, #{downloaderName}, #{description}, #{totalSize}, #{percentage}, #{currentSpeed}, #{ETA},#{status})")
+    void completeDownload(Download Download);
+
+    /**
+     * 查询已经完成的下载记录
+     * @return
+     */
+
+    @Select("select * from download")
+    @ResultMap("DownloadResultMap")
+    List<Download> selectCompleteDownload();
 }
