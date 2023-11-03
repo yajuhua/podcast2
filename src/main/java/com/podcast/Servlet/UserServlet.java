@@ -7,6 +7,7 @@ import com.podcast.Utils.TimeFormat;
 import com.podcast.loader.PluginLoader;
 import com.podcast.pojo.ChannelDataShow;
 import com.podcast.pojo.ChannelDate;
+import com.podcast.pojo.Download;
 import com.podcast.pojo.PodcastUser;
 import com.podcast.service.ChannelService;
 import com.podcast.service.PodcastUserService;
@@ -43,6 +44,7 @@ public class UserServlet  extends BaseServlet{
     private ChannelService channelService = new ChannelService();
     public static Integer CREATE_STATUS;
     private static final Logger LOGGER = LoggerFactory.getLogger("UserServlet");
+    private Gson gson = new Gson();
 
     /**
      * 修改用户名和密码
@@ -439,5 +441,19 @@ public class UserServlet  extends BaseServlet{
 
         //6.返回uuid
         return uuid;
+    }
+
+
+    /**
+     * 获取完成下载记录
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    public void selectCompleteDownloadServlet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        List<Download> completeDownload = channelService.selectCompleteDownload();
+        response.setContentType("text/json;charset=utf-8");
+        response.getWriter().write(gson.toJson(completeDownload));
     }
 }
