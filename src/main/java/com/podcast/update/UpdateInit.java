@@ -96,12 +96,6 @@ public class UpdateInit implements ServletContextListener {
         Runnable checkForSurvivalTarget = new CheckForSurvival();
         executor.scheduleAtFixedRate(checkForSurvivalTarget, 0, checkForSurvival, TimeUnit.SECONDS);
 
-        //定期删除日志文件
-        ScheduledExecutorService executor2 = Executors.newScheduledThreadPool(1);
-        Runnable deleteLogsTarget = new DeleteLogsTarget();
-        // 在0分钟后开始执行任务，每隔一个小时重复执行
-        executor2.scheduleAtFixedRate(deleteLogsTarget, 0, 1, TimeUnit.HOURS);
-
     }
 
     @Override
