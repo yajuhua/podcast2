@@ -1,13 +1,24 @@
 package com.podcast.Utils;
 
+import com.google.gson.Gson;
+import com.podcast.Progress.WebSocketServerDownload;
+import com.podcast.pojo.Download;
+import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class N_m3u8DL_RE {
+    /**
+     * 解析json
+     */
+    private static Gson gson = new Gson();
     /**
      * 日志
      */
@@ -87,7 +98,7 @@ public class N_m3u8DL_RE {
      * @throws Exception
      */
     public void startDownload() throws Exception {
-        Cmd(getDownloadCmd());
+        nM3u8DLRECmd(getDownloadCmd());
     }
 
     /**
@@ -119,6 +130,80 @@ public class N_m3u8DL_RE {
             }
         } catch (Exception e) {
            LOGGER.error("执行cmd时出错！"+" 详细:"+e);
+        }
+    }
+
+    /**
+     * 解析N_m3u8DL-RE的日志
+     * @param command 命令
+     */
+    public static void nM3u8DLRECmd(String command) throws IOException {
+        //封装信息
+        Download download = new Download();
+        download.setId(UUID.randomUUID().toString());
+        download.setETA("暂无");
+        download.setDownloaderName("N_m3u8DL-RE");
+        download.setCurrentSpeed("暂无");
+        download.setTotalSize("暂无 ");//后面得加个空格，不然会报错
+
+
+        try {
+            BufferedReader br = null;
+            try {
+                Process p = Runtime.getRuntime().exec(command);
+
+                br = new BufferedReader(new InputStreamReader(p.getInputStream(),"UTF-8"));//解决中文乱码 GBK是汉字编码//二维码会乱码
+                String line = null;
+                while ((line = br.readLine()) != null) {
+
+                    String destinationReg = "保存文件名: .{1,}";
+
+                    //描述
+                    Pattern destinationPattern = Pattern.compile(destinationReg);
+                    Matcher destinationMatcher = destinationPattern.matcher(line);
+
+                    if (destinationMatcher.find()){
+                        download.setDescription(destinationMatcher.group().replace("保存文件名: ",""));
+                    }
+
+
+                    //获取百分比
+                    String regex = "Vid Kbps: \\d{1,3}%";
+                    Pattern compile = Pattern.compile(regex);
+                    Matcher matcher = compile.matcher(line);
+                    while (matcher.find()){
+                        String regex2 = "\\d{1,3}";
+                        Pattern compile2 = Pattern.compile(regex2);
+                        Matcher matcher2 = compile2.matcher(matcher.group());
+                        while (matcher2.find()){
+                            download.setPercentage(Integer.parseInt(matcher2.group()));
+                        }
+                    }
+                    //出现Done说明下载完成了
+                    if (line.contains("Done")){
+                        download.setPercentage(100);
+                    }
+
+                    //通过WS推送到前端
+                    if (WebSocketServerDownload._session!=null && WebSocketServerDownload._session.isOpen()){
+                        WebSocketServerDownload._session.getBasicRemote().sendText(gson.toJson(download));
+                    }
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+
+                if (br != null) {
+                    try {
+                        br.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } catch (Exception e) {
+
         }
     }
 }

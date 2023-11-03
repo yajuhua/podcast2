@@ -1,13 +1,23 @@
 package com.podcast.Utils;
 
+import com.google.gson.Gson;
+import com.podcast.Progress.WebSocketServerDownload;
+import com.podcast.pojo.Download;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Yt_dlp {
+    /**
+     * 解析json
+     */
+    private static Gson gson = new Gson();
     /**
      * 日志
      */
@@ -148,19 +158,108 @@ public class Yt_dlp {
      * @return 是否正确下载,错误返回false，否则返回true
      * @throws IOException
      */
-    public  boolean startDownload() throws IOException {
-        //命令输出行数
-        int lineCount = 0;
+    public  void startDownload() throws IOException {
+       ytDlpCmd(getDownloadCmd());
+    }
+
+    /**
+     * 解析yt-dlp日志信息
+     * @param command 命令
+     */
+    public static void ytDlpCmd(String command) throws IOException {
         try {
             BufferedReader br = null;
             try {
-                Process p = Runtime.getRuntime().exec(getDownloadCmd());
-                //解决中文乱码 GBK是汉字编码
+                Process p = Runtime.getRuntime().exec(command);
+
                 br = new BufferedReader(new InputStreamReader(p.getInputStream(),"UTF-8"));//解决中文乱码 GBK是汉字编码//二维码会乱码
                 String line = null;
 
+                //获取下载进度正则表达式
+                String percentageReg = "[0-9]{1,3}\\.[0-9]%";
+
+                //获取总MB正则表达式
+                String totalSizeReg = "[0-9]{1,3}\\.[0-9][0-9]MiB ";
+
+                //获取当前下载速度正则表达式
+                String currentSpeedReg = "[0-9]{1,3}\\.[0-9][0-9][KM]iB/s";
+
+                //获取剩余时间正则表达式
+                String ETArex = "[0-9][0-9]:[0-9][0-9](:[0-9][0-9])?";
+
+                //获取描述
+                String DestinationReg = "Destination:.+";
+
+                //获取下载进度
+                double percentage;
+                //获取总MB
+                String totalSize;
+                //获取当前速度
+                String currentSpeed;
+                //获取剩余时间
+                String ETA;
+                String destination;
+
+                Download download  = new Download();
+                download.setId(UUID.randomUUID().toString());
+                download.setDownloaderName("yt-dlp");
+                download.setTotalSize("");
+                download.setCurrentSpeed("");
+                download.setETA("");
+
                 while ((line = br.readLine()) != null) {
-                    LOGGER.debug(line);
+
+                    //描述
+                    Pattern DestinationPattern = Pattern.compile(DestinationReg);
+                    Matcher DestinationMatcher = DestinationPattern.matcher(line);
+
+                    while(DestinationMatcher.find()){
+                        destination = DestinationMatcher.group().replace("Destination: ","");
+                        download.setDescription(destination);
+                    }
+
+                    if (!line.contains("in")){
+                        //进度百分比
+                        Pattern percentagePattern = Pattern.compile(percentageReg);
+                        Matcher percentageMatcher = percentagePattern.matcher(line);
+
+                        //获取获取总MB
+                        Pattern totalSizePattern = Pattern.compile(totalSizeReg);
+                        Matcher totalSizeMatcher = totalSizePattern.matcher(line);
+
+                        //获取当前速度
+                        Pattern currentSpeedPattern = Pattern.compile(currentSpeedReg);
+                        Matcher currentSpeedMatcher = currentSpeedPattern.matcher(line);
+
+                        //获取剩余时间
+                        Pattern ETAPattern = Pattern.compile(ETArex);
+                        Matcher ETAMatcher = ETAPattern.matcher(line);
+
+                        if (percentageMatcher.find()){
+                            percentage = Double.parseDouble(percentageMatcher.group().replace("%",""));
+                            download.setPercentage(percentage);
+                        }
+
+                        if (totalSizeMatcher.find()){
+                            totalSize = totalSizeMatcher.group();
+                            download.setTotalSize(totalSize+"MB");
+                        }
+
+                        if (currentSpeedMatcher.find()){
+                            currentSpeed = currentSpeedMatcher.group();
+                            download.setCurrentSpeed(currentSpeed);
+                        }
+
+                        if (ETAMatcher.find()){
+                            ETA = ETAMatcher.group();
+                            download.setETA(ETA);
+                        }
+
+                        //通过WS推送到前端
+                        if (WebSocketServerDownload._session!=null && WebSocketServerDownload._session.isOpen()){
+                            WebSocketServerDownload._session.getBasicRemote().sendText(gson.toJson(download));
+                        }
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -175,8 +274,7 @@ public class Yt_dlp {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("执行cmd时出错！"+" 详细:"+e);
+
         }
-        return lineCount>2;
     }
 }

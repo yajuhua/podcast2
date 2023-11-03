@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.apache.commons.text.StringEscapeUtils;
+import org.testng.annotations.Test;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -228,5 +229,15 @@ public class Aria2Client {
      */
     public String tellStatus(String[] keys) throws Exception {
         return invoke(this.Aria2_RPO_URL,"aria2.tellStatus",this.secret,this.gid,keys);
+    }
+
+    @Test
+    public void t1() throws Exception {
+       /* Aria2Client aria2Client = new Aria2Client("http://192.168.123.169:6800/jsonrpc");
+        aria2Client.secret = "token:aria2";
+        aria2Client.tellStatus(new String[]{"totalLength", "completedLength"});*/
+        String url = "https://v16m-default.akamaized.net/1d78252e8457be5562a0d0d91f4e096a/6544a04c/video/tos/alisg/tos-alisg-v-0000/ogNzQyEMAPHffApsawEF24AeeGAE6ojD2X5LRg/?a=2011&ch=0&cr=0&dr=0&net=5&cd=0%7C0%7C0%7C0&br=974&bt=487&bti=MzhALjBg&cs=0&ds=3&ft=iJOG.y7oZZv0PD1TxS0xg9wz.DKlBEeC~&mime_type=video_mp4&qs=0&rc=MzY6Z2Q7NWQ8NzRkaTVlOEBpajVlaDo6ZnFvZzMzODYzNEAwY19jMDAtXjYxXzEuLTQyYSMzczNkcjRfc3BgLS1kMC1zcw%3D%3D&l=202311030118450B095A82CF0F0356707C&btag=e000a0000";
+        Aria2c aria2c = new Aria2c(url,UUID.randomUUID().toString(),"D:\\Download\\Aria2");
+        aria2c.startDownload();
     }
 }
