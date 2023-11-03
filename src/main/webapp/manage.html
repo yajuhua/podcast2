@@ -35,6 +35,15 @@
                     <template slot="title">用户</template>
                     <el-menu-item index="changePassword">修改</el-menu-item>
                 </el-submenu>
+
+                <el-submenu index="download">
+                    <template slot="title">下载</template>
+                    <el-menu-item index="Downloading">正在下载 {{this.downloadData.length}}</el-menu-item>
+                    <el-menu-item index="Done">已完成</el-menu-item>
+                    <el-menu-item index="DownloaderInfo">下载器信息</el-menu-item>
+                </el-submenu>
+
+
                 <el-menu-item index="SubscriptionList" @click="toSubscriptionList">订阅列表</el-menu-item>
                 <el-menu-item index="about">关于</el-menu-item>
                 <el-menu-item index="exit" @click="exit">退出</el-menu-item>
@@ -86,6 +95,42 @@
                         <el-button type="primary" @click="changeUserPasswd">修改</el-button>
                     </el-form-item>
                 </el-form></div>
+
+
+            <!--查看正在下载-->
+            <div v-show="activeMenu === 'Downloading'">
+                <el-table
+                        :data="downloadData"
+                        style="width: 100%"
+                        :row-class-name="tableRowClassName">
+                    <el-table-column
+                            prop="downloaderName"
+                            label="下载器名称">
+                    </el-table-column>
+                    <el-table-column
+                            prop="description"
+                            label="描述">
+                    </el-table-column>
+                    <el-table-column
+                            prop="totalSize"
+                            label="文件大小">
+                    </el-table-column>
+                    <el-table-column
+                            label="下载进度">
+                        <!--使用slot-scope="scope"来访问表格中每行的数据-->
+                        <el-progress slot-scope="scope" :text-inside="true" :stroke-width="26" :percentage="scope.row.percentage"></el-progress>
+                    </el-table-column>
+                    <el-table-column
+                            prop="currentSpeed"
+                            label="速度">
+                    </el-table-column>
+                    <el-table-column
+                            prop="ETA"
+                            label="剩余时间">
+                    </el-table-column>
+                </el-table>
+            </el-form>
+            </div>
 
             <!--系统概况-->
             <div v-show="activeMenu === 'info'">

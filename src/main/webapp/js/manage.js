@@ -8,6 +8,7 @@ new Vue({
                 password: ''
             },
             logs: [], // 存储日志信息的数组
+            downloadInfo:"",
             systemAllData: [],
             systemAllData1: "",
             infoData: [
@@ -18,10 +19,10 @@ new Vue({
             ],
             fileList: [],
             multipleSelection: [],
-            preparingForUpdates:false
+            preparingForUpdates:false,
+            downloadData:[]
         };
     }, mounted: function () {
-
         // 页面加载完成后，发送异步请求，查询数据
         var _this = this;
         axios({
@@ -36,29 +37,85 @@ new Vue({
             _this.infoData[3].value = resp.data.systemCode;
 
         })
+
+        //开启WS
+        this.setupLogSocket();
+        this.setupDownloadSocket();
     },
     created() {
-        // 建立 WebSocket 连接
-        const socket = new WebSocket("ws://"+ window.location.host +"/podcast2/websocket/logs");
-
-        // 监听 WebSocket 连接事件
-        socket.onopen = () => {
-            console.log("WebSocket 连接成功");
-        };
-
-        // 监听 WebSocket 接收消息事件
-        socket.onmessage = (event) => {
-            const message = event.data;
-            this.logs.push(message); // 将接收到的日志信息添加到数组中
-            this.scrollToBottom(); // 滚动到底部
-        };
-
-        // 监听 WebSocket 关闭事件
-        socket.onclose = () => {
-            console.log("WebSocket 连接关闭");
-        };
+    },
+    beforeUnmount() {
+        // 组件卸载前关闭 WebSocket 连接
+        this.logSocket.close();
+        this.downloadSocket.close();
+    },
+    beforeDestroy() {
+        // 执行关闭资源的操作
+        this.logSocket.close();
+        this.downloadSocket.close();
     },
     methods: {
+
+        //日志展示
+        setupLogSocket() {
+            this.logSocket = new WebSocket(
+                "ws://" + window.location.host + "/podcast2/websocket/logs"
+            );
+
+            this.logSocket.onopen = () => {
+                console.log("logSocket 连接成功");
+            };
+
+            this.logSocket.onmessage = (event) => {
+                const message = event.data;
+                this.logs.push(message);
+                this.scrollToBottom();
+            };
+
+            this.logSocket.onclose = () => {
+                console.log("logSocket 连接关闭");
+            };
+        },
+        //下载进度展示
+        setupDownloadSocket() {
+            this.downloadSocket = new WebSocket(
+                "ws://" + window.location.host + "/podcast2/websocket/download"
+            );
+
+            this.downloadSocket.onopen = () => {
+                console.log("WebSocket 连接成功");
+            };
+
+            this.downloadSocket.onmessage = (event) => {
+                const message = event.data;
+                console.log("下载器日志信息：" + message);
+                console.log("下载器日志信息对象：" + JSON.parse(message));
+                var json = JSON.parse(message);
+                this.scrollToBottom();
+
+                const index = this.downloadData.findIndex((item) => item.id === json.id);
+                if (index !== -1) {
+                    console.log("id存在");
+                    this.$set(this.downloadData, index, json);
+                    console.log("更新完成");
+                    if (this.downloadData[index].percentage === 100.0){
+                        console.log("达到100%，删除该元素");
+                        this.downloadData.splice(index, 1);
+                    }
+
+                } else {
+                    if (json.percentage != 100.0){
+                        console.log("id不存在");
+                        this.downloadData.push(json);
+                        console.log("添加完成");
+                    }
+                }
+            };
+
+            this.downloadSocket.onclose = () => {
+                console.log("WebSocket 连接关闭");
+            };
+        },
         handleMenuSelect(index) {
             this.activeMenu = index;
         },
