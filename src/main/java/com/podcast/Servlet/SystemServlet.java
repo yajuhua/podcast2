@@ -1,8 +1,11 @@
 package com.podcast.Servlet;
 
 import com.google.gson.Gson;
+import com.podcast.Utils.Aria2c;
 import com.podcast.Utils.N_m3u8DL_RE;
+import com.podcast.Utils.Yt_dlp;
 import com.podcast.loader.PluginLoader;
+import com.podcast.pojo.Downloader;
 import com.podcast.pojo.Plugin;
 import com.podcast.pojo.SystemInfo;
 import com.podcast.update.Update;
@@ -344,5 +347,21 @@ public class SystemServlet extends BaseServlet {
             response.setContentType("text/*; charset=utf-8");
             response.getWriter().write("uploadno");
         }
+    }
+
+    /**
+     * 删除插件
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    public void downloaderInfoServlet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        List<Downloader> downloaderList = new ArrayList<>();
+        downloaderList.add(new Downloader("yt-dlp", Yt_dlp.version()));
+        downloaderList.add(new Downloader("N_m3u8DL-RE", N_m3u8DL_RE.version()));
+        downloaderList.add(new Downloader("aria2", Aria2c.version()));
+        response.setContentType("text/json; charset=utf-8");
+        response.getWriter().write(new Gson().toJson(downloaderList));
     }
 }
