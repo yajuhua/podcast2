@@ -187,4 +187,17 @@ public class ChannelService {
         sqlSession.close();
         return completeDownload;
     }
+
+
+    /**
+     * 通过id删除下载记录
+     * @param id
+     */
+    public void deleteDownloadRecord(String id){
+        SqlSession sqlSession = factory.openSession();
+        ChannelMapper mapper = sqlSession.getMapper(ChannelMapper.class);
+        mapper.deleteDownloadRecord(id);
+        sqlSession.commit();
+        sqlSession.close();
+    }
 }

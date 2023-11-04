@@ -456,4 +456,19 @@ public class UserServlet  extends BaseServlet{
         response.setContentType("text/json;charset=utf-8");
         response.getWriter().write(gson.toJson(completeDownload));
     }
+
+
+    /**
+     * 根据id删除下载记录
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    public void deleteDownloadRecordServlet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String id = request.getParameter("id");
+        channelService.deleteDownloadRecord(id);
+        response.setContentType("text/*;charset=utf-8");
+        response.getWriter().write("ok");
+    }
 }

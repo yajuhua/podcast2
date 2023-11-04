@@ -128,4 +128,11 @@ public interface ChannelMapper {
     @Select("select * from download")
     @ResultMap("DownloadResultMap")
     List<Download> selectCompleteDownload();
+
+    /**
+     * 根据id删除下载记录
+     * @param id
+     */
+    @Delete("DELETE FROM download WHERE id = #{id}")
+    void deleteDownloadRecord(@Param("id") String id);
 }
