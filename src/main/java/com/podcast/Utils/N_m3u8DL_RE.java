@@ -7,6 +7,7 @@ import com.podcast.service.ChannelService;
 import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.Test;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -222,5 +223,13 @@ public class N_m3u8DL_RE {
         } catch (Exception e) {
 
         }
+    }
+
+    /**
+     * 获取版本号
+     * @return
+     */
+    public static String version(){
+        return Yt_dlp.cmd("N_m3u8DL-RE --version");
     }
 }

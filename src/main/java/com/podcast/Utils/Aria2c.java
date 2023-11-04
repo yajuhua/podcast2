@@ -10,14 +10,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Aria2c {
     /**
@@ -183,6 +187,57 @@ public class Aria2c {
             LOGGER.error("使用startDownload时出错！"+"详细:"+e);
         }
        return status;
+    }
+
+
+    /**
+     * 获取版本号
+     * @return
+     */
+    public static String version(){
+        String result = "";
+        try {
+            BufferedReader br = null;
+            try {
+                Process p = Runtime.getRuntime().exec("aria2c --version");
+
+                br = new BufferedReader(new InputStreamReader(p.getInputStream(),"UTF-8"));
+                String line = null;
+                String reg = "\\d{1,2}\\.\\d{1,2}\\.\\d{1,2}";//匹配版本号
+                Pattern pattern = Pattern.compile(reg);
+
+                while ((line = br.readLine()) != null) {
+                    if (line.contains("aria2 版本") || line.contains("aria2 version")){
+                        Matcher matcher = pattern.matcher(line);
+                        while (matcher.find()){
+                            line = matcher.group();
+                        }
+                        //返回结果
+                        result = line;
+                        return line;
+                    }
+
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+
+                if (br != null) {
+                    try {
+                        br.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } catch (Exception e) {
+        }
+        return result;
+    }
+
+    @Test
+    public void t2(){
+        System.out.println(version());
     }
 
     /**

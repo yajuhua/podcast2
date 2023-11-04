@@ -6,6 +6,7 @@ import com.podcast.pojo.Download;
 import com.podcast.service.ChannelService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.Test;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -296,5 +297,57 @@ public class Yt_dlp {
         } catch (Exception e) {
 
         }
+    }
+
+    /**
+     * 更新下载器
+     */
+    public static void update() throws Exception {
+        cmd("yt-dlp -U");
+        //将版本信息存入数据库
+    }
+
+
+    /**
+     * 获取版本
+     * @return
+     */
+    public static String version(){
+       return cmd("yt-dlp --version");
+    }
+
+    /**
+     * cmd命令行的操作(字符串类型)
+     * @param command 命令
+     */
+    public static String cmd(String command){
+        String result = "";
+        try {
+            BufferedReader br = null;
+            try {
+                Process p = Runtime.getRuntime().exec(command);
+                //
+                br = new BufferedReader(new InputStreamReader(p.getInputStream(),"UTF-8"));
+                String line = null;
+                while ((line = br.readLine()) != null) {
+                    LOGGER.debug(line);
+                    result+=line;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+
+                if (br != null) {
+                    try {
+                        br.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("执行cmd时出错！"+" 详细:"+e);
+        }
+        return result;
     }
 }
