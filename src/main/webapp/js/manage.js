@@ -20,7 +20,9 @@ new Vue({
             fileList: [],
             multipleSelection: [],
             preparingForUpdates:false,
-            downloadData:[]
+            downloadData:[],
+            downloadDone:[],
+            multipleDoneSelection:[]
         };
     }, mounted: function () {
         // 页面加载完成后，发送异步请求，查询数据
@@ -38,9 +40,13 @@ new Vue({
 
         })
 
+        //获取下载完成数据
+        this.getDownloadDone();
+
         //开启WS
         this.setupLogSocket();
         this.setupDownloadSocket();
+
     },
     created() {
     },
@@ -55,7 +61,57 @@ new Vue({
         this.downloadSocket.close();
     },
     methods: {
+        //获取下载已完成数据
+        getDownloadDone(){
+            _this = this;
+            axios({
+                method:"get",
+                url:"./user/selectCompleteDownloadServlet"
+            }).then(function (resp) {
+                console.log(resp.data);
+                _this.downloadDone = resp.data;
+            })
+        },
+        //根据id删除记录
+        deleteDownloadRecord(id){
+            _this = this;
 
+            this.$confirm('此操作将永久删除该记录, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+
+                axios({
+                    method:"get",
+                    url:"./user/deleteDownloadRecordServlet?id="+id
+                }).then(function (resp) {
+                    if (resp.data == 'ok'){
+                        //删除成功
+                        _this.$message({
+                            showClose: true,
+                            message: '删除成功！',
+                            type: 'success'
+                        });
+                        //重新获取
+                        _this.getDownloadDone();
+                    }else {
+                        //删除失败
+                        _this.$message({
+                            showClose: true,
+                            message: '删除失败',
+                            type: 'error'
+                        });
+                    }
+                })
+
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消删除'
+                });
+            });
+        },
         //日志展示
         setupLogSocket() {
             this.logSocket = new WebSocket(
@@ -78,6 +134,7 @@ new Vue({
         },
         //下载进度展示
         setupDownloadSocket() {
+            _this = this;
             this.downloadSocket = new WebSocket(
                 "ws://" + window.location.host + "/podcast2/websocket/download"
             );
@@ -101,6 +158,8 @@ new Vue({
                     if (this.downloadData[index].percentage === 100.0){
                         console.log("达到100%，删除该元素");
                         this.downloadData.splice(index, 1);
+                        //刷新页面
+                        this.getDownloadDone();
                     }
 
                 } else {
@@ -359,6 +418,42 @@ new Vue({
                 this.$message({
                     type: 'success',
                     message: '插件正在删除中...该页面不会自动刷新!'
+                });
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消删除'
+                });
+            });
+        },
+        //选择删除要的下载记录
+        handleSelectionDoneChange(val) {
+            this.multipleDoneSelection = val;
+            console.log(this.multipleDoneSelection);
+        },
+        //批量删除下载完成记录
+        deleteDownloadRecords(){
+
+            this.$confirm('此操作将永久删除选择的下载记录, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+
+                for (let i = 0; i < this.multipleDoneSelection.length; i++) {
+                    id = this.multipleDoneSelection[i].id;
+                    axios({
+                        method:"get",
+                        url:"./user/deleteDownloadRecordServlet?id="+id
+                    })
+                }
+
+                //重新获取下载完成数据
+                this.getDownloadDone();
+
+                this.$message({
+                    type: 'success',
+                    message: '删除成功！'
                 });
             }).catch(() => {
                 this.$message({

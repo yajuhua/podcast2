@@ -24,6 +24,7 @@
 
         <!--面包屑-->
         <div class="sidebar">
+
             <el-menu :default-active="activeMenu" class="el-menu-vertical-demo" @select="handleMenuSelect">
                 <el-submenu index="system">
                     <template slot="title">系统</template>
@@ -38,8 +39,8 @@
 
                 <el-submenu index="download">
                     <template slot="title">下载</template>
-                    <el-menu-item index="Downloading">正在下载 {{this.downloadData.length}}</el-menu-item>
-                    <el-menu-item index="Done">已完成</el-menu-item>
+                    <el-menu-item index="Downloading">正在下载 {{this.downloadData.length > 0 ? this.downloadData.length:''}}</el-menu-item>
+                    <el-menu-item index="Done">已完成 {{this.downloadDone.length > 0 ? this.downloadDone.length:''}}</el-menu-item>
                     <el-menu-item index="DownloaderInfo">下载器信息</el-menu-item>
                 </el-submenu>
 
@@ -99,38 +100,118 @@
 
             <!--查看正在下载-->
             <div v-show="activeMenu === 'Downloading'">
-                <el-table
-                        :data="downloadData"
-                        style="width: 100%"
-                        :row-class-name="tableRowClassName">
-                    <el-table-column
-                            prop="downloaderName"
-                            label="下载器名称">
-                    </el-table-column>
-                    <el-table-column
-                            prop="description"
-                            label="描述">
-                    </el-table-column>
-                    <el-table-column
-                            prop="totalSize"
-                            label="文件大小">
-                    </el-table-column>
-                    <el-table-column
-                            label="下载进度">
-                        <!--使用slot-scope="scope"来访问表格中每行的数据-->
-                        <el-progress slot-scope="scope" :text-inside="true" :stroke-width="26" :percentage="scope.row.percentage"></el-progress>
-                    </el-table-column>
-                    <el-table-column
-                            prop="currentSpeed"
-                            label="速度">
-                    </el-table-column>
-                    <el-table-column
-                            prop="ETA"
-                            label="剩余时间">
-                    </el-table-column>
-                </el-table>
-            </el-form>
+               <div class="Download">
+                   <el-table
+                           :data="downloadData"
+                           style="width: 100%"
+                           :row-class-name="tableRowClassName">
+                       <el-table-column
+                               prop="downloaderName"
+                               label="下载器名称">
+                       </el-table-column>
+                       <el-table-column
+                               prop="description"
+                               label="描述">
+                       </el-table-column>
+                       <el-table-column
+                               prop="totalSize"
+                               label="文件大小">
+                       </el-table-column>
+                       <el-table-column
+                               label="下载进度">
+                           <!--使用slot-scope="scope"来访问表格中每行的数据-->
+                           <el-progress slot-scope="scope" :text-inside="true" :stroke-width="26" :percentage="scope.row.percentage"></el-progress>
+                       </el-table-column>
+                       <el-table-column
+                               prop="currentSpeed"
+                               label="速度">
+                       </el-table-column>
+                       <el-table-column
+                               prop="ETA"
+                               label="剩余时间">
+                       </el-table-column>
+                   </el-table>
+                   </el-form>
+               </div>
             </div>
+
+
+
+            <!--查看已完成-->
+            <div v-show="activeMenu === 'Done'">
+                <div class="Download">
+                    <el-table
+                            :data="downloadDone"
+                            style="width: 100%"
+                            @selection-change="handleSelectionDoneChange"
+                            :row-class-name="tableRowClassName">
+                        <el-table-column
+                                type="selection"
+                                width="55">
+                        </el-table-column>
+                        <el-table-column
+                                prop="status"
+                                label="状态">
+                            <div slot-scope="scope">
+                                <!--                            <span>{{ scope.row.status === 1 ? '✅ 成功' : '❌ 失败' }}</span>-->
+                                <div v-if="scope.row.status === 1">
+                                    <i class="el-icon-success">成功</i>
+                                </div>
+                                <div v-if="scope.row.status != 1">
+                                    <i class="el-icon-error">失败</i>
+                                </div>
+                            </div>
+                        </el-table-column>
+                        <el-table-column
+                                prop="downloaderName"
+                                label="下载器名称">
+                        </el-table-column>
+                        <el-table-column
+                                prop="description"
+                                label="描述">
+                        </el-table-column>
+                        <el-table-column
+                                prop="totalSize"
+                                label="文件大小">
+                        </el-table-column>
+                        <el-table-column
+                                label="下载进度">
+                            <!--使用slot-scope="scope"来访问表格中每行的数据-->
+                            <div slot-scope="scope">
+                                <div v-if="scope.row.status === 1">
+                                    <el-progress :text-inside="true" :stroke-width="26" :percentage="scope.row.percentage"></el-progress>
+                                </div>
+                                <div v-if="scope.row.status != 1">
+                                    <el-progress :text-inside="true" :stroke-width="26" :percentage="scope.row.percentage" status="exception"></el-progress>
+                                </div>
+                            </div>
+
+                        </el-table-column>
+                        <el-table-column
+                                prop="currentSpeed"
+                                label="速度">
+                        </el-table-column>
+                        <el-table-column
+                                prop="ETA"
+                                label="剩余时间">
+                        </el-table-column>
+                        <el-table-column
+                                prop="finalAt"
+                                label="结束于">
+                        </el-table-column>
+                        <el-table-column
+                                label="删除记录">
+                            <el-button slot-scope="scope" type="danger" icon="el-icon-delete" circle @click="deleteDownloadRecord(scope.row.id)"></el-button>
+                        </el-table-column>
+                    </el-table>
+                    </el-form>
+
+                    <div class="footer">
+                        <el-button type="danger" round v-if="multipleDoneSelection.length > 1" @click="deleteDownloadRecords">批量删除</el-button>
+                    </div>
+                </div>
+            </div>
+
 
             <!--系统概况-->
             <div v-show="activeMenu === 'info'">
