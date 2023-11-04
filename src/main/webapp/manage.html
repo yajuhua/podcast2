@@ -213,6 +213,26 @@
             </div>
 
 
+            <!--查看下载器信息-->
+            <div v-show="activeMenu === 'DownloaderInfo'">
+                <div class="Download">
+                    <el-table
+                            :data="DownloaderInfo"
+                            style="width: 100%"
+                            :row-class-name="tableRowClassName">
+                        <el-table-column
+                                prop="name"
+                                label="名称">
+                        </el-table-column>
+                        <el-table-column
+                                label="版本">
+                            <el-tag :type="success" slot-scope="scope">{{scope.row.version}}</el-tag>
+                        </el-table-column>
+                    </el-table>
+                </div>
+            </div>
+
+
             <!--系统概况-->
             <div v-show="activeMenu === 'info'">
                 <h2>系统概况</h2>

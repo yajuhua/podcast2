@@ -22,7 +22,8 @@ new Vue({
             preparingForUpdates:false,
             downloadData:[],
             downloadDone:[],
-            multipleDoneSelection:[]
+            multipleDoneSelection:[],
+            DownloaderInfo:[]
         };
     }, mounted: function () {
         // 页面加载完成后，发送异步请求，查询数据
@@ -39,6 +40,9 @@ new Vue({
             _this.infoData[3].value = resp.data.systemCode;
 
         })
+
+        //获取下载器信息
+        this.getDownloaderInfo();
 
         //获取下载完成数据
         this.getDownloadDone();
@@ -61,6 +65,17 @@ new Vue({
         this.downloadSocket.close();
     },
     methods: {
+        //获取下载器信息
+        getDownloaderInfo(){
+            _this = this;
+            axios({
+                method:"get",
+                url:"./system/downloaderInfoServlet"
+            }).then(function (resp) {
+                console.log(resp.data);
+                _this.DownloaderInfo = resp.data;
+            })
+        },
         //获取下载已完成数据
         getDownloadDone(){
             _this = this;
