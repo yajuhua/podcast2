@@ -2,7 +2,6 @@ package com.podcast.update;
 
 import com.podcast.Servlet.UserServlet;
 import com.podcast.Utils.N_m3u8DL_RE;
-import com.podcast.service.ChannelService;
 import com.podcast.service.PodcastUserService;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -95,6 +94,13 @@ public class UpdateInit implements ServletContextListener {
         LOGGER.info("开始检查item存活,间隔：" + checkForSurvival+"s");
         Runnable checkForSurvivalTarget = new CheckForSurvival();
         executor.scheduleAtFixedRate(checkForSurvivalTarget, 0, checkForSurvival, TimeUnit.SECONDS);
+
+        //检查更新yt-dlp下载器,每24小时检查更新一次
+        LOGGER.info("更新yt-dlp下载器");
+        //获取检查更新时间间隔，默认24小时
+        long downloaderUpdate = Long.parseLong((String) properties.get("downloaderUpdate"));
+        UpdateDownloader updateDownloader = new UpdateDownloader();
+        executor.scheduleAtFixedRate(updateDownloader,0,downloaderUpdate,TimeUnit.HOURS);
 
     }
 
