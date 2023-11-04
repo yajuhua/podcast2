@@ -13,10 +13,13 @@ import java.util.List;
  */
 public class Target implements Runnable{
     private static final Logger LOGGER = LoggerFactory.getLogger("Target");
+    public static Integer UPDATE_STATUS;//更新状态
     @Override
     public void run() {
+            UPDATE_STATUS = 1;
             LOGGER.info("系统开始扫描！");
             LOGGER.info("createStatus:"+ UserServlet.CREATE_STATUS);
+            LOGGER.info("updateStatus:"+UPDATE_STATUS);
             ChannelService service = new ChannelService();
             List<String> list = service.checkForUpdate(System.currentTimeMillis() / 1000);
             for (String u : list) {
@@ -33,8 +36,10 @@ public class Target implements Runnable{
                     LOGGER.error("在等待下个更新任务时出错，重启服务试试"+" 详细:" +e);
                 }
             }
+            UPDATE_STATUS = 0;
             LOGGER.info("系统扫描完成！");
             LOGGER.info("createStatus:"+UserServlet.CREATE_STATUS);
+            LOGGER.info("updateStatus:"+UPDATE_STATUS);
 
     }
 }
