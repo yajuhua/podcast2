@@ -265,7 +265,7 @@ public class Update extends Thread{
      * 更新
      * @param uuid
      * @param plugin*/
-    public static boolean update(String uuid, Class plugin, Properties pluginProperties, Properties mainProperties, String webappPath)  {
+    public static boolean update(String uuid, Class plugin, Properties pluginProperties, Properties mainProperties, String webappPath) throws Exception {
 
         //0.根据uuid获取xml文件进行读取count、type和link
         String xmlPath = webappPath+ File.separator+"xml"+File.separator+uuid+".xml";
@@ -275,6 +275,7 @@ public class Update extends Thread{
 
         //需要读取的数据
         Integer count = null;
+        String equal = null;
         String type = null;
         String link = null;
 
@@ -289,7 +290,16 @@ public class Update extends Thread{
             Element channel = rootElement.element("channel");
             link = channel.element("link").getText();
             type = channel.element("type").getText();
-            count = Integer.parseInt(channel.element("totalCount").getText());
+
+            //获取countOrEqual
+            List<Element> channels = channel.elements();
+            for (Element element : channels) {
+                if (element.getName().equals("totalCount")){
+                    count = Integer.parseInt(element.getText());
+                }else if (element.getName().equals("equal")){
+                    equal = element.getText();
+                }
+            }
         } catch (DocumentException e) {
             LOGGER.error("解析xml时出错！"+"详细:"+e);
         }
@@ -326,8 +336,15 @@ public class Update extends Thread{
         }
 
         //4.比对count是否需要更新
-        int latestCount = item.getCount();
+        Integer latestCount = null;
+        String lastesEqual = null;
+        Object[] equalOrCount = equalOrCount(item);
 
+        if (equalOrCount[0].equals("getCount")){
+            latestCount = (int)equalOrCount[1];
+        }else if (equalOrCount[0].equals("getEqual")){
+            lastesEqual = (String) equalOrCount[1];
+        }
 
         /**
          *  1.读取配置文件plugin.properties中的downloader值
@@ -335,8 +352,8 @@ public class Update extends Thread{
          *  3.将item内容写入xml文件
          * */
 
-
-        if (latestCount>count){
+        //()
+        if (((latestCount!=null) && latestCount>count) || (lastesEqual!=null && (!lastesEqual.equals(equal)))){
 
             //更新status
             int getChannelStatus = channel.getStatus();
@@ -392,6 +409,12 @@ public class Update extends Thread{
                         enclosureLink = mode.V2();
                         writeItem(item,type,enclosureLink,xmlPath,latestCount);
                         return true;
+                    case "customize" :
+                        enclosureLink = mode.customize();
+                        writeItem(item,type,enclosureLink,xmlPath,item.getCount());
+                        //将资源uuid添加到数据库
+                        channelService.addResource(xmlUuid,resourceUuid);
+                        break;
                     default:
                         return false;
                 }
@@ -408,6 +431,12 @@ public class Update extends Thread{
                         enclosureLink = mode.A2();
                         writeItem(item,type,enclosureLink,xmlPath,latestCount);
                         return true;
+                    case "customize" :
+                        enclosureLink = mode.customize();
+                        writeItem(item,type,enclosureLink,xmlPath,item.getCount());
+                        //将资源uuid添加到数据库
+                        channelService.addResource(xmlUuid,resourceUuid);
+                        break;
                     default:
                         return false;
                 }
@@ -424,7 +453,7 @@ public class Update extends Thread{
      * @param xmlPath
      * @param latestCount
      */
-    public static void writeItem(Item item_,String type,String enclosureLink,String xmlPath,int latestCount){
+    public static void writeItem(Item item_,String type,String enclosureLink,String xmlPath,int latestCount) throws Exception {
         LOGGER.info("开始写入item");
 
         //写入item
@@ -450,8 +479,8 @@ public class Update extends Thread{
         String itemStr = item.toString();
         replaceUpdate(itemStr,xmlPath);
         //更新count
-        LOGGER.info("更新count");
-        updateCount(latestCount,xmlPath);
+        //updateCount(latestCount,xmlPath);
+        updateCountOrEqual(item_,xmlPath);
         LOGGER.info("写入item完成");
 
     }
@@ -494,6 +523,8 @@ public class Update extends Thread{
         updateCount(latestCount,xmlPath);
         LOGGER.info("写入item完成");
 
+
+
     }
 
     /*
@@ -530,6 +561,49 @@ public class Update extends Thread{
         }
     }
 
+    /**
+     * 把比对标签<totalCount>和<equal>更新
+     * @param FilePath xml文件的路径*/
+    private static void updateCountOrEqual(Item item,String FilePath) throws Exception {
+
+      //
+        Object[] equalOrCount = equalOrCount(item);
+
+        String tag = null;
+        if (equalOrCount[0].equals("getCount")){
+            tag = "totalCount";
+            LOGGER.info("更新count");
+        }else {
+            tag = "equal";
+            LOGGER.info("更新equal");
+        }
+
+        try(BufferedReader br = new BufferedReader(new FileReader(FilePath));) {
+
+            ArrayList<String> strings = new ArrayList<String>();
+            String s;//读取的每一行数据
+            while ((s=br.readLine()) != null){
+                if (s.contains("<"+ tag +">")) {
+                    s = "\t\t<"+tag+">"+ equalOrCount[1] +"</"+tag+">";
+                }
+                strings.add(s);//将数据存入集合
+            }
+            BufferedWriter bw = null;
+            FileOutputStream writerStream = new FileOutputStream(FilePath);
+            bw = new BufferedWriter(new OutputStreamWriter(writerStream, "UTF-8"));
+
+            for (String string : strings) {
+                bw.write(string);//一行一行写入数据
+                bw.newLine();//换行
+            }
+            bw.close();
+            writerStream.close();
+
+
+        }catch (Exception e){
+
+        }
+    }
 
     /**
      * 把xml里的null替换成新的item
@@ -660,5 +734,23 @@ public class Update extends Thread{
         URL url = jarFile.toURI().toURL();
         URLClassLoader classLoader = new URLClassLoader(new URL[]{url}, null);
         return classLoader;
+    }
+
+
+    /**
+     * 判断使用哪种方式更新
+     * @param item
+     * @return
+     * @throws Exception
+     */
+    public static Object[] equalOrCount(Item item) throws Exception {
+        Class<? extends Item> aClass = item.getClass();
+        Method[] methods = aClass.getMethods();
+        for (Method method : methods) {
+            if (method.getName().equals("getEqual") && method.invoke(item)!=null) {
+                return new Object[]{"getEqual",method.invoke(item)};
+            }
+        }
+        return new Object[]{"getCount",aClass.getMethod("getCount").invoke(item)};
     }
 }
