@@ -216,6 +216,13 @@ public class Update extends Thread{
                         enclosureLink = mode.V2();
                         writeItem(item,type,enclosureLink,xmlPath,item.getCount());
                         break;
+
+                    case "customize" :
+                        enclosureLink = mode.customize();
+                        writeItem(item,type,enclosureLink,xmlPath,item.getCount());
+                        //将资源uuid添加到数据库
+                        channelService.addResource(xmlUuid,resourceUuid);
+                        break;
                 }
             }else {
                 //音频
@@ -232,6 +239,12 @@ public class Update extends Thread{
                         writeItem(item,type,enclosureLink,xmlPath,item.getCount());
                         break;
 
+                    case "customize" :
+                        enclosureLink = mode.customize();
+                        writeItem(item,type,enclosureLink,xmlPath,item.getCount());
+                        //将资源uuid添加到数据库
+                        channelService.addResource(xmlUuid,resourceUuid);
+                        break;
                 }
             }
         }

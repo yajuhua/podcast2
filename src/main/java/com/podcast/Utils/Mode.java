@@ -1,11 +1,19 @@
 package com.podcast.Utils;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.Test;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * 音视频模式
@@ -36,6 +44,9 @@ public class Mode {
      * 服务器IP地址
      */
     private String IP;
+
+    public Mode() {
+    }
 
     /**
      * 参数：资源链接、保存位置：webapp 、 下载器 、 uuid 、type
@@ -175,5 +186,90 @@ public class Mode {
         //debug
         LOGGER.debug("资源url(V2):"+this.Enclosure);
         return this.Enclosure;
+    }
+
+    /**
+     * 自定义模式
+     * @return 返回资源URL
+     */
+    public  String customize() throws Exception {
+
+        //资源存放位置
+        String filePath = this.webappPath+ File.separator+this.type+File.separator;
+
+        //集合类型
+        Type listType = new TypeToken<List<String[]>>() {}.getType();
+
+        //将json字符串转换成对象
+        Gson gson = new Gson();
+        List<String[]> customCmd = gson.fromJson(this.Enclosure, listType);
+
+        String toolName; //工具名称
+        String command; //执行命令
+        String result = null; //资源绝对路径
+        String format = null; //格式
+        List<String> results = new ArrayList<>();//存放返回资源绝对路径
+
+        for (int i = 0; i < customCmd.size(); i++) {
+            toolName = customCmd.get(i)[0];
+            command = customCmd.get(i)[1].replace("${path}",filePath).replace("${rename}",uuid);
+            result = customCmd.get(i)[2].replace("${path}",filePath).replace("${rename}",uuid);
+            format = result.substring(result.indexOf("."));
+            results.add(result);//收集返回资源绝对路径
+            switch (toolName){
+                case "yt-dlp":
+                    LOGGER.info("yt-dlp执行:"+command);
+                    Yt_dlp ytDlp = new Yt_dlp();
+                    ytDlp.ytDlpCmd(command);
+                    LOGGER.info("yt-dlpResult:"+result);
+                    break;
+                case "N_m3u8DL-RE":
+                    LOGGER.info("N_m3u8DL-RE执行:"+command);
+                    N_m3u8DL_RE n_m3u8DL_re = new N_m3u8DL_RE();
+                    n_m3u8DL_re.nM3u8DLRECmd(command);
+                    LOGGER.info("N_m3u8DL-REResult:"+result);
+                    break;
+                case "ffmpeg":
+                    LOGGER.info("ffmpeg执行:"+command);
+                    N_m3u8DL_RE.Cmd(command);
+                    LOGGER.info("ffmpegResult:"+result);
+                    break;
+                case "cmd":
+                    LOGGER.info("执行cmd命令:"+command);
+                    N_m3u8DL_RE.Cmd(command);
+                    LOGGER.info("cmdResult:"+result);
+            }
+        }
+
+        //除了最后一个资源
+        String lastResult  = results.get(results.size() - 1);
+        for (int i = 0; i < results.size(); i++) {
+            if (!results.get(i).contains(lastResult)){
+                //删除资源,除了最后一个资源
+                if (FileUtils.deleteQuietly(new File(results.get(i)))){
+                    LOGGER.info("删除成功："+results.get(i));
+                }
+            }
+        }
+
+        //拼接URL
+        String url = this.IP+"/"+this.type+"/"+this.uuid+format;
+        //返回URL
+        return url;
+    }
+
+    @Test
+    public void t3() throws Exception {
+        String IP = "http://podcast2.lighnting.cyou:8088/podcast2";
+        String uuid = UUID.randomUUID().toString();
+        String[] cmd1 = {"yt-dlp","yt-dlp -f mp4 --path ${path}  --output ${rename}.mp4 https://www.youtube.com/watch?v=YAXTn0E-Zgo&ab_channel=Tranquility","${path}${rename}.mp4"};
+        String[] cmd2 = {"ffmpeg","ffmpeg -i ${path}${rename}.mp4 -vn -c:a copy ${path}${rename}.m4a","${path}${rename}.m4a"};
+        //String[] cmd3 = {"cmd","del ${path}${rename}.mp4","${path}${rename}.m4a"};
+        List<String[]> cmds = new ArrayList<>();
+        cmds.add(cmd1);
+        cmds.add(cmd2);
+        Mode mode = new Mode(new Gson().toJson(cmds),"E:\\webapps",null,uuid,"audio",IP);
+        String customize = mode.customize();
+        System.out.println(customize);
     }
 }
