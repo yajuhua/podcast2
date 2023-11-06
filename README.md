@@ -30,6 +30,7 @@ curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh && system
 mkdir  ~/podcast2
 cd ~/podcast2
 docker run -id --name=podcast2 \
+--restart=always \
 -p 8088:8088 \
 -p 6800:6800 \
 -v ~/podcast2/xml:/opt/tomcat/tomcat8/webapps/podcast2/xml/ \
