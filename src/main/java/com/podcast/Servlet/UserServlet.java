@@ -339,6 +339,7 @@ public class UserServlet  extends BaseServlet{
         String typeStr = request.getParameter("type");
         String url = request.getParameter("url");
         String episodes = request.getParameter("episodes");
+        String args = request.getParameter("args");
         //频道类型："Video、Live、News、Shorts、Post
         String frequency = request.getParameter("frequency");
         ServletContext servletContext = request.getServletContext();
@@ -441,6 +442,7 @@ public class UserServlet  extends BaseServlet{
         ps.print(xml);
         ps.close();
 
+        //将数据封装存入数据库
         ChannelDate channelDate = new ChannelDate();
         channelDate.setUuid(uuid);
         channelDate.setChannelTitle(channel.getTitle());
@@ -450,6 +452,12 @@ public class UserServlet  extends BaseServlet{
         channelDate.setLatestCheckTimestamp(System.currentTimeMillis()/1000);
         channelDate.setChannelFace(channel.getImage());
         channelDate.setSurvival(survivalTime);
+        channelDate.setArgs(args);//下载器选项
+        channelDate.setLink(channel.getLink());//频道链接
+        channelDate.setEqual("none");//比对更新
+        channelDate.setDescription(channel.getDescription());//频道描述
+        channelDate.setType(typeStr);//频道资源类型
+        channelDate.setPlugin(usePluginName);//频道使用插件
         ChannelService service1 = new ChannelService();
         service1.add(channelDate);
 

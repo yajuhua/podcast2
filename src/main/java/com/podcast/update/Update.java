@@ -261,6 +261,7 @@ public class Update extends Thread{
         Channel channel = gson.fromJson(channelStr, Channel.class);
         int getChannelStatus = channel.getStatus();
         channelService.UpdateForStatus(getChannelStatus,uuid);
+        channelService.UpdateForEqual(item_.getEqual(),uuid);
 
         return true;
     }
@@ -410,16 +411,19 @@ public class Update extends Thread{
                         writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
+                        channelService.UpdateForEqual(item.getEqual(),uuid);
                         return true;
                     case "V2" :
                         enclosureLink = mode.V2();
                         writeItem(item,type,enclosureLink,xmlPath);
+                        channelService.UpdateForEqual(item.getEqual(),uuid);
                         return true;
                     case "customize" :
                         enclosureLink = mode.customize();
                         writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
+                        channelService.UpdateForEqual(item.getEqual(),uuid);
                         break;
                     default:
                         return false;
@@ -432,16 +436,19 @@ public class Update extends Thread{
                         writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
+                        channelService.UpdateForEqual(item.getEqual(),uuid);
                         return true;
                     case "A2" :
                         enclosureLink = mode.A2();
                         writeItem(item,type,enclosureLink,xmlPath);
+                        channelService.UpdateForEqual(item.getEqual(),uuid);
                         return true;
                     case "customize" :
                         enclosureLink = mode.customize();
                         writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
+                        channelService.UpdateForEqual(item.getEqual(),uuid);
                         break;
                     default:
                         return false;
@@ -457,7 +464,6 @@ public class Update extends Thread{
      * @param type
      * @param enclosureLink
      * @param xmlPath
-     * @param latestCount
      */
     public static void writeItem(Item item_,String type,String enclosureLink,String xmlPath) throws Exception {
         LOGGER.info("开始写入item");
@@ -488,48 +494,6 @@ public class Update extends Thread{
         //updateCount(latestCount,xmlPath);
         updateCountOrEqual(item_,xmlPath);
         LOGGER.info("写入item完成");
-
-    }
-
-    /**
-     * 旧版1.1.0
-     * @param methodResult
-     * @param type
-     * @param enclosureLink
-     * @param xmlPath
-     * @param latestCount
-     */
-    public static void writeItem(Map<String,Object> methodResult,String type,String enclosureLink,String xmlPath,int latestCount){
-        LOGGER.info("开始写入item");
-
-        //写入item
-        StringBuffer item = new StringBuffer();
-        item.append("\t<update>update</update>\n");
-        item.append("\t<item>\n");
-        long time = (Long) methodResult.get("getItemCreateTime");
-        item.append("\t\t<pubDate>").append(TimeFormat.change(String.valueOf(time))).append("</pubDate>\n");
-        item.append("\t\t<title>").append(methodResult.get("getItemTitle")).append("</title>\n");
-        item.append("\t\t<link>").append(methodResult.get("getItemLink")).append("</link>\n");
-        if ("video".equals(type)){
-            item.append("\t\t<enclosure url=\"").append(enclosureLink).append("\" type=\"video/mp4\" />\n");
-        }else {
-            item.append("\t\t<enclosure url=\"").append(enclosureLink).append("\" type=\"audio/x-m4a\"/>\n");
-        }
-        //需要一个时长的时间格式
-        item.append("\t\t<itunes:duration>").append(TimeFormat.duration((int)methodResult.get("getItemDuration"))).append("</itunes:duration>\n");
-        item.append("\t\t<description>").append(methodResult.get("getItemDescription")).append("</description>\n");
-        item.append("\t\t<itunes:image href=\"").append(methodResult.get("getItemImage")).append("\"/>\n");
-        item.append("\t</item>\n");
-
-        //把null替换成item
-        String itemStr = item.toString();
-        replaceUpdate(itemStr,xmlPath);
-        //更新count
-        LOGGER.info("更新count");
-        updateCount(latestCount,xmlPath);
-        LOGGER.info("写入item完成");
-
-
 
     }
 

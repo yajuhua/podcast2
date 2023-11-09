@@ -200,4 +200,17 @@ public class ChannelService {
         sqlSession.commit();
         sqlSession.close();
     }
+
+    /**
+     * 更新频道状态
+     * @param equal 比对更新
+     * @param uuid
+     */
+    public void UpdateForEqual(String equal,String uuid){
+        SqlSession sqlSession = factory.openSession();
+        ChannelMapper mapper = sqlSession.getMapper(ChannelMapper.class);
+        mapper.UpdateForEqual(equal,uuid);
+        sqlSession.commit();
+        sqlSession.close();
+    }
 }
