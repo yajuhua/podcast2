@@ -143,4 +143,12 @@ public interface ChannelMapper {
      */
     @Update("UPDATE channel SET equal = #{equal} WHERE uuid = #{uuid}")
     void UpdateForEqual(@Param("equal") String equal, @Param("uuid") String uuid);
+
+    /**
+     * 根据uuid获取args
+     * @return args
+     */
+
+    @Select("select args from channel where uuid = #{uuid}")
+    String selectArgs(@Param("uuid") String uuid);
 }

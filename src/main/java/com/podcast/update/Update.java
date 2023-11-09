@@ -151,9 +151,12 @@ public class Update extends Thread{
             LOGGER.error("解析xml时出错！"+"详细:"+e);
         }
 
+        //获取args
+        String args = channelService.selectArgs(uuid);
+
         //通过插件获取items
-        Constructor constructor = plugin.getConstructor(String.class, String.class, List.class);
-        Object o = constructor.newInstance(link, type, episodes);
+        Constructor constructor = plugin.getConstructor(String.class, String.class, List.class,String.class);
+        Object o = constructor.newInstance(link, type, episodes,args);
         Method methodItems = plugin.getMethod("items");
         List<String> itemsStr = (List<String>)methodItems.invoke(o);
         List<Item> items = new ArrayList<>();
@@ -314,11 +317,12 @@ public class Update extends Thread{
         Object o = null;
         Item item = null;
         Channel channel = null;
-
+        String args = channelService.selectArgs(uuid);//args
         try {
+
             //1.获取构造器
-            constructor = plugin.getConstructor(String.class,String.class);
-            o = constructor.newInstance(link,type);
+            constructor = plugin.getConstructor(String.class,String.class,String.class);
+            o = constructor.newInstance(link,type,args);
 
             //获取最新
             Method methodLatestItem = plugin.getMethod("latestItem");

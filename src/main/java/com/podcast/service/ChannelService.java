@@ -213,4 +213,16 @@ public class ChannelService {
         sqlSession.commit();
         sqlSession.close();
     }
+
+    /**
+     * 根据uuid获取args
+     * @return
+     */
+    public String selectArgs(String uuid){
+        SqlSession sqlSession = factory.openSession();
+        ChannelMapper mapper = sqlSession.getMapper(ChannelMapper.class);
+        String args = mapper.selectArgs(uuid);
+        sqlSession.close();
+        return args;
+    }
 }
