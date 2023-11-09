@@ -403,7 +403,7 @@ public class UserServlet  extends BaseServlet{
         Item item = gson.fromJson(itemStr, Item.class);
         Object[] equalOrCount = Update.equalOrCount(item);
 
-
+        LOGGER.info("判断equalOrCount："+Arrays.toString(equalOrCount));
 
         //4.以uuid命名，保存到webapp/xml/UUID.xml
         String uuid = UUID.randomUUID().toString();

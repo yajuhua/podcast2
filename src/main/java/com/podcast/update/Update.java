@@ -186,6 +186,8 @@ public class Update extends Thread{
         }
 
 
+        Item item_ = null;
+
 
         for (int i = 0; i < items.size(); i++) {
             /**
@@ -195,6 +197,7 @@ public class Update extends Thread{
             String resourceUuid = UUID.randomUUID().toString();
             //解析item对象
             Item item = items.get(i);
+            item_ = item;
             //创建模式
             Mode mode = new Mode(item.getEnclosure(),webappPath,downLoderClass,resourceUuid,type,IP);
 
@@ -207,19 +210,19 @@ public class Update extends Thread{
                 switch (videoMode){
                     case "V1":
                         enclosureLink = mode.V1();
-                        writeItem(item,type,enclosureLink,xmlPath,item.getCount());
+                        writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
                         break;
 
                     case "V2" :
                         enclosureLink = mode.V2();
-                        writeItem(item,type,enclosureLink,xmlPath,item.getCount());
+                        writeItem(item,type,enclosureLink,xmlPath);
                         break;
 
                     case "customize" :
                         enclosureLink = mode.customize();
-                        writeItem(item,type,enclosureLink,xmlPath,item.getCount());
+                        writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
                         break;
@@ -229,25 +232,28 @@ public class Update extends Thread{
                 switch (audioMode){
                     case "A1":
                         enclosureLink = mode.A1();
-                        writeItem(item,type,enclosureLink,xmlPath,item.getCount());
+                        writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
                         break;
 
                     case "A2" :
                         enclosureLink = mode.A2();
-                        writeItem(item,type,enclosureLink,xmlPath,item.getCount());
+                        writeItem(item,type,enclosureLink,xmlPath);
                         break;
 
                     case "customize" :
                         enclosureLink = mode.customize();
-                        writeItem(item,type,enclosureLink,xmlPath,item.getCount());
+                        writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
                         break;
                 }
             }
         }
+
+        //更新对比
+        updateCountOrEqual(item_,xmlPath);
 
         //更新status
         Method methodChannel = plugin.getMethod("channel");
@@ -401,17 +407,17 @@ public class Update extends Thread{
                     case "V1":
                         enclosureLink = mode.V1();
                         LOGGER.info("转换后的链接："+enclosureLink);
-                        writeItem(item,type,enclosureLink,xmlPath,latestCount);
+                        writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
                         return true;
                     case "V2" :
                         enclosureLink = mode.V2();
-                        writeItem(item,type,enclosureLink,xmlPath,latestCount);
+                        writeItem(item,type,enclosureLink,xmlPath);
                         return true;
                     case "customize" :
                         enclosureLink = mode.customize();
-                        writeItem(item,type,enclosureLink,xmlPath,item.getCount());
+                        writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
                         break;
@@ -423,17 +429,17 @@ public class Update extends Thread{
                 switch (audioMode){
                     case "A1":
                         enclosureLink = mode.A1();
-                        writeItem(item,type,enclosureLink,xmlPath,latestCount);
+                        writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
                         return true;
                     case "A2" :
                         enclosureLink = mode.A2();
-                        writeItem(item,type,enclosureLink,xmlPath,latestCount);
+                        writeItem(item,type,enclosureLink,xmlPath);
                         return true;
                     case "customize" :
                         enclosureLink = mode.customize();
-                        writeItem(item,type,enclosureLink,xmlPath,item.getCount());
+                        writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
                         break;
@@ -453,7 +459,7 @@ public class Update extends Thread{
      * @param xmlPath
      * @param latestCount
      */
-    public static void writeItem(Item item_,String type,String enclosureLink,String xmlPath,int latestCount) throws Exception {
+    public static void writeItem(Item item_,String type,String enclosureLink,String xmlPath) throws Exception {
         LOGGER.info("开始写入item");
 
         //写入item
