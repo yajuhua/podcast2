@@ -495,4 +495,19 @@ public class UserServlet  extends BaseServlet{
         response.setContentType("text/*;charset=utf-8");
         response.getWriter().write("ok");
     }
+
+    /**
+     * 获取channel数据库表中所有数据
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    public void channelDataServlet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        List<ChannelDate> channelDates = channelService.seletAll();
+        response.setContentType("text/*;charset=utf-8");
+        response.getWriter().write(gson.toJson(channelDates));
+    }
+
+
 }
