@@ -8,7 +8,10 @@ new Vue({
             survival:"604800",
             customInput:null,
             episodes:"0",
-            finalEpisodes:null
+            finalEpisodes:null,
+            selectArgs:"0",
+            args:null,
+            loading: false
         }
     },methods:{
         submit(){
@@ -45,12 +48,15 @@ new Vue({
                     for (let i = 0; i < pluginList.length; i++) {
                         if (_this.url.includes(pluginList[i].name)){
 
+                            _this.loading = true;
+                            console.log("args:"+_this.args);
                             //提交表单
                             axios({
                                 method: "post",
                                 url: "./user/xmlFactoryServlet",
-                                data: "url=" + _this.url + "&type=" + _this.type + "&frequency=" + _this.frequency + "&survival=" + _this.survival + "&episodes=" + _this.finalEpisodes
+                                data: "url=" + _this.url + "&type=" + _this.type + "&frequency=" + _this.frequency + "&survival=" + _this.survival + "&episodes=" + _this.finalEpisodes+"&args="+_this.args
                             }).then(function (response) {
+                                _this.loading = false;
                                 console.log(response.data)//打印响应数据
                                 if (response.data === "ok") {
                                     _this.$message({
@@ -90,12 +96,15 @@ new Vue({
                     for (let i = 0; i < pluginList.length; i++) {
                         if (_this.url.includes(pluginList[i].name)){
 
+                            _this.loading = true;
+
                             //提交表单
                             axios({
                                 method: "post",
                                 url: "./user/xmlFactoryServlet",
-                                data: "url=" + _this.url + "&type=" + _this.type + "&frequency=" + _this.frequency + "&survival=" + _this.survival + "&episodes=" + _this.finalEpisodes
+                                data: "url=" + _this.url + "&type=" + _this.type + "&frequency=" + _this.frequency + "&survival=" + _this.survival + "&episodes=" + _this.finalEpisodes+"&args="+_this.args
                             }).then(function (response) {
+                                _this.loading = false;
                                 console.log(response.data)//打印响应数据
                                 if (response.data === "ok") {
                                     _this.$message({
