@@ -11,6 +11,14 @@ public class ChannelDate {
   private Long latestCheckTimestamp;
   private String channelFace;
   private Long survival;
+  private String args;
+  private String link;
+  private String equal;
+  private String description;
+  private String type;
+  private String plugin;
+
+
 
     public ChannelDate() {
     }
@@ -23,6 +31,54 @@ public class ChannelDate {
         this.latestCheckTimestamp = latestCheckTimestamp;
         this.channelFace = channelFace;
         this.survival = survival;
+    }
+
+    public String getArgs() {
+        return args;
+    }
+
+    public void setArgs(String args) {
+        this.args = args;
+    }
+
+    public String getLink() {
+        return link;
+    }
+
+    public void setLink(String link) {
+        this.link = link;
+    }
+
+    public String getEqual() {
+        return equal;
+    }
+
+    public void setEqual(String equal) {
+        this.equal = equal;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getPlugin() {
+        return plugin;
+    }
+
+    public void setPlugin(String plugin) {
+        this.plugin = plugin;
     }
 
     public String getUuid() {
@@ -91,6 +147,12 @@ public class ChannelDate {
                 ", latestCheckTimestamp=" + latestCheckTimestamp +
                 ", channelFace='" + channelFace + '\'' +
                 ", survival=" + survival +
+                ", args='" + args + '\'' +
+                ", link='" + link + '\'' +
+                ", equal='" + equal + '\'' +
+                ", description='" + description + '\'' +
+                ", type='" + type + '\'' +
+                ", plugin='" + plugin + '\'' +
                 '}';
     }
 }

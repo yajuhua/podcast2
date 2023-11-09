@@ -25,8 +25,8 @@ public interface ChannelMapper {
     /**
      * 添加数据
      */
-    @Insert("INSERT INTO channel (uuid, channel_title, update_timestamp, frequency, latest_check_timestamp, channel_face, survival_time) " +
-            "VALUES (#{uuid}, #{channelTitle}, #{updateTimestamp}, #{frequency}, #{latestCheckTimestamp}, #{channelFace}, #{survival})")
+    @Insert("INSERT INTO channel (uuid, channel_title, update_timestamp, frequency, latest_check_timestamp, channel_face, survival_time,args,link,equal,description,type,plugin) " +
+            "VALUES (#{uuid}, #{channelTitle}, #{updateTimestamp}, #{frequency}, #{latestCheckTimestamp}, #{channelFace}, #{survival}, #{args}, #{link}, #{equal}, #{description}, #{type}, #{plugin})")
     void add(ChannelDate channelDate);
 
 
@@ -135,4 +135,12 @@ public interface ChannelMapper {
      */
     @Delete("DELETE FROM download WHERE id = #{id}")
     void deleteDownloadRecord(@Param("id") String id);
+
+    /**
+     * 更新频道equal
+     * @param equal 比对更新
+     * @param uuid
+     */
+    @Update("UPDATE channel SET equal = #{equal} WHERE uuid = #{uuid}")
+    void UpdateForEqual(@Param("equal") String equal, @Param("uuid") String uuid);
 }
