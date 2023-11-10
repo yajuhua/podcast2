@@ -422,13 +422,13 @@ public class UserServlet  extends BaseServlet{
         xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<rss version=\"2.0\" encoding=\"UTF-8\" xmlns:atom=\"http://www.w3.org/2005/Atom\" xmlns:itunes=\"http://www.itunes.com/dtds/podcast-1.0.dtd\">\n");
         xml.append("\t<channel>\n");
-        xml.append("\t\t<title>").append(channel.getTitle()).append("</title>\n");
+        xml.append("\t\t<title><![CDATA[ ").append(channel.getTitle()).append(" ]]></title>\n");
         xml.append("\t\t<pubDate>").append(TimeFormat.now()).append("</pubDate>\n");
         xml.append("\t\t<language>").append("zh-CN").append("</language>\n");
-        xml.append("\t\t<link>").append(channel.getLink()).append("</link>\n");
+        xml.append("\t\t<link><![CDATA[ ").append(channel.getLink()).append(" ]]></link>\n");
         xml.append("\t\t<itunes:image href=\"").append(channel.getImage()).append("\"/>\n");
-        xml.append("\t\t<description>").append(channel.getDescription()).append("</description>\n");
-        xml.append("\t\t<itunes:author>").append(channel.getAuthor()).append("</itunes:author>\n");
+        xml.append("\t\t<description><![CDATA[ ").append(channel.getDescription()).append(" ]]></description>\n");
+        xml.append("\t\t<itunes:author><![CDATA[ ").append(channel.getAuthor()).append(" ]]></itunes:author>\n");
         xml.append("\t\t<itunes:category text=\"").append(channel.getCategory()).append("\"/>\n");
         xml.append("\t\t<type>").append(type.name()).append("</type>\n");//为创建完成后就更新，在totalCount上减一
         //xml.append("\t\t<totalCount>").append(getCount-1).append("</totalCount>\n");
@@ -550,13 +550,13 @@ public class UserServlet  extends BaseServlet{
                 xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                         "<rss version=\"2.0\" encoding=\"UTF-8\" xmlns:atom=\"http://www.w3.org/2005/Atom\" xmlns:itunes=\"http://www.itunes.com/dtds/podcast-1.0.dtd\">\n");
                 xml.append("\t<channel>\n");
-                xml.append("\t\t<title>").append(channelDate.getChannelTitle()).append("</title>\n");
+                xml.append("\t\t<title><![CDATA[ ").append(channelDate.getChannelTitle()).append(" ]]></title>\n");
                 xml.append("\t\t<pubDate>").append(TimeFormat.now()).append("</pubDate>\n");
                 xml.append("\t\t<language>").append("zh-CN").append("</language>\n");
-                xml.append("\t\t<link>").append(channelDate.getLink()).append("</link>\n");
+                xml.append("\t\t<link><![CDATA[ ").append(channelDate.getLink()).append(" ]]></link>\n");
                 xml.append("\t\t<itunes:image href=\"").append(channelDate.getChannelFace()).append("\"/>\n");
-                xml.append("\t\t<description>").append(channelDate.getDescription()).append("</description>\n");
-                xml.append("\t\t<itunes:author>").append(channelDate.getChannelTitle()).append("</itunes:author>\n");
+                xml.append("\t\t<description><![CDATA[ ").append(channelDate.getDescription()).append(" ]]></description>\n");
+                xml.append("\t\t<itunes:author><![CDATA[ ").append(channelDate.getChannelTitle()).append(" ]]></itunes:author>\n");
                 xml.append("\t\t<itunes:category text=\"").append("null").append("\"/>\n");
                 xml.append("\t\t<type>").append(channelDate.getType()).append("</type>\n");//为创建完成后就更新，在totalCount上减一
 

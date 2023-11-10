@@ -478,8 +478,8 @@ public class Update extends Thread{
         item.append("\t<item>\n");
         long time = item_.getCreateTime();
         item.append("\t\t<pubDate>").append(TimeFormat.change(String.valueOf(time))).append("</pubDate>\n");
-        item.append("\t\t<title>").append(item_.getTitle()).append("</title>\n");
-        item.append("\t\t<link>").append(item_.getLink()).append("</link>\n");
+        item.append("\t\t<title><![CDATA[ ").append(item_.getTitle()).append(" ]]></title>\n");
+        item.append("\t\t<link><![CDATA[ ").append(item_.getLink()).append(" ]]></link>\n");
         if ("video".equals(type)){
             item.append("\t\t<enclosure url=\"").append(enclosureLink).append("\" type=\"video/mp4\" />\n");
         }else {
@@ -487,7 +487,7 @@ public class Update extends Thread{
         }
         //需要一个时长的时间格式
         item.append("\t\t<itunes:duration>").append(TimeFormat.duration(item_.getDuration())).append("</itunes:duration>\n");
-        item.append("\t\t<description>").append(item_.getDescription()).append("</description>\n");
+        item.append("\t\t<description><![CDATA[ ").append(item_.getDescription()).append(" ]]></description>\n");
         item.append("\t\t<itunes:image href=\"").append(item_.getImage()).append("\"/>\n");
         item.append("\t</item>\n");
 
