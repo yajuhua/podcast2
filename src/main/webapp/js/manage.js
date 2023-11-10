@@ -23,7 +23,12 @@ new Vue({
             downloadData:[],
             downloadDone:[],
             multipleDoneSelection:[],
-            DownloaderInfo:[]
+            DownloaderInfo:[],
+            multipleSelectChannelData: [],
+            channelData:null,
+            importData:null,
+            multipleSelectImportData:null,
+            importDataDialog:false
         };
     }, mounted: function () {
         // 页面加载完成后，发送异步请求，查询数据
@@ -41,6 +46,9 @@ new Vue({
 
         })
 
+        //获取频道所有信息
+        this.getAllChannelData();
+
         //获取下载器信息
         this.getDownloaderInfo();
 
@@ -50,6 +58,7 @@ new Vue({
         //开启WS
         this.setupLogSocket();
         this.setupDownloadSocket();
+
 
     },
     created() {
@@ -476,6 +485,96 @@ new Vue({
                     message: '已取消删除'
                 });
             });
+        },
+        //选择频道数据
+        selectionChannelData(val) {
+            this.multipleSelectChannelData = val;
+        },
+        //选择频道数据
+        selectionImportData(val) {
+            this.multipleSelectImportData = val;
+        },
+        //获取所有频道数据
+        getAllChannelData(){
+            _this = this;
+            axios({
+                method:"get",
+                url:"./user/channelDataServlet"
+            }).then(function (resp) {
+                var json = resp.data;
+                _this.channelData = json;
+                console.log(_this.channelData)
+            })
+        },
+        //数据导出
+        dataExport(){
+            //选择不能为空
+            if (this.multipleSelectChannelData.length!=0) {
+                //生成
+                const blob = new Blob([JSON.stringify(this.multipleSelectChannelData)], {type: 'text/plain'});
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'dataExport.json');
+                document.body.appendChild(link);
+                link.click();
+            }
+        },
+        //数据导入
+        dataImport(){
+            this.$refs.fileInput.value = '';
+            this.triggerFileSelect();
+        },
+        //读取并解析本地json文件
+        handleFileSelect(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+
+            // 解除之前的事件处理函数绑定
+            reader.onload = null;
+
+            // 注册新的事件处理函数
+            reader.onload = () => {
+                const content = reader.result;
+                this.importData = JSON.parse(content);
+                this.importDataDialog = true
+            };
+
+            reader.readAsText(file);
+        },
+        triggerFileSelect() {
+            document.querySelector('.custom-file-input').click();
+        },
+        //发往服务器
+        importChannelDataToService(){
+            _this = this;
+            axios({
+                method: "post",
+                url: "./user/importChannelDataServlet",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"  // 指定请求字符编码为 UTF-8
+                },
+                data: "importData=" + encodeURIComponent(JSON.stringify(_this.multipleSelectImportData))  // 对数据进行 URL 编码
+            }).then(function (resp) {
+                var rs = resp.data;
+                if (rs == 'importOk') {
+                    console.log('importOk');
+
+                    //重新获取频道数据
+                    _this.channelData = _this.getAllChannelData();
+
+                    //提示成功
+                    _this.$message({
+                        message: '导入成功！',
+                        type: 'success'
+                    });
+                }else {
+                    _this.$message.error('导入失败，请检查文件！');
+                }
+            })
+
+            this.importDataDialog = false;
         }
     },
 });
