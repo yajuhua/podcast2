@@ -35,6 +35,7 @@
                 <el-submenu index="user">
                     <template slot="title">用户</template>
                     <el-menu-item index="changePassword">修改</el-menu-item>
+                    <el-menu-item index="dataMigration">数据迁移</el-menu-item>
                 </el-submenu>
 
                 <el-submenu index="download">
@@ -75,7 +76,7 @@
             <div v-show="activeMenu === 'about'">
                 <el-menu>
                     <el-menu-item>
-                        <iframe src="https://yajuhua.github.io" width="100%" height="1080" frameborder="0"></iframe>
+                        <iframe  src="https://yajuhua.github.io" width="100%" height="1080" frameborder="0"></iframe>
                     </el-menu-item>
                 </el-menu>
             </div>
@@ -98,9 +99,67 @@
                 </el-form></div>
 
 
+            <!--数据迁移-->
+            <div v-show="activeMenu === 'dataMigration'">
+
+                <el-button type="primary" round @click="dataImport">
+                    导入
+                    <!--ref属性用于重置文件，避免浏览器认为是同一个文件-->
+                    <input type="file" class="custom-file-input" @change="handleFileSelect" ref="fileInput" />
+                </el-button>
+                <el-table
+                        :data="channelData"
+                        style="width: 100%"
+                        @selection-change="selectionChannelData"
+                        :row-class-name="tableRowClassName">
+                    <el-table-column
+                            type="selection"
+                            width="55">
+                    </el-table-column>
+                    <el-table-column
+                            prop="channelTitle"
+                            label="频道名称"
+                            >
+                    </el-table-column>
+                </el-table>
+                <div class="footer">
+                    <el-button type="success" round v-if="multipleSelectChannelData.length > 0" @click="dataExport">导出</el-button>
+                </div>
+            </div>
+
+            <!--选择导入数据 -->
+            <el-dialog
+                    title="数据导入"
+                    width="50%"
+                    :visible.sync="importDataDialog"
+                    >
+                <div>
+                    <el-table
+                            :data="importData"
+                            style="width: 100%"
+                            @selection-change="selectionImportData"
+                            :row-class-name="tableRowClassName">
+                        <el-table-column
+                                type="selection"
+                                width="55">
+                        </el-table-column>
+                        <el-table-column
+                                prop="channelTitle"
+                                label="频道名称"
+                        >
+                        </el-table-column>
+                    </el-table>
+                </div>
+                    <span slot="footer" class="dialog-footer">
+                    <el-button @click="importDataDialog = false">取 消</el-button>
+                    <el-button type="primary" @click="importChannelDataToService">导入</el-button>
+                </span>
+            </el-dialog>
+
+
             <!--查看正在下载-->
             <div v-show="activeMenu === 'Downloading'">
-               <div class="Download">
+               <div>
                    <el-table
                            :data="downloadData"
                            style="width: 100%"
@@ -139,7 +198,7 @@
 
             <!--查看已完成-->
             <div v-show="activeMenu === 'Done'">
-                <div class="Download">
+                <div>
                     <el-table
                             :data="downloadDone"
                             style="width: 100%"
@@ -215,7 +274,7 @@
 
             <!--查看下载器信息-->
             <div v-show="activeMenu === 'DownloaderInfo'">
-                <div class="Download">
+                <div>
                     <el-table
                             :data="DownloaderInfo"
                             style="width: 100%"
