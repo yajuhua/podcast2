@@ -2,6 +2,8 @@ package com.podcast.Servlet;
 
 import com.alibaba.fastjson.JSON;
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 import com.podcast.Type.Type;
 import com.podcast.Utils.TimeFormat;
 import com.podcast.loader.PluginLoader;
@@ -509,5 +511,74 @@ public class UserServlet  extends BaseServlet{
         response.getWriter().write(gson.toJson(channelDates));
     }
 
+
+    /**
+     * 导入数据
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    public void importChannelDataServlet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        ServletContext servletContext = request.getServletContext();
+        String webappPath = servletContext.getRealPath("/");
+
+
+
+        //类型
+        java.lang.reflect.Type listType = new TypeToken<List<ChannelDate>>(){}.getType();
+        String importData = request.getParameter("importData");
+        if (importData!=null){
+
+            LOGGER.debug("importData:"+importData);
+
+            List<ChannelDate> channelDates = null;
+            try {
+                channelDates = gson.fromJson(importData, listType);
+            } catch (JsonSyntaxException e) {
+                response.getWriter().write("importError");
+            }
+
+            for (ChannelDate channelDate : channelDates) {
+                //获取基本信息
+                String uuid = channelDate.getUuid();
+                String savePath = webappPath+ "xml"+File.separator+uuid+".xml";
+                PrintStream ps = new PrintStream(new File(savePath));
+
+                //将频道信息写入xml文件中
+                StringBuffer xml = new StringBuffer();
+                xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                        "<rss version=\"2.0\" encoding=\"UTF-8\" xmlns:atom=\"http://www.w3.org/2005/Atom\" xmlns:itunes=\"http://www.itunes.com/dtds/podcast-1.0.dtd\">\n");
+                xml.append("\t<channel>\n");
+                xml.append("\t\t<title>").append(channelDate.getChannelTitle()).append("</title>\n");
+                xml.append("\t\t<pubDate>").append(TimeFormat.now()).append("</pubDate>\n");
+                xml.append("\t\t<language>").append("zh-CN").append("</language>\n");
+                xml.append("\t\t<link>").append(channelDate.getLink()).append("</link>\n");
+                xml.append("\t\t<itunes:image href=\"").append(channelDate.getChannelFace()).append("\"/>\n");
+                xml.append("\t\t<description>").append(channelDate.getDescription()).append("</description>\n");
+                xml.append("\t\t<itunes:author>").append(channelDate.getChannelTitle()).append("</itunes:author>\n");
+                xml.append("\t\t<itunes:category text=\"").append("null").append("\"/>\n");
+                xml.append("\t\t<type>").append(channelDate.getType()).append("</type>\n");//为创建完成后就更新，在totalCount上减一
+
+                xml.append("\t\t<equal>").append("none").append("</equal>\n");
+                xml.append("\t\t<plugin>").append(channelDate.getPlugin()).append("</plugin>\n");
+                xml.append("\t<update>update</update>\n");
+                xml.append("\t</channel>\n");
+                xml.append("</rss>");
+
+                //写入xml文件
+                ps.print(xml);
+                ps.close();
+
+                //存入数据库
+                channelService.add(channelDate);
+            }
+            response.getWriter().write("importOk");
+        }else {
+            response.getWriter().write("importError");
+        }
+
+
+    }
 
 }
