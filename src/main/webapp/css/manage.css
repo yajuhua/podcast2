@@ -17,7 +17,7 @@
 
 .sidebar {
     width: 200px;
-    background-color: #f0f0f0;
+    background-color:#FFFFFF;
 }
 
 .main {
@@ -27,12 +27,11 @@
 
 #logspage {
     display: flex;
-    height: 100vh;
     flex-direction: column;
 }
 
 .logs {
-    height: 80vh;
+    height: 70vh;
     /* 将高度设置为页面高度的 80% */
     padding: 20px;
     overflow-y: scroll;
@@ -45,4 +44,10 @@
 
 .el-table .success-row {
     background: #f0f9eb;
+}
+/*去除file按钮的样式*/
+.custom-file-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
 }
