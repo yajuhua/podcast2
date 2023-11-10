@@ -540,7 +540,7 @@ public class Update extends Thread{
      * @param FilePath xml文件的路径*/
     private static void updateCountOrEqual(Item item,String FilePath) throws Exception {
 
-      //
+     /* //
         Object[] equalOrCount = equalOrCount(item);
 
         String tag = null;
@@ -550,7 +550,9 @@ public class Update extends Thread{
         }else {
             tag = "equal";
             LOGGER.info("更新equal");
-        }
+        }*/
+
+        String tag = "equal";
 
         try(BufferedReader br = new BufferedReader(new FileReader(FilePath));) {
 
@@ -558,7 +560,7 @@ public class Update extends Thread{
             String s;//读取的每一行数据
             while ((s=br.readLine()) != null){
                 if (s.contains("<"+ tag +">")) {
-                    s = "\t\t<"+tag+">"+ equalOrCount[1] +"</"+tag+">";
+                    s = "\t\t<"+tag+">"+ item.getEqual() +"</"+tag+">";
                 }
                 strings.add(s);//将数据存入集合
             }
