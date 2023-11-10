@@ -10,6 +10,7 @@
         <result column="channel_title" property="channelTitle"></result>
         <result column="update_timestamp" property="updateTimestamp"></result>
         <result column="latest_check_timestamp" property="latestCheckTimestamp"></result>
+        <result column="survival_time" property="survival"></result>
         <result column="channel_face" property="channelFace"></result>
     </resultMap>
 
