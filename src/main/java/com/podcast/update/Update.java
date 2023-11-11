@@ -73,9 +73,9 @@ public class Update extends Thread{
         //1.根据xml中的<plugin>ganjing</plugin>获取插件类，
 
         try {
-            if (episodes==null || episodes.size()==0){
+            if (episodes.get(0)==0 || episodes.size()==0 || episodes == null){
                 //首次单集更新
-                LOGGER.debug("进入单集更新");
+                LOGGER.info("进入单集更新");
                 boolean update = update(uuid, channelPlugin, pluginProperties, mainProperties, webappPath);
                 if (update){
                     //写入最新检查更新的时间
@@ -159,11 +159,14 @@ public class Update extends Thread{
         Object o = constructor.newInstance(link, type, episodes,args);
         Method methodItems = plugin.getMethod("items");
         List<String> itemsStr = (List<String>)methodItems.invoke(o);
+        LOGGER.debug("itemsStr.size:"+itemsStr.size());
         List<Item> items = new ArrayList<>();
         Gson gson = new Gson();
         for (int i = 0; i < itemsStr.size(); i++) {
             items.add(gson.fromJson(itemsStr.get(i),Item.class));
         }
+
+        LOGGER.debug("items.size:"+items.size());
 
         LOGGER.debug(items.toString());
 
@@ -189,18 +192,20 @@ public class Update extends Thread{
         }
 
 
-        Item item_ = null;
+        Item item;
 
 
         for (int i = 0; i < items.size(); i++) {
+
+            LOGGER.debug("进入items遍历，size:"+items.size());
             /**
              * 变量
              */
             //生成资源的uuid
             String resourceUuid = UUID.randomUUID().toString();
             //解析item对象
-            Item item = items.get(i);
-            item_ = item;
+            item = items.get(i);
+            //item_ = item;
             //创建模式
             Mode mode = new Mode(item.getEnclosure(),webappPath,downLoderClass,resourceUuid,type,IP);
 
@@ -246,6 +251,7 @@ public class Update extends Thread{
                         break;
 
                     case "customize" :
+                        LOGGER.debug("进入audioCustomize");
                         enclosureLink = mode.customize();
                         writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
@@ -253,18 +259,19 @@ public class Update extends Thread{
                         break;
                 }
             }
+
+
+            //更新对比
+            updateCountOrEqual(item,xmlPath);
+
+            //更新status
+            Method methodChannel = plugin.getMethod("channel");
+            String channelStr = (String) methodChannel.invoke(o);
+            Channel channel = gson.fromJson(channelStr, Channel.class);
+            int getChannelStatus = channel.getStatus();
+            channelService.UpdateForStatus(getChannelStatus,uuid);
+            channelService.UpdateForEqual(item.getEqual(),uuid);
         }
-
-        //更新对比
-        updateCountOrEqual(item_,xmlPath);
-
-        //更新status
-        Method methodChannel = plugin.getMethod("channel");
-        String channelStr = (String) methodChannel.invoke(o);
-        Channel channel = gson.fromJson(channelStr, Channel.class);
-        int getChannelStatus = channel.getStatus();
-        channelService.UpdateForStatus(getChannelStatus,uuid);
-        channelService.UpdateForEqual(item_.getEqual(),uuid);
 
         return true;
     }
