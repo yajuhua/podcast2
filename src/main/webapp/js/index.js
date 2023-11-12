@@ -37,7 +37,7 @@ new Vue({
         changeUrl(uuid) {
             this.dialogVisible = true;
             // this.qrurl = "https://api.pwmqr.com/qrcode/create/?url=http://" + window.location.host + "/podcast2/xml/" + uuid + ".xml";
-            this.qrurl = "http://" + window.location.host + "/podcast2/xml/" + uuid + ".xml";
+            this.qrurl = window.location.protocol + "//" + window.location.host + "/podcast2/xml/" + uuid + ".xml";
             this._uuid = uuid;
         },
         //单个删除
@@ -128,7 +128,7 @@ new Vue({
                 text += "  </head>\n";
                 text += "  <body>\n";
                 for (let i = 0; i < this.selecteUuid.length; i++) {
-                    text += "    <outline type=\"rss\"  xmlUrl=\"" + "http://" + window.location.host + "/podcast2/xml/" + this.selecteUuid[i] + ".xml\" />\n"
+                    text += "    <outline type=\"rss\"  xmlUrl=\"" + window.location.protocol + "//" + window.location.host + "/podcast2/xml/" + this.selecteUuid[i] + ".xml\" />\n"
                 }
                 text += "  </body>\n";
                 text += "</opml>\n";
@@ -147,7 +147,7 @@ new Vue({
         //点击复制URL
         copyToClipboard(uuid) {
             const textarea = document.createElement('textarea');
-            textarea.value = "http://" + window.location.host + "/podcast2/xml/" + uuid + ".xml"
+            textarea.value = window.location.protocol + "//" + window.location.host + "/podcast2/xml/" + uuid + ".xml"
             textarea.setAttribute('readonly', '');
             textarea.style.position = 'absolute';
             textarea.style.left = '-9999px';
