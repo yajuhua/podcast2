@@ -16,7 +16,6 @@ public interface ChannelMapper {
      * 查询所有
      * @return
      */
-
     @Select("select * from channel")
     @ResultMap("ChannelDateResultMap")
     List<ChannelDate> selectAll();
@@ -151,4 +150,12 @@ public interface ChannelMapper {
 
     @Select("select args from channel where uuid = #{uuid}")
     String selectArgs(@Param("uuid") String uuid);
+
+    /**
+     * 根据uuid查询频道数据所有
+     * @return
+     */
+    @Select("select * from channel where uuid = #{uuid}")
+    @ResultMap("ChannelDateResultMap")
+    ChannelDate selectAllByUuid(@Param("uuid") String uuid);
 }

@@ -225,4 +225,17 @@ public class ChannelService {
         sqlSession.close();
         return args;
     }
+
+
+    /**
+     * 根据uuid查询频道数据所有
+     * @return
+     */
+    public ChannelDate selectAllByUuid(String uuid){
+        SqlSession sqlSession = factory.openSession();
+        ChannelMapper mapper = sqlSession.getMapper(ChannelMapper.class);
+        ChannelDate channelDate = mapper.selectAllByUuid(uuid);
+        sqlSession.close();
+        return channelDate;
+    }
 }
