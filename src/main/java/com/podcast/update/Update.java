@@ -5,14 +5,14 @@ import com.podcast.Servlet.UserServlet;
 import com.podcast.Utils.Mode;
 import com.podcast.Utils.TimeFormat;
 import com.podcast.loader.PluginLoader;
+import com.podcast.pojo.ChannelDate;
 import com.podcast.service.ChannelService;
 import com.podcast.service.PodcastUserService;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
-import org.podcast2.Channel;
-import org.podcast2.Item;
+import io.github.yajuhua.podcast2API.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +73,7 @@ public class Update extends Thread{
         //1.根据xml中的<plugin>ganjing</plugin>获取插件类，
 
         try {
-            if (episodes.get(0)==0 || episodes.size()==0 || episodes == null){
+            if (episodes == null || episodes.size()==0 || episodes.get(0)==0){
                 //首次单集更新
                 LOGGER.info("进入单集更新");
                 boolean update = update(uuid, channelPlugin, pluginProperties, mainProperties, webappPath);
@@ -132,27 +132,12 @@ public class Update extends Thread{
         //xml的uuid
         String xmlUuid = uuid;
 
-        //需要读取的数据
-        String type = null;
-        String link = null;
 
-
-        //解析xml
-        try {
-            SAXReader reader = new SAXReader();
-            Document document = reader.read(new File(xmlPath));
-
-            //获取根元素
-            Element rootElement = document.getRootElement();
-            Element channel = rootElement.element("channel");
-            type = channel.element("type").getText();
-            link = channel.element("link").getText();
-        } catch (DocumentException e) {
-            LOGGER.error("解析xml时出错！"+"详细:"+e);
-        }
-
-        //获取args
-        String args = channelService.selectArgs(uuid);
+        //获取所需数据
+        ChannelDate channelDate = channelService.selectAllByUuid(uuid);
+        String type = channelDate.getType();
+        String link = channelDate.getLink();
+        String args = channelDate.getArgs();
 
         //通过插件获取items
         Constructor constructor = plugin.getConstructor(String.class, String.class, List.class,String.class);
@@ -170,8 +155,8 @@ public class Update extends Thread{
 
         LOGGER.debug(items.toString());
 
-        //读取数据库的IP地址
-        String IP = service.getIP();
+        //IP地址
+        String IP = UserServlet.IP_ADDRESS;
 
         //获取插件mode
         String audioMode = (String)pluginProperties.get("audioMode");
@@ -262,7 +247,7 @@ public class Update extends Thread{
 
 
             //更新对比
-            updateCountOrEqual(item,xmlPath);
+            updateEqual(item,xmlPath);
 
             //更新status
             Method methodChannel = plugin.getMethod("channel");
@@ -290,41 +275,18 @@ public class Update extends Thread{
         //xml的uuid
         String xmlUuid = uuid;
 
-        //需要读取的数据
-        Integer count = null;
-        String equal = null;
-        String type = null;
-        String link = null;
+        //获取所需数据
+        ChannelDate channelDate = channelService.selectAllByUuid(uuid);
+        String type = channelDate.getType();
+        String link = channelDate.getLink();
+        String args = channelDate.getArgs();
+        String  lastEqual = channelDate.getEqual();//上次比对信息
 
-
-        //解析xml
-        try {
-            SAXReader reader = new SAXReader();
-            Document document = reader.read(new File(xmlPath));
-
-            //获取根元素
-            Element rootElement = document.getRootElement();
-            Element channel = rootElement.element("channel");
-            link = channel.element("link").getText();
-            type = channel.element("type").getText();
-
-            //获取countOrEqual
-            List<Element> channels = channel.elements();
-            for (Element element : channels) {
-                if (element.getName().equals("totalCount")){
-                    count = Integer.parseInt(element.getText());
-                }else if (element.getName().equals("equal")){
-                    equal = element.getText();
-                }
-            }
-        } catch (DocumentException e) {
-            LOGGER.error("解析xml时出错！"+"详细:"+e);
-        }
         Constructor constructor = null;
         Object o = null;
         Item item = null;
         Channel channel = null;
-        String args = channelService.selectArgs(uuid);//args
+
         try {
 
             //1.获取构造器
@@ -353,25 +315,7 @@ public class Update extends Thread{
            LOGGER.error(e.getTargetException().toString());
         }
 
-        //4.比对count是否需要更新
-        Integer latestCount = null;
-        String lastesEqual = null;
-        Object[] equalOrCount = equalOrCount(item);
-
-        if (equalOrCount[0].equals("getCount")){
-            latestCount = (int)equalOrCount[1];
-        }else if (equalOrCount[0].equals("getEqual")){
-            lastesEqual = (String) equalOrCount[1];
-        }
-
-        /**
-         *  1.读取配置文件plugin.properties中的downloader值
-         *  2.调用对应的下载器进行下载，返回uuid
-         *  3.将item内容写入xml文件
-         * */
-
-        //()
-        if (((latestCount!=null) && latestCount>count) || (lastesEqual!=null && (!lastesEqual.equals(equal)))){
+        if (!item.getEqual().equals(lastEqual)){
 
             //更新status
             int getChannelStatus = channel.getStatus();
@@ -385,7 +329,7 @@ public class Update extends Thread{
             String resourceUuid = UUID.randomUUID().toString();
 
             //获取IP地址
-            String IP = service.getIP();
+            String IP = UserServlet.IP_ADDRESS;
 
             //读取下载器类
             String downloader = (String)pluginProperties.get("downloader");
@@ -501,18 +445,17 @@ public class Update extends Thread{
         //把null替换成item
         String itemStr = item.toString();
         replaceUpdate(itemStr,xmlPath);
-        //更新count
-        //updateCount(latestCount,xmlPath);
-        updateCountOrEqual(item_,xmlPath);
+
+        //更新equal
+        updateEqual(item_,xmlPath);
         LOGGER.info("写入item完成");
 
     }
 
-    /*
+    /**
      *
      * 把xml里的null替换成新的item
      * @param newItem  新的item内容
-     * @param FilePath TXT和xml文件的路径
      */
     private static void replaceUpdate(String newItem, String filePath) {
 
@@ -542,32 +485,19 @@ public class Update extends Thread{
         }
     }
 
+
     /**
-     * 把比对标签<totalCount>和<equal>更新
+     * 更新<equal></equal>
      * @param FilePath xml文件的路径*/
-    private static void updateCountOrEqual(Item item,String FilePath) throws Exception {
-
-     /* //
-        Object[] equalOrCount = equalOrCount(item);
-
-        String tag = null;
-        if (equalOrCount[0].equals("getCount")){
-            tag = "totalCount";
-            LOGGER.info("更新count");
-        }else {
-            tag = "equal";
-            LOGGER.info("更新equal");
-        }*/
-
-        String tag = "equal";
+    private static void updateEqual(Item item,String FilePath) throws Exception {
 
         try(BufferedReader br = new BufferedReader(new FileReader(FilePath));) {
 
             ArrayList<String> strings = new ArrayList<String>();
             String s;//读取的每一行数据
             while ((s=br.readLine()) != null){
-                if (s.contains("<"+ tag +">")) {
-                    s = "\t\t<"+tag+">"+ item.getEqual() +"</"+tag+">";
+                if (s.contains("<equal>")) {
+                    s = "\t\t<equal>"+ item.getEqual() +"</equal>";
                 }
                 strings.add(s);//将数据存入集合
             }
@@ -587,41 +517,15 @@ public class Update extends Thread{
 
         }
     }
+
 
     /**
-     * 把xml里的null替换成新的item
-     * @param FilePath TXT和xml文件的路径*/
-
-
-    private static void updateCount(int lastCount,String FilePath) {
-
-        try(BufferedReader br = new BufferedReader(new FileReader(FilePath));) {
-
-            ArrayList<String> strings = new ArrayList<String>();
-            String s;//读取的每一行数据
-            while ((s=br.readLine()) != null){
-                if (s.contains("<totalCount>")) {
-                    s = "\t\t<totalCount>"+ lastCount +"</totalCount>";
-                }
-                strings.add(s);//将数据存入集合
-            }
-            BufferedWriter bw = null;
-            FileOutputStream writerStream = new FileOutputStream(FilePath);
-            bw = new BufferedWriter(new OutputStreamWriter(writerStream, "UTF-8"));
-
-            for (String string : strings) {
-                bw.write(string);//一行一行写入数据
-                bw.newLine();//换行
-            }
-            bw.close();
-            writerStream.close();
-
-
-        }catch (Exception e){
-
-        }
-    }
-
+     * 获取频道使用的插件
+     * @param uuid
+     * @param webappPath
+     * @return
+     * @throws Exception
+     */
     private static Class getChannelPlugin(String uuid,String webappPath) throws Exception {
         //1.需要webappPath
         //2.根据uuid获取xml文件中的插件名称
@@ -651,6 +555,12 @@ public class Update extends Thread{
         }
     }
 
+    /**
+     * 扫描插件
+     * @param webappPath
+     * @return
+     * @throws Exception
+     */
     private static Map<String,Class> scanerPlugin(String webappPath) throws Exception {
         //配置文件的名称
         String PROPERTIES_NAME = "plugin.properties";
@@ -717,23 +627,5 @@ public class Update extends Thread{
         URL url = jarFile.toURI().toURL();
         URLClassLoader classLoader = new URLClassLoader(new URL[]{url}, null);
         return classLoader;
-    }
-
-
-    /**
-     * 判断使用哪种方式更新
-     * @param item
-     * @return
-     * @throws Exception
-     */
-    public static Object[] equalOrCount(Item item) throws Exception {
-        Class<? extends Item> aClass = item.getClass();
-        Method[] methods = aClass.getMethods();
-        for (Method method : methods) {
-            if (method.getName().equals("getEqual") && method.invoke(item)!=null) {
-                return new Object[]{"getEqual",method.invoke(item)};
-            }
-        }
-        return new Object[]{"getCount",aClass.getMethod("getCount").invoke(item)};
     }
 }
