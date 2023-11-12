@@ -24,21 +24,45 @@
 curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh && systemctl start docker
 ```
 
-### 2.创建并启动容器
+#### 2.创建并启动容器(http)
 
-```shell
+````shell
 mkdir  ~/podcast2
 cd ~/podcast2
 docker run -id --name=podcast2 \
 --restart=always \
 -p 8088:8088 \
--p 6800:6800 \
 -v ~/podcast2/xml:/opt/tomcat/tomcat8/webapps/podcast2/xml/ \
 -v ~/podcast2/video:/opt/tomcat/tomcat8/webapps/podcast2/video/ \
 -v ~/podcast2/audio:/opt/tomcat/tomcat8/webapps/podcast2/audio/ \
 -v ~/podcast2/plugin:/opt/tomcat/tomcat8/webapps/podcast2/plugin/ \
 -v ~/podcast2/logs:/logs \
-yajuhua/podcast2:1.2.8
+yajuhua/podcast2:1.3.0
+````
+#### 创建并启动容器(https)
+```shell
+#申请证书
+    安装acme：curl https://get.acme.sh | sh
+    安装socat：yum install socat
+    添加软链接：ln -s  /root/.acme.sh/acme.sh /usr/local/bin/acme.sh
+    注册账号： acme.sh --register-account -m 你的邮箱
+    开放80端口：firewall-cmd --add-port=80/tcp --permanent && firewall-cmd --reload
+    申请证书： acme.sh  --issue -d 你的域名  --standalone -k ec-256 
+    安装证书： acme.sh --installcert -d 你的域名 --ecc  --key-file   ~/podcast2/cert/podcast2.key   --fullchain-file ~/podcast2/cert/podcast2.crt 
+
+#创建并启动容器
+    mkdir  ~/podcast2
+    cd ~/podcast2
+    docker run -id --name=podcast2 \
+    --restart=always \
+    -p 443:443 \ 
+    -v ~/podcast2/cert:/opt/tomcat/tomcat8/cert/ \
+    -v ~/podcast2/xml:/opt/tomcat/tomcat8/webapps/podcast2/xml/ \
+    -v ~/podcast2/video:/opt/tomcat/tomcat8/webapps/podcast2/video/ \
+    -v ~/podcast2/audio:/opt/tomcat/tomcat8/webapps/podcast2/audio/ \
+    -v ~/podcast2/plugin:/opt/tomcat/tomcat8/webapps/podcast2/plugin/ \
+    -v ~/podcast2/logs:/logs \
+    yajuhua/podcast2:1.3.0
 ```
 ### 3.防火墙放行8088端口
 ````shell
@@ -61,10 +85,11 @@ firewall-cmd --reload
 
 #### 1.下载插件
 
-| 网站 <img width=200/>            | 名称<img width=200/> | 版本<img width=200/> | 下载地址<img width=200/>                                                                                  |
-| :------------------------------- | -------------------- | -------------------- |-------------------------------------------------------------------------------------------------------|
-| [干净世界](https://ganjing.com/) | ganjing              | 1.2.1                | [点击下载](https://github.com/yajuhua/plugin/raw/master/ganjing/Ganjing3-1.2.1-jar-with-dependencies.jar) |
-| [ntdm](https://www.ntdm.tv)              | ntdm8                | 1.2.1                | [点击下载](https://github.com/yajuhua/plugin/raw/master/ntdm8/ntdm8-1.2.1-jar-with-dependencies.jar)      |
+| 网站 <img width=200/>            | 名称<img width=200/> | 版本<img width=200/> | 下载地址<img width=200/>                                     |
+| :------------------------------- | -------------------- | -------------------- | ------------------------------------------------------------ |
+| [干净世界](https://ganjing.com/) | ganjing              | 1.3.0                | [点击下载](https://github.com/yajuhua/plugin/raw/master/ganjing/1.3/1.3.0/Ganjing3-jar-with-dependencies.jar) |
+| [ntdm](https://www.ntdm.tv)      | ntdm8                | 1.3.0                | [点击下载](https://github.com/yajuhua/plugin/raw/master/ntdm8/1.3/1.3.0/ntdm8-jar-with-dependencies.jar) |
+| [youtube](www.youtube.com)       | youtube              | 1.3.0                | [点击下载](https://github.com/yajuhua/plugin/raw/master/youtube/1.3/1.3.0/Youtube-jar-with-dependencies.jar) |
 
 #### 2.进入管理页面
 
@@ -109,6 +134,8 @@ firewall-cmd --reload
             </a><a href="https://podcastaddict.com/" target="_blank"><img title="Podcast Addict" alt="Podcast Addict" src="https://pod.link/assets/apps/podcastaddict.svg" width="35"></a>  <a href="https://antennapod.org/" target="_blank">
               <img src="https://antennapod.org/assets/branding/logo-full-horizontal-dynamic.svg" width="230" alt="AntennaPod">          </a>
 
+## 交流群
+**945797272**
 ## 免责声明
 
 **此项目仅供研究、学习和交流，请勿用于商业或非法用途， 开发者与协作者不对使用者负任何法律责任， 使用者自行承担因不当使用所产生的后果与责任。**
