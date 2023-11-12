@@ -80,10 +80,12 @@ public class Update extends Thread{
                 if (update){
                     //写入最新检查更新的时间
                     channelService.UpdateForChannel(System.currentTimeMillis()/1000,uuid);
+                    UserServlet.CREATE_STATUS = 0;
                     LOGGER.info("新内容已更新完成！");
                 }else {
                     //写入最新检查更新的时间
                     channelService.UpdateLatestCheckTimestampByUuid(System.currentTimeMillis()/1000,uuid);
+                    UserServlet.CREATE_STATUS = 0;
                     LOGGER.info("检查更新完成，无内容更新！");
                 }
             }else {
@@ -99,6 +101,7 @@ public class Update extends Thread{
                 }else {
                     //写入最新检查更新的时间
                     channelService.UpdateLatestCheckTimestampByUuid(System.currentTimeMillis()/1000,uuid);
+                    UserServlet.CREATE_STATUS = 0;
                     LOGGER.info("检查更新完成，无内容更新！");
                 }
             }
