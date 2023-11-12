@@ -15,8 +15,7 @@ import com.podcast.service.ChannelService;
 import com.podcast.service.PodcastUserService;
 import com.podcast.update.Update;
 import org.apache.commons.io.FileUtils;
-import org.podcast2.Channel;
-import org.podcast2.Item;
+import io.github.yajuhua.podcast2API.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +44,8 @@ import java.util.*;
 public class UserServlet  extends BaseServlet{
     private PodcastUserService service = new PodcastUserService();
     private ChannelService channelService = new ChannelService();
-    public static Integer CREATE_STATUS;
+    public static Integer CREATE_STATUS;//创建状态
+    public static String IP_ADDRESS;//IP地址
     private static final Logger LOGGER = LoggerFactory.getLogger("UserServlet");
     private Gson gson = new Gson();
 
@@ -246,7 +246,7 @@ public class UserServlet  extends BaseServlet{
             LOGGER.debug("episodes:"+episodes);
 
             //更新IP地址
-            service.UpdateIP(requestUrl);
+            IP_ADDRESS = requestUrl;
             LOGGER.info("开始创建！");
             String uuid = create(request);
             LOGGER.info("创建完成！"+uuid);
@@ -402,20 +402,12 @@ public class UserServlet  extends BaseServlet{
         Gson gson = new Gson();
         Channel channel = gson.fromJson(channelStr, Channel.class);
 
-        //获取Item，用于判断equalOrCount
-        Method methodLatestItem = plugin.getMethod("latestItem");
-        String itemStr = (String)methodLatestItem.invoke(o);
-        Item item = gson.fromJson(itemStr, Item.class);
-        Object[] equalOrCount = Update.equalOrCount(item);
-
-        LOGGER.info("判断equalOrCount："+Arrays.toString(equalOrCount));
 
         //4.以uuid命名，保存到webapp/xml/UUID.xml
         String uuid = UUID.randomUUID().toString();
         String savePath = webappPath+ "xml"+File.separator+uuid+".xml";
         PrintStream ps = new PrintStream(new File(savePath));
 
-        //Integer getCount = 0;
 
         //5.将频道信息写入xml文件中
         StringBuffer xml = new StringBuffer();
@@ -431,12 +423,7 @@ public class UserServlet  extends BaseServlet{
         xml.append("\t\t<itunes:author><![CDATA[ ").append(channel.getAuthor()).append(" ]]></itunes:author>\n");
         xml.append("\t\t<itunes:category text=\"").append(channel.getCategory()).append("\"/>\n");
         xml.append("\t\t<type>").append(type.name()).append("</type>\n");//为创建完成后就更新，在totalCount上减一
-        //xml.append("\t\t<totalCount>").append(getCount-1).append("</totalCount>\n");
-        if (equalOrCount[0].equals("getCount")){
-            xml.append("\t\t<totalCount>").append(-1).append("</totalCount>\n");
-        }else if (equalOrCount[0].equals("getEqual")){
-            xml.append("\t\t<equal>").append("none").append("</equal>\n");
-        }
+        xml.append("\t\t<equal>").append("none").append("</equal>\n");
         xml.append("\t\t<plugin>").append(usePluginName).append("</plugin>\n");
         xml.append("\t<update>update</update>\n");
         xml.append("\t</channel>\n");
