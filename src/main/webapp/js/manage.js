@@ -138,8 +138,12 @@ new Vue({
         },
         //日志展示
         setupLogSocket() {
+            let wsURL = "ws://" + window.location.host + "/podcast2/websocket/logs";
+            if (window.location.protocol.includes("https")){
+                wsURL = "wss://" + window.location.host + "/podcast2/websocket/logs";
+            }
             this.logSocket = new WebSocket(
-                "ws://" + window.location.host + "/podcast2/websocket/logs"
+                wsURL
             );
 
             this.logSocket.onopen = () => {
@@ -158,9 +162,13 @@ new Vue({
         },
         //下载进度展示
         setupDownloadSocket() {
+            let wsURL = "ws://" + window.location.host + "/podcast2/websocket/download";
+            if (window.location.protocol.includes("https")){
+                wsURL = "wss://" + window.location.host + "/podcast2/websocket/download";
+            }
             _this = this;
             this.downloadSocket = new WebSocket(
-                "ws://" + window.location.host + "/podcast2/websocket/download"
+                wsURL
             );
 
             this.downloadSocket.onopen = () => {
