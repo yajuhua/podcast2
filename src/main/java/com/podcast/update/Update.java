@@ -318,6 +318,11 @@ public class Update extends Thread{
            LOGGER.error(e.getTargetException().toString());
         }
 
+        //拦截null
+        if (item==null || item.getEqual()==null){
+            return false;
+        }
+
         if (!item.getEqual().equals(lastEqual)){
 
             //更新status
