@@ -7,7 +7,7 @@
     text-align: center;
 }
 .Download {
-    height: 100vh;
+    height: 90vh;
     overflow-y: scroll;
 }
 #app {

@@ -159,7 +159,7 @@
 
             <!--查看正在下载-->
             <div v-show="activeMenu === 'Downloading'">
-               <div>
+               <div class="Download">
                    <el-table
                            :data="downloadData"
                            style="width: 100%"
@@ -198,7 +198,7 @@
 
             <!--查看已完成-->
             <div v-show="activeMenu === 'Done'">
-                <div>
+                <div class="Download">
                     <el-table
                             :data="downloadDone"
                             style="width: 100%"
@@ -212,7 +212,6 @@
                                 prop="status"
                                 label="状态">
                             <div slot-scope="scope">
-                                <!--                            <span>{{ scope.row.status === 1 ? '✅ 成功' : '❌ 失败' }}</span>-->
                                 <div v-if="scope.row.status === 1">
                                     <i class="el-icon-success">成功</i>
                                 </div>
