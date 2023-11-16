@@ -33,28 +33,8 @@ public class UpdateInit implements ServletContextListener {
         // 获取webapp目录的绝对路径
         String webappPath = context.getRealPath("/");
         WEBAPP_PATH = webappPath;
-        deletePluginPath = WEBAPP_PATH + "tmp" + File.separator + "deletePlugins";
+        deletePluginPath = WEBAPP_PATH + "tmp" + File.separator + "deletePlugins.sh";
 
-
-        //1.读取要删除的插件
-        try {
-            List<String> deletePluginList = FileUtils.readLines(new File(deletePluginPath));
-            for (String p : deletePluginList) {
-                //一行一行读取插件绝对路径，然后删除
-                /**
-                 * 用JavaAPI无法删除
-                 */
-                String rmcmd = "rm -rf "+p;
-                LOGGER.info("删除插件："+rmcmd);
-                N_m3u8DL_RE.Cmd(rmcmd);
-            }
-
-            //清空插件删除列表
-            FileUtils.write(new File(deletePluginPath)," ","utf-8");
-
-        } catch (IOException e) {
-            LOGGER.error("插件删除列表无法读取！");
-        }
         //是否有新创建
         UserServlet.CREATE_STATUS = 0;
         PodcastUserService service = new PodcastUserService();
