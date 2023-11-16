@@ -159,7 +159,7 @@ public class Update extends Thread{
         LOGGER.debug(items.toString());
 
         //IP地址
-        String IP = UserServlet.IP_ADDRESS;
+        String IP = service.getIP();
 
         //获取插件mode
         String audioMode = (String)pluginProperties.get("audioMode");
@@ -337,7 +337,7 @@ public class Update extends Thread{
             String resourceUuid = UUID.randomUUID().toString();
 
             //获取IP地址
-            String IP = UserServlet.IP_ADDRESS;
+            String IP = service.getIP();
 
             //读取下载器类
             String downloader = (String)pluginProperties.get("downloader");

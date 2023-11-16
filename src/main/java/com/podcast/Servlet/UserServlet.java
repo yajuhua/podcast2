@@ -45,7 +45,6 @@ public class UserServlet  extends BaseServlet{
     private PodcastUserService service = new PodcastUserService();
     private ChannelService channelService = new ChannelService();
     public static Integer CREATE_STATUS;//创建状态
-    public static String IP_ADDRESS;//IP地址
     private static final Logger LOGGER = LoggerFactory.getLogger("UserServlet");
     private Gson gson = new Gson();
 
@@ -246,7 +245,7 @@ public class UserServlet  extends BaseServlet{
             LOGGER.debug("episodes:"+episodes);
 
             //更新IP地址
-            IP_ADDRESS = requestUrl;
+            service.UpdateIP(requestUrl);//存入数据库
             LOGGER.info("开始创建！");
             String uuid = create(request);
             LOGGER.info("创建完成！"+uuid);

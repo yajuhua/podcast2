@@ -45,4 +45,18 @@ public interface PodcastUserMapper {
      */
     @Select("select webapp_path from podcast_user")
     String getWebappPath();
+
+
+    /**
+     * 更新IP地址
+     */
+    @Update("UPDATE podcast_user SET IP = #{IP}")
+    int updateIPARR(@Param("IP") String IP);
+
+    /**
+     * 获取IP
+     * @return
+     */
+    @Select("select IP from podcast_user")
+    String getIP();
 }

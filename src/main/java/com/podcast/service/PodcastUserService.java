@@ -85,4 +85,28 @@ public class PodcastUserService {
         sqlSession.close();
         return webappPath;
     }
+
+
+    /**
+     * 更新IP地址
+     * @param IP
+     */
+    public void UpdateIP(String IP){
+        SqlSession sqlSession = factory.openSession();
+        PodcastUserMapper mapper = sqlSession.getMapper(PodcastUserMapper.class);
+        mapper.updateIPARR(IP);
+        sqlSession.commit();
+        sqlSession.close();
+    }
+
+    /**
+     * 获取IP
+     */
+    public String getIP(){
+        SqlSession sqlSession = factory.openSession();
+        PodcastUserMapper mapper = sqlSession.getMapper(PodcastUserMapper.class);
+        String IP = mapper.getIP();
+        sqlSession.close();
+        return IP;
+    }
 }
