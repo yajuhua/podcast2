@@ -14,19 +14,21 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.Test;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLEncoder;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -158,10 +160,18 @@ public class SystemServlet extends BaseServlet {
         String pluginsPath = UpdateInit.WEBAPP_PATH+"plugin";
         File pluginFile = new File(pluginsPath);
 
+        String deletePlugins = request.getParameter("deletePlugins");
+        LOGGER.info("deletePlugins:"+deletePlugins);
+
         //获取所有的插件文件
         File[] pluginList = pluginFile.listFiles();
 
+        //清空deletePlugins.sh
+        FileUtils.write(new File(UpdateInit.deletePluginPath),"","utf-8");
 
+        //声明shell
+        String bash = "#!/bin/bash\n";
+        FileUtils.write(new File(UpdateInit.deletePluginPath),bash,"utf-8",true);
         //遍历,将要删除的插件绝对路径存入插件删除列表
         for (File plugin : pluginList) {
             String pluginPath = plugin.getAbsolutePath();
@@ -170,15 +180,114 @@ public class SystemServlet extends BaseServlet {
             String name = (String) properties.get("name");
             String version = (String) properties.get("version");
             if (pluginName.equals(name) && pluginVersion.equals(version)){
-                FileUtils.write(new File(UpdateInit.deletePluginPath),plugin.getAbsolutePath(),"utf-8",true);
+                String delCmd = "rm -rf "+"'"+plugin.getAbsolutePath()+"'";
+                LOGGER.info("delCmd:"+delCmd);
+                FileUtils.write(new File(UpdateInit.deletePluginPath),delCmd,"utf-8",true);
+                //rm -rf 'Youtube-jar-with-dependencies (1).jar' 在bash终端中，括号是特殊字符，需要进行转义或使用引号来处理
+
+                try {
+                    String command = "sh "+UpdateInit.deletePluginPath;
+                    LOGGER.info("删除插件命令："+command);
+                    N_m3u8DL_RE.Cmd(command);
+                    response.getWriter().write("ok");
+                } catch (Exception e) {
+                    response.getWriter().write("error");
+                }finally {
+                    //清空插件删除列表
+                    FileUtils.write(new File(UpdateInit.deletePluginPath)," ","utf-8");
+                }
+
+            }
+        }
+    }
+
+    /**
+     * 批量删除插件
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    public void deletePluginsServlet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        /**
+         * 根据插件名称和版本号进行删除
+         * 读取plugin包下的所有插件配置文件，符合的删除
+         */
+        //配置文件的名称
+        String PROPERTIES_NAME = "plugin.properties";
+
+        //所有插件的位置
+        String pluginsPath = UpdateInit.WEBAPP_PATH+"plugin";
+        File pluginFile = new File(pluginsPath);
+
+        String deletePluginsStr = request.getParameter("deletePlugins");
+        Gson gson = new Gson();
+        String[] deletePlugins = gson.fromJson(deletePluginsStr, String[].class);
+
+        Map<String,String> nameAndVersion = new HashMap<>();
+
+        for (String deletePlugin : deletePlugins) {
+
+            String[] split = deletePlugin.split("-");
+            String name = split[0].split("=")[1];
+            String version = split[1].split("=")[1];
+            nameAndVersion.put(name,version);
+            /*
+            *   name=youtube-version=1.3.0
+                name=ganjing-version=1.3.0
+                name=ntdm9-version=1.3.0
+            * */
+
+        }
+
+        //前端返回的数组字符串
+        LOGGER.info("deletePlugins:"+deletePluginsStr);
+
+        //获取所有的插件文件
+        File[] pluginList = pluginFile.listFiles();
+
+
+        //清空deletePlugins.sh
+        FileUtils.write(new File(UpdateInit.deletePluginPath),"","utf-8");
+
+        //声明shell
+        String bash = "#!/bin/bash\n";
+        FileUtils.write(new File(UpdateInit.deletePluginPath),bash,"utf-8",true);
+        //遍历,将要删除的插件绝对路径存入插件删除列表
+        for (File plugin : pluginList) {
+            String pluginPath = plugin.getAbsolutePath();
+            ClassLoader classLoader = getClassLoader(pluginPath);
+            Properties properties = getProperties(classLoader,PROPERTIES_NAME);
+            String name = (String) properties.get("name");
+            String version = (String) properties.get("version");
+
+            Set<String> pluginNames = nameAndVersion.keySet();
+
+            for (String pluginName : pluginNames) {
+                String pluginVersion = nameAndVersion.get(pluginName);
+
+                if (pluginName.equals(name) && pluginVersion.equals(version)){
+                    String delCmd = "rm -rf "+"'"+plugin.getAbsolutePath()+"'\n";
+                    LOGGER.info("delCmd:"+delCmd);
+                    FileUtils.write(new File(UpdateInit.deletePluginPath),delCmd,"utf-8",true);
+                }
             }
         }
 
-        //重启系统
-        LOGGER.info("系统重启");
-        N_m3u8DL_RE.Cmd("/restartTomat.sh");
-    }
 
+        //执行deletePlugins.sh
+        try {
+            String command = "sh "+UpdateInit.deletePluginPath;
+            LOGGER.info("删除插件命令："+command);
+            N_m3u8DL_RE.Cmd(command);
+            response.getWriter().write("ok");
+        } catch (Exception e) {
+            response.getWriter().write("error");
+        }finally {
+            //清空插件删除列表
+            FileUtils.write(new File(UpdateInit.deletePluginPath)," ","utf-8");
+        }
+    }
 
     /**
      * 获取系统信息：插件信息、系统运行时间、系统版本信息

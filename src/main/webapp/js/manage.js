@@ -32,19 +32,9 @@ new Vue({
         };
     }, mounted: function () {
         // 页面加载完成后，发送异步请求，查询数据
-        var _this = this;
-        axios({
-            method: "get",
-            url: "./system/systemInfoServlet"
-        }).then(function (resp) {
-            //系统信息
-            _this.systemAllData1 = resp.data;
-            _this.infoData[0].value = resp.data.systemRuntime;
-            _this.infoData[1].value = resp.data.systemVersion;
-            _this.infoData[2].value = resp.data.systemUpdate;
-            _this.infoData[3].value = resp.data.systemCode;
 
-        })
+        //获取系统所有信息
+        this.getSystemAllData();
 
         //获取频道所有信息
         this.getAllChannelData();
@@ -74,6 +64,21 @@ new Vue({
         this.downloadSocket.close();
     },
     methods: {
+        getSystemAllData(){
+            var _this = this;
+            axios({
+                method: "get",
+                url: "./system/systemInfoServlet"
+            }).then(function (resp) {
+                //系统信息
+                _this.systemAllData1 = resp.data;
+                _this.infoData[0].value = resp.data.systemRuntime;
+                _this.infoData[1].value = resp.data.systemVersion;
+                _this.infoData[2].value = resp.data.systemUpdate;
+                _this.infoData[3].value = resp.data.systemCode;
+
+            })
+        },
         //获取下载器信息
         getDownloaderInfo(){
             _this = this;
@@ -406,37 +411,46 @@ new Vue({
             for (let i = 0; i < val.length; i++) {
                 var name = val[i].name;
                 var version = val[i].version;
-                var info = "name=" + name + "&version=" + version;
+                var info = "name=" + name + "-version=" + version;
                 this.multipleSelection[i] = info;
             }
         },
         //批量删除
         deletePlugins() {
-            this.$confirm('此操作将永久删除选择的插件且系统会重启, 是否继续?', '提示', {
+            console.log(this.multipleSelection)
+            _this = this;
+            this.$confirm('此操作将永久删除选择的插件, 是否继续?', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning'
             }).then(() => {
-                for (let i = 0; i < this.multipleSelection.length; i++) {
-                    axios({
-                        method: "post",
-                        url: "./system/deletePluginServlet",
-                        data: this.multipleSelection[i]
-                    })
-                }
-                this.$message({
-                    type: 'success',
-                    message: '插件正在删除中...该页面不会自动刷新'
-                });
+                axios({
+                    method: "post",
+                    url: "./system/deletePluginsServlet",
+                    data: "deletePlugins="+JSON.stringify(this.multipleSelection)
+                }).then(function (resp) {
+
+                    if (resp.data == 'ok'){
+                        //重新加载插件消信息
+                        _this.getSystemAllData();
+                        _this.$message({
+                            type: 'success',
+                            message: '插件删除成功！'
+                        });
+                    }
+                })
             }).catch(() => {
                 this.$message({
                     type: 'info',
                     message: '已取消删除'
                 });
             });
-        },
+        }
+
+    ,
         //单个删除
         deletePlugin(row) {
+            _this = this;
             this.$confirm('此操作将永久删除该插件, 是否继续?', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
@@ -446,11 +460,18 @@ new Vue({
                     method: "post",
                     url: "./system/deletePluginServlet",
                     data: "name=" + row.name + "&version=" + row.version
+                }).then(function (resp) {
+                    if(resp.data == 'ok'){
+                        //重新加载插件消信息
+                        _this.getSystemAllData();
+                        _this.$message({
+                            type: 'success',
+                            message: '插件删除成功！'
+                        });
+                    }else {
+                        _this.$message.error('插件删除失败，请重来！');
+                    }
                 })
-                this.$message({
-                    type: 'success',
-                    message: '插件正在删除中...该页面不会自动刷新!'
-                });
             }).catch(() => {
                 this.$message({
                     type: 'info',
