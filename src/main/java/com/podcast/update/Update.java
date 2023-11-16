@@ -8,10 +8,6 @@ import com.podcast.loader.PluginLoader;
 import com.podcast.pojo.ChannelDate;
 import com.podcast.service.ChannelService;
 import com.podcast.service.PodcastUserService;
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
 import io.github.yajuhua.podcast2API.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +66,6 @@ public class Update extends Thread{
         } catch (Exception e) {
            LOGGER.error("使用ClassLoader加载Properties文件时出错！"+"详细:"+e);
         }
-        //1.根据xml中的<plugin>ganjing</plugin>获取插件类，
 
         try {
             if (episodes == null || episodes.size()==0 || episodes.get(0)==0){
@@ -535,21 +530,9 @@ public class Update extends Thread{
      * @throws Exception
      */
     private static Class getChannelPlugin(String uuid,String webappPath) throws Exception {
-        //1.需要webappPath
-        //2.根据uuid获取xml文件中的插件名称
-        String xmlPath = webappPath+File.separator+"xml"+File.separator+uuid+".xml";
-        String pluginName = null;
-        try {
-            SAXReader reader = new SAXReader();
-            Document document = reader.read(new File(xmlPath));
 
-            //获取根元素
-            Element rootElement = document.getRootElement();
-            Element channel = rootElement.element("channel");
-            pluginName = channel.element("plugin").getText();
-        } catch (DocumentException e) {
-            LOGGER.error("根据uuid获取xml文件中的插件名称时出错！"+"详细:"+e);
-        }
+        //根据频道uuid获取插件名称
+        String pluginName = channelService.getPluginNameByUuid(uuid);
 
         //根据插件名称去匹配url中有没有包含，在进入这里之前，先判断url是否可通
         Map<String, Class> plugins = scanerPlugin(webappPath);

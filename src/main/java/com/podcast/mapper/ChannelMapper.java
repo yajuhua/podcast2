@@ -147,7 +147,6 @@ public interface ChannelMapper {
      * 根据uuid获取args
      * @return args
      */
-
     @Select("select args from channel where uuid = #{uuid}")
     String selectArgs(@Param("uuid") String uuid);
 
@@ -158,4 +157,11 @@ public interface ChannelMapper {
     @Select("select * from channel where uuid = #{uuid}")
     @ResultMap("ChannelDateResultMap")
     ChannelDate selectAllByUuid(@Param("uuid") String uuid);
+
+    /**
+     * 根据uuid获取频道插件名称
+     * @return args
+     */
+    @Select("select plugin from channel where uuid = #{uuid}")
+    String getPluginNameByUuid(@Param("uuid") String uuid);
 }

@@ -238,4 +238,16 @@ public class ChannelService {
         sqlSession.close();
         return channelDate;
     }
+
+    /**
+     * 根据uuid获取plugin(插件名称)
+     * @return
+     */
+    public String getPluginNameByUuid(String uuid){
+        SqlSession sqlSession = factory.openSession();
+        ChannelMapper mapper = sqlSession.getMapper(ChannelMapper.class);
+        String pluginName = mapper.getPluginNameByUuid(uuid);
+        sqlSession.close();
+        return pluginName;
+    }
 }
