@@ -49,6 +49,7 @@ public class UpdateInit implements ServletContextListener {
         new File(directory,"plugin").mkdir();
         new File(directory,"xml").mkdir();
         new File(directory,"tmp").mkdir();
+        new File(directory,"init").mkdirs();
 
 
         //定时任务
@@ -84,29 +85,32 @@ public class UpdateInit implements ServletContextListener {
 
         //检测初始化文件system.init
         LOGGER.info("检测初始化文件system.init");
-        String initPath = WEBAPP_PATH + "tmp" + File.separator + "init" + File.separator + "system.init";
-        try {
-            List<String> initList = FileUtils.readLines(new File(initPath), "UTF-8");//获取要初始的
-            for (String init : initList) {
-                switch (init){
-                    case "PASSWORD":
-                        LOGGER.info("初始化密码1");
-                        //初始化密码1
-                        service.changePassword("1");
-                        break;
+        String initPath = WEBAPP_PATH + "init" + File.separator + "system.init";
+        //先判断是否存在
+        if (new File(initPath).exists()){
+            try {
+                List<String> initList = FileUtils.readLines(new File(initPath), "UTF-8");//获取要初始的
+                for (String init : initList) {
+                    switch (init){
+                        case "PASSWORD":
+                            LOGGER.info("初始化密码1");
+                            //初始化密码1
+                            service.changePassword("1");
+                            break;
 
-                    case "ACCOUNT":
-                        //初始化账号(用户名和密码)admin 1
-                        LOGGER.info("初始化账号(用户名和密码)admin 1");
-                        service.changeAll("admin","1");
-                        break;
+                        case "ACCOUNT":
+                            //初始化账号(用户名和密码)admin 1
+                            LOGGER.info("初始化账号(用户名和密码)admin 1");
+                            service.changeAll("admin","1");
+                            break;
+                    }
                 }
-            }
 
-            //清空system.init
-            FileUtils.write(new File(initPath),"");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+                //清空system.init
+                FileUtils.write(new File(initPath),"");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
     }
