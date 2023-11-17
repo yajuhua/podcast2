@@ -51,3 +51,8 @@
     width: 0;
     height: 0;
 }
+
+.pluginList {
+    height: 30vh;
+    overflow-y: scroll;
+}

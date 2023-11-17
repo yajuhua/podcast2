@@ -321,7 +321,7 @@
                             @click="submitUpload">上传到服务器</el-button>
                         <el-button type="danger" size="small" @click="deletePlugins">批量删除</el-button>
                     </el-upload>
-                    <div>
+                    <div class="pluginList">
                         <el-table :data="systemAllData1.pluginList" style="width: 100%"
                             :row-class-name="tableRowClassName" @selection-change="handleSelectionChange">
                             <el-table-column type="selection" width="55">
