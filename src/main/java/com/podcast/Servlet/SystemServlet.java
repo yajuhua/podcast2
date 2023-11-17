@@ -34,6 +34,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * 关于系统的servlet
@@ -289,6 +290,131 @@ public class SystemServlet extends BaseServlet {
         }
     }
 
+
+    /**
+     * 插件去重
+     */
+    public static boolean pluginDeduplication() throws Exception {
+        LOGGER.info("插件去重");
+        /**
+         * 根据插件名称和版本号进行删除
+         * 读取plugin包下的所有插件配置文件，符合的删除
+         */
+        //配置文件的名称
+        String PROPERTIES_NAME = "plugin.properties";
+
+        //所有插件的位置
+        String pluginsPath = UpdateInit.WEBAPP_PATH+"plugin";
+        File pluginFile = new File(pluginsPath);
+
+        //获取所有的插件文件
+        File[] pluginList = pluginFile.listFiles();
+
+        Set<String> setName = new HashSet<>();
+        List<String> listName = new ArrayList<>();
+
+        //1.获取所有插件配置文件中的name值
+        for (File plugin : pluginList) {
+            String pluginPath = plugin.getAbsolutePath();
+            ClassLoader classLoader = getClassLoader(pluginPath);
+            Properties properties = getProperties(classLoader,PROPERTIES_NAME);
+            String name = (String) properties.get("name");
+
+            //2.将name存入List集合和Set集合
+            setName.add(name);
+            listName.add(name);
+        }
+
+        //3.repetition集合用于存放重复插件的name值
+        List<String> repetition = new ArrayList<>();
+
+        if (setName.size() == listName.size()){
+            //说明没有重复的
+            return false;//没有重复的
+        }
+
+
+        //找出重复插件的名称
+        for (String name : setName) {
+            int nameFlag = 0;
+            for (String s : listName) {
+                if (s.equals(name)){
+                    nameFlag++;
+                }
+            }
+            if (nameFlag > 1){
+                //说明有重复的
+                repetition.add(name);
+            }
+        }
+
+        LOGGER.info("repetition:"+repetition);
+
+        //最终要删除的插件
+        List<File> dels = new ArrayList<>();
+
+       //根据插件名称保留最近修改的时间，若存在多个相同的且最近修改时间也相同，那么只保留其中一个
+        //遍历,将要删除的插件绝对路径存入插件删除列表
+        for (String pluginName : repetition) {
+
+            List<File> listTmp = new ArrayList<>();
+
+            for (File plugin : pluginList) {
+                String pluginPath = plugin.getAbsolutePath();
+                ClassLoader classLoader = getClassLoader(pluginPath);
+                Properties properties = getProperties(classLoader, PROPERTIES_NAME);
+                String name = (String) properties.get("name");
+
+                if (pluginName.equals(name)) {
+                    listTmp.add(plugin);
+                }
+            }
+
+
+            //根据最后修改时间排序，
+            Collections.sort(listTmp, new Comparator<File>() {
+                @Override
+                //正数、负数、还是零，决定元素放在后面、前面还是不存。
+                public int compare(File o1, File o2) {
+                    return o1.lastModified() > o2.lastModified()?1:-1;
+                }
+            });
+
+            //保留最近最后修改时间的
+            for (int i = 0; i < listTmp.size()-1; i++) {
+                dels.add(listTmp.get(i));
+            }
+        }
+
+        //先清空deletePlugins.sh
+        FileUtils.write(new File(UpdateInit.deletePluginPath),"","utf-8");
+
+        //声明shell
+        String bash = "#!/bin/bash\n";
+        FileUtils.write(new File(UpdateInit.deletePluginPath),bash,"utf-8");
+
+        //将命令写入deletePlugins.sh
+        for (File del : dels) {
+            String delCmd = "rm -rf "+"'"+del.getAbsolutePath()+"'\n";
+            LOGGER.info("delCmd:"+delCmd);
+            FileUtils.write(new File(UpdateInit.deletePluginPath),delCmd,"utf-8",true);
+        }
+
+
+        //执行deletePlugins.sh
+        try {
+            String command = "sh "+UpdateInit.deletePluginPath;
+            LOGGER.info("删除插件命令："+command);
+            N_m3u8DL_RE.Cmd(command);
+        } catch (Exception e) {
+
+        }finally {
+            //清空插件删除列表
+            FileUtils.write(new File(UpdateInit.deletePluginPath)," ","utf-8");
+        }
+        return true;
+    }
+
     /**
      * 获取系统信息：插件信息、系统运行时间、系统版本信息
      */
@@ -405,11 +531,12 @@ public class SystemServlet extends BaseServlet {
      * @throws ServletException
      * @throws IOException
      */
-    public void uploadServlet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    public void uploadServlet(HttpServletRequest request, HttpServletResponse response) throws Exception {
         //上传插件
         String pluginsPath = UpdateInit.WEBAPP_PATH+"plugin"+File.separator;
         LOGGER.debug("pluginsPath:"+pluginsPath);
         upload(request,response,pluginsPath);
+        pluginDeduplication();//插件去重，保留最新
     }
 
     /**
