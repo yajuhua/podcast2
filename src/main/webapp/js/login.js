@@ -34,5 +34,18 @@ new Vue({
                 });
             }
         }
+        ,
+        //重置密码提示
+        resetPassword() {
+            this.$alert('在init/system.init文件中添加PASSWORD字段，若没有system.init,请创建。', '重置密码', {
+                confirmButtonText: '确定',
+            });
+        },
+        //重置账号
+        resetAccount(){
+            this.$alert('在init/system.init文件中添加ACCOUNT字段，若没有system.init,请创建。', '重置用户名和密码', {
+                confirmButtonText: '确定',
+            });
+        }
     }
 })
