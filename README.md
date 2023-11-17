@@ -2,11 +2,11 @@
 
 <br>
 <p align="center">
-<img src="https://img.shields.io/badge/Release-1.2.8-<COLOR>.svg" alt="Release" />
-<img src="https://img.shields.io/badge/JDK-17-blue.svg" alt="JDK" />
-<img src="https://img.shields.io/badge/Tomcat-8.5.59-blue.svg" alt="Tomcat" />
+<img src="https://img.shields.io/badge/release-1.3.0-<COLOR>.svg" alt="Release" />
+<img src="https://img.shields.io/badge/jdk-17-blue.svg" alt="JDK" />
+<img src="https://img.shields.io/badge/tomcat-8.5.59-blue.svg" alt="Tomcat" />
 <img src="https://img.shields.io/badge/license-Apache2.0-green.svg" alt="apache-licenses" />
-<img src="https://img.shields.io/badge/Vue-2.6.13-blue.svg" alt="Vue" />
+<img src="https://img.shields.io/badge/vue-2.6.13-blue.svg" alt="Vue" />
 <img src="https://img.shields.io/badge/element_ui-2.15.14-blue.svg" alt="Vue" />
 </p>
 <h2 align=center><p>Podcast2</p></h2>
@@ -14,7 +14,7 @@
 
 ## 项目说明
 
-将视频网站转换成播客。
+将视频网站转换成播客订阅。
 
 ## 快速开始
 
@@ -32,6 +32,7 @@ cd ~/podcast2
 docker run -id --name=podcast2 \
 --restart=always \
 -p 8088:8088 \
+-v ~/podcast2/init:/opt/tomcat/tomcat8/webapps/podcast2/init/ \
 -v ~/podcast2/xml:/opt/tomcat/tomcat8/webapps/podcast2/xml/ \
 -v ~/podcast2/video:/opt/tomcat/tomcat8/webapps/podcast2/video/ \
 -v ~/podcast2/audio:/opt/tomcat/tomcat8/webapps/podcast2/audio/ \
@@ -42,27 +43,28 @@ yajuhua/podcast2:1.3.0
 #### 创建并启动容器(https)
 ```shell
 #申请证书
-    安装acme：curl https://get.acme.sh | sh
-    安装socat：yum install socat
-    添加软链接：ln -s  /root/.acme.sh/acme.sh /usr/local/bin/acme.sh
-    注册账号： acme.sh --register-account -m 你的邮箱
-    开放80端口：firewall-cmd --add-port=80/tcp --permanent && firewall-cmd --reload
-    申请证书： acme.sh  --issue -d 你的域名  --standalone -k ec-256 
-    安装证书： acme.sh --installcert -d 你的域名 --ecc  --key-file   ~/podcast2/cert/podcast2.key   --fullchain-file ~/podcast2/cert/podcast2.crt 
+安装acme：curl https://get.acme.sh | sh
+安装socat：yum install socat
+添加软链接：ln -s  /root/.acme.sh/acme.sh /usr/local/bin/acme.sh
+注册账号： acme.sh --register-account -m 你的邮箱
+开放80端口：firewall-cmd --add-port=80/tcp --permanent && firewall-cmd --reload
+申请证书： acme.sh  --issue -d 你的域名  --standalone -k ec-256 
+安装证书： acme.sh --installcert -d 你的域名 --ecc  --key-file   ~/podcast2/cert/podcast2.key   --fullchain-file ~/podcast2/cert/podcast2.crt 
 
 #创建并启动容器
-    mkdir  ~/podcast2
-    cd ~/podcast2
-    docker run -id --name=podcast2 \
-    --restart=always \
-    -p 443:443 \ 
-    -v ~/podcast2/cert:/opt/tomcat/tomcat8/cert/ \
-    -v ~/podcast2/xml:/opt/tomcat/tomcat8/webapps/podcast2/xml/ \
-    -v ~/podcast2/video:/opt/tomcat/tomcat8/webapps/podcast2/video/ \
-    -v ~/podcast2/audio:/opt/tomcat/tomcat8/webapps/podcast2/audio/ \
-    -v ~/podcast2/plugin:/opt/tomcat/tomcat8/webapps/podcast2/plugin/ \
-    -v ~/podcast2/logs:/logs \
-    yajuhua/podcast2:1.3.0
+mkdir  ~/podcast2
+cd ~/podcast2
+docker run -id --name=podcast2 \
+--restart=always \
+-p 443:443 \
+-v ~/podcast2/cert:/opt/tomcat/tomcat8/cert/ \
+-v ~/podcast2/init:/opt/tomcat/tomcat8/webapps/podcast2/init/ \
+-v ~/podcast2/xml:/opt/tomcat/tomcat8/webapps/podcast2/xml/ \
+-v ~/podcast2/video:/opt/tomcat/tomcat8/webapps/podcast2/video/ \
+-v ~/podcast2/audio:/opt/tomcat/tomcat8/webapps/podcast2/audio/ \
+-v ~/podcast2/plugin:/opt/tomcat/tomcat8/webapps/podcast2/plugin/ \
+-v ~/podcast2/logs:/logs \
+yajuhua/podcast2:1.3.0
 ```
 ### 3.防火墙放行8088端口
 ````shell
@@ -85,11 +87,11 @@ firewall-cmd --reload
 
 #### 1.下载插件
 
-| 网站 <img width=200/>            | 名称<img width=200/> | 版本<img width=200/> | 下载地址<img width=200/>                                     |
-| :------------------------------- | -------------------- | -------------------- | ------------------------------------------------------------ |
-| [干净世界](https://ganjing.com/) | ganjing              | 1.3.0                | [点击下载](https://github.com/yajuhua/plugin/raw/master/ganjing/1.3/1.3.0/Ganjing3-jar-with-dependencies.jar) |
-| [ntdm](https://www.ntdm.tv)      | ntdm8                | 1.3.0                | [点击下载](https://github.com/yajuhua/plugin/raw/master/ntdm8/1.3/1.3.0/ntdm8-jar-with-dependencies.jar) |
-| [youtube](www.youtube.com)       | youtube              | 1.3.0                | [点击下载](https://github.com/yajuhua/plugin/raw/master/youtube/1.3/1.3.0/Youtube-jar-with-dependencies.jar) |
+| 网站 <img width=200/>            | 名称<img width=200/> | 版本<img width=200/> | 下载地址<img width=200/>                                                                                           |
+| :------------------------------- | -------------------- |--------------------|----------------------------------------------------------------------------------------------------------------|
+| [干净世界](https://ganjing.com/) | ganjing              | 1.3.0              | [点击下载](https://github.com/yajuhua/plugin/raw/master/ganjing/1.3/1.3.0/Ganjing3-jar-with-dependencies.jar)      |
+| [ntdm](https://www.ntdm.tv)      | ntdm8                | 1.3.1              | [点击下载](https://github.com/yajuhua/plugin/raw/master/ntdm8/1.3/1.3.1/ntdm8-1.3.1-jar-with-dependencies.jar)     |
+| [youtube](www.youtube.com)       | youtube              | 1.3.1              | [点击下载](https://github.com/yajuhua/plugin/raw/master/youtube/1.3/1.3.1/Youtube-1.3.1-jar-with-dependencies.jar) |
 
 #### 2.进入管理页面
 
