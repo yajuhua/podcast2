@@ -82,6 +82,33 @@ public class UpdateInit implements ServletContextListener {
         UpdateDownloader updateDownloader = new UpdateDownloader();
         executor.scheduleAtFixedRate(updateDownloader,0,downloaderUpdate,TimeUnit.HOURS);
 
+        //检测初始化文件system.init
+        LOGGER.info("检测初始化文件system.init");
+        String initPath = WEBAPP_PATH + "tmp" + File.separator + "init" + File.separator + "system.init";
+        try {
+            List<String> initList = FileUtils.readLines(new File(initPath), "UTF-8");//获取要初始的
+            for (String init : initList) {
+                switch (init){
+                    case "PASSWORD":
+                        LOGGER.info("初始化密码1");
+                        //初始化密码1
+                        service.changePassword("1");
+                        break;
+
+                    case "ACCOUNT":
+                        //初始化账号(用户名和密码)admin 1
+                        LOGGER.info("初始化账号(用户名和密码)admin 1");
+                        service.changeAll("admin","1");
+                        break;
+                }
+            }
+
+            //清空system.init
+            FileUtils.write(new File(initPath),"");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Override
