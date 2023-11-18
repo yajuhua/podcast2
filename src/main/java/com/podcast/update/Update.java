@@ -382,7 +382,7 @@ public class Update extends Thread{
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
                         channelService.UpdateForEqual(item.getEqual(),uuid);
-                        break;
+                        return true;
                     default:
                         return false;
                 }
@@ -407,7 +407,7 @@ public class Update extends Thread{
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
                         channelService.UpdateForEqual(item.getEqual(),uuid);
-                        break;
+                        return true;
                     default:
                         return false;
                 }
