@@ -2,6 +2,7 @@ package com.podcast.Utils;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.podcast.pojo.Download;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -204,6 +205,7 @@ public class Mode {
         Gson gson = new Gson();
         List<String[]> customCmd = gson.fromJson(this.Enclosure, listType);
 
+        Download download = null; //yt-dlp下载信息
         String toolName; //工具名称
         String command; //执行命令
         String result = null; //资源绝对路径
@@ -220,7 +222,8 @@ public class Mode {
                 case "yt-dlp":
                     LOGGER.info("yt-dlp执行:"+command);
                     Yt_dlp ytDlp = new Yt_dlp();
-                    ytDlp.ytDlpCmd(command);
+                    download = ytDlp.ytDlpCmd(command);
+                    format = download.getDescription().substring(download.getDescription().lastIndexOf("."));
                     LOGGER.info("yt-dlpResult:"+result);
                     break;
                 case "N_m3u8DL-RE":
