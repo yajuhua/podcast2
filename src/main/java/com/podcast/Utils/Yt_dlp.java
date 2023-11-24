@@ -169,7 +169,8 @@ public class Yt_dlp {
      * 解析yt-dlp日志信息
      * @param command 命令
      */
-    public void ytDlpCmd(String command) throws IOException {
+    public Download ytDlpCmd(String command) throws IOException {
+        Download download  = new Download();
         try {
             BufferedReader br = null;
             try {
@@ -203,7 +204,7 @@ public class Yt_dlp {
                 String ETA;
                 String destination;
 
-                Download download  = new Download();
+                //Download download  = new Download();
                 download.setId(UUID.randomUUID().toString());
                 download.setDownloaderName("yt-dlp");
                 download.setTotalSize("");
@@ -258,7 +259,8 @@ public class Yt_dlp {
                             download.setETA(ETA);
                         }
 
-                        if (download.getPercentage() == 100.0){
+
+                    /*    if (download.getPercentage() == 100.0){
                             //通过WS推送到前端
                             if (WebSocketServerDownload._session!=null && WebSocketServerDownload._session.isOpen()){
                                 WebSocketServerDownload._session.getBasicRemote().sendText(gson.toJson(download));
@@ -269,8 +271,8 @@ public class Yt_dlp {
                             channelService.completeDownload(download);
 
                             //结束
-                            return;
-                        }
+                            return download;
+                        }*/
 
                         //通过WS推送到前端
                         if (WebSocketServerDownload._session!=null && WebSocketServerDownload._session.isOpen()){
@@ -279,8 +281,15 @@ public class Yt_dlp {
                     }
                 }
 
-                //将记录存入数据库
+              /*  //将记录存入数据库
                 download.setStatus(0);
+                channelService.completeDownload(download);*/
+                if (WebSocketServerDownload._session!=null && WebSocketServerDownload._session.isOpen()){
+                    WebSocketServerDownload._session.getBasicRemote().sendText(gson.toJson(download));
+                }
+
+                //将记录存入数据库
+                download.setStatus(1);
                 channelService.completeDownload(download);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -297,6 +306,7 @@ public class Yt_dlp {
         } catch (Exception e) {
 
         }
+        return download;
     }
 
     /**
