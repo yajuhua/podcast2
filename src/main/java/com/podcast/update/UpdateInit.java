@@ -35,8 +35,6 @@ public class UpdateInit implements ServletContextListener {
         WEBAPP_PATH = webappPath;
         deletePluginPath = WEBAPP_PATH + "tmp" + File.separator + "deletePlugins.sh";
 
-        //是否有新创建
-        UserServlet.CREATE_STATUS = 0;
         PodcastUserService service = new PodcastUserService();
         //存入数据库
         service.updateWebappPath(webappPath);

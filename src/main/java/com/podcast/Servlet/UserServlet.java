@@ -44,7 +44,8 @@ import java.util.*;
 public class UserServlet  extends BaseServlet{
     private PodcastUserService service = new PodcastUserService();
     private ChannelService channelService = new ChannelService();
-    public static Integer CREATE_STATUS;//创建状态
+    public static List<String> CREATE_UUID = new ArrayList<>();//首次更新的UUID
+    public static Map<String,Update> FIRST_UPDATE = new HashMap<>();
     private static final Logger LOGGER = LoggerFactory.getLogger("UserServlet");
     private Gson gson = new Gson();
 
@@ -132,6 +133,14 @@ public class UserServlet  extends BaseServlet{
                 }
             }
         }
+
+        //在首次更新UUID集合中移除此UUID
+        UserServlet.CREATE_UUID.remove(uuid);
+
+        //结束正在下载
+        Update update = UserServlet.FIRST_UPDATE.get(uuid);
+        update.interrupt();//发送中断信息
+        UserServlet.FIRST_UPDATE.remove(uuid);
 
         request.getRequestDispatcher("/index.html").forward(request,response);
     }
@@ -252,10 +261,11 @@ public class UserServlet  extends BaseServlet{
             response.getWriter().write("ok");
             LOGGER.info("进入首次更新！");
 
-            CREATE_STATUS = 1;
             //开启一个线程进行首次更新
             Update update = new Update(uuid,episodes);
             update.start();
+            CREATE_UUID.add(uuid);
+            FIRST_UPDATE.put(uuid,update);
         } catch (Exception e) {
             LOGGER.error("创建失败 "+request.getParameter("url"));
             request.getRequestDispatcher("add.html").forward(request,response);

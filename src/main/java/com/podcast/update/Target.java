@@ -18,7 +18,7 @@ public class Target implements Runnable{
     public void run() {
             UPDATE_STATUS = 1;
             LOGGER.info("系统开始扫描！");
-            LOGGER.info("createStatus:"+ UserServlet.CREATE_STATUS);
+            LOGGER.info("createSize:"+UserServlet.CREATE_UUID.size());
             LOGGER.info("updateStatus:"+UPDATE_STATUS);
             ChannelService service = new ChannelService();
             List<String> list = service.checkForUpdate(System.currentTimeMillis() / 1000);
@@ -26,7 +26,7 @@ public class Target implements Runnable{
                 try {
                     //要等待12秒，不然容易风控
                     Thread.sleep(12*1000);
-                    while (UserServlet.CREATE_STATUS==1){
+                    while (UserServlet.CREATE_UUID.size()!=0){
                         Thread.sleep(10*1000);//等待10秒
                         LOGGER.info("有多集正在更新,扫描更新等待10秒");
                     }
@@ -38,7 +38,7 @@ public class Target implements Runnable{
             }
             UPDATE_STATUS = 0;
             LOGGER.info("系统扫描完成！");
-            LOGGER.info("createStatus:"+UserServlet.CREATE_STATUS);
+            LOGGER.info("createSize:"+UserServlet.CREATE_UUID.size());
             LOGGER.info("updateStatus:"+UPDATE_STATUS);
 
     }

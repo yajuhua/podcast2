@@ -75,12 +75,12 @@ public class Update extends Thread{
                 if (update){
                     //写入最新检查更新的时间
                     channelService.UpdateForChannel(System.currentTimeMillis()/1000,uuid);
-                    UserServlet.CREATE_STATUS = 0;
+                    //UserServlet.CREATE_STATUS = 0;
                     LOGGER.info("新内容已更新完成！");
                 }else {
                     //写入最新检查更新的时间
                     channelService.UpdateLatestCheckTimestampByUuid(System.currentTimeMillis()/1000,uuid);
-                    UserServlet.CREATE_STATUS = 0;
+                    //UserServlet.CREATE_STATUS = 0;
                     LOGGER.info("检查更新完成，无内容更新！");
                 }
             }else {
@@ -91,19 +91,21 @@ public class Update extends Thread{
                     //写入最新检查更新的时间
                     channelService.UpdateForChannel(System.currentTimeMillis()/1000,uuid);
                     LOGGER.info("新内容已更新完成！");
-                    UserServlet.CREATE_STATUS = 0;
-                    LOGGER.info("createStatus:"+UserServlet.CREATE_STATUS);
+
+                    UserServlet.CREATE_UUID.remove(uuid);
+                    //UserServlet.CREATE_STATUS = 0;
+                    LOGGER.info("createSize:"+UserServlet.CREATE_UUID.size());
                 }else {
                     //写入最新检查更新的时间
                     channelService.UpdateLatestCheckTimestampByUuid(System.currentTimeMillis()/1000,uuid);
-                    UserServlet.CREATE_STATUS = 0;
+                    //UserServlet.CREATE_STATUS = 0;
+                    UserServlet.CREATE_UUID.remove(uuid);
                     LOGGER.info("检查更新完成，无内容更新！");
                 }
             }
 
         } catch (Exception e) {
             LOGGER.error("检查更新失败！"+"uuid:"+ uuid +" 详细:"+e);
-            UserServlet.CREATE_STATUS = 0;
         }
 
     }
@@ -179,6 +181,11 @@ public class Update extends Thread{
 
 
         for (int i = 0; i < items.size(); i++) {
+
+            if (!UserServlet.CREATE_UUID.contains(uuid)){
+                LOGGER.info("退出首次更新，该订阅:"+ uuid +"已删除。");
+                return true;
+            }
 
             LOGGER.debug("进入items遍历，size:"+items.size());
             /**
