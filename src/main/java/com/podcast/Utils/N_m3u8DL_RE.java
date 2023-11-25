@@ -159,6 +159,12 @@ public class N_m3u8DL_RE {
                 String line = null;
                 while ((line = br.readLine()) != null) {
 
+                    if (Thread.currentThread().isInterrupted()){
+                        //结束下载
+                        LOGGER.info("该订阅已删除，结束下载");
+                        return;
+                    }
+
                     String destinationReg = "保存文件名: .{1,}";
 
                     //描述

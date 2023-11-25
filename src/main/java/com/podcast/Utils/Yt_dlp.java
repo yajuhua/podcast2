@@ -2,6 +2,7 @@ package com.podcast.Utils;
 
 import com.google.gson.Gson;
 import com.podcast.Progress.WebSocketServerDownload;
+import com.podcast.Servlet.UserServlet;
 import com.podcast.pojo.Download;
 import com.podcast.service.ChannelService;
 import org.slf4j.Logger;
@@ -212,6 +213,13 @@ public class Yt_dlp {
                 download.setETA("");
 
                 while ((line = br.readLine()) != null) {
+
+                    //判断线程是否中断
+                    if (Thread.currentThread().isInterrupted()){
+                        //结束下载
+                        LOGGER.info("该订阅已删除，结束下载");
+                        return download;
+                    }
 
                     //描述
                     Pattern DestinationPattern = Pattern.compile(DestinationReg);

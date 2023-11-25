@@ -111,6 +111,13 @@ public class Aria2c {
             String[] keys = {"status","totalLength","completedLength","downloadSpeed","dir"};
             String tellStatusStr;
             while ((tellStatusStr=aria2Client.tellStatus(keys))!=null){
+
+                if (Thread.currentThread().isInterrupted()){
+                    //结束下载
+                    LOGGER.info("该订阅已删除，结束下载");
+                    return false;
+                }
+
                 JsonObject jsonObject = gson.fromJson(tellStatusStr, JsonObject.class);
 
                 int totalLength = jsonObject.get("result").getAsJsonObject().get("totalLength").getAsInt();
