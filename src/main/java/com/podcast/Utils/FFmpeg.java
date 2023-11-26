@@ -1,5 +1,6 @@
 package com.podcast.Utils;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +60,7 @@ public class FFmpeg {
         }
         //删除原文件
         File delFile = new File(this.filePath);
-        if (delFile.delete()){
+        if (FileUtils.deleteQuietly(delFile)){
             LOGGER.info("删除成功!");
         }else {
             LOGGER.error("删除失败！");
