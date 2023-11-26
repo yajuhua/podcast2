@@ -42,6 +42,7 @@ public class Update extends Thread{
     @Override
     public void run() {
         run_();
+        UserServlet.CREATE_UUID.remove(uuid);
     }
 
     /**
