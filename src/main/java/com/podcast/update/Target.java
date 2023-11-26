@@ -1,6 +1,7 @@
 package com.podcast.update;
 
 import com.podcast.Servlet.UserServlet;
+import com.podcast.Utils.Clear;
 import com.podcast.service.ChannelService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,13 @@ public class Target implements Runnable{
     public static Integer UPDATE_STATUS;//更新状态
     @Override
     public void run() {
+
+            //如果没有创建，则执行清理未完成的资源
+            if (UserServlet.CREATE_UUID.size() == 0){
+                Clear.clearNotSubscribeResourceData();//清除数据库记录
+                Clear.clearNotCompleted();
+            }
+
             UPDATE_STATUS = 1;
             LOGGER.info("系统开始扫描！");
             LOGGER.info("createSize:"+UserServlet.CREATE_UUID.size());

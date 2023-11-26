@@ -12,10 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 清除类
@@ -25,6 +23,8 @@ public class Clear {
      * 日志
      */
     private static final Logger LOGGER = LoggerFactory.getLogger("Clear");
+    public static ChannelService channelService = new ChannelService();
+    public static PodcastUserService podcastUserService = new PodcastUserService();
 
     /**
      * 清除xml文件中过期的item和相关资源
@@ -137,5 +137,53 @@ public class Clear {
                 LOGGER.error("清除过期item时出错！"+" 详细:"+e);
             }
         }
+    }
+
+    /**
+     * 删除没有完成下载的
+     */
+    public static void clearNotCompleted(){
+        //获取UUID集合
+        List<String> allResourceUUID = channelService.getAllResourceUUID();
+        //资源位置
+        String webappPath = podcastUserService.getWebappPath();
+        //获取video和audio目录下的File[]对象
+        List<File> videoFiles = Arrays.stream(new File(webappPath + "video").listFiles()).toList();
+        List<File> audioFiles = Arrays.stream(new File(webappPath + "audio").listFiles()).toList();
+        //全部File
+        List<File> allResourceFile = new ArrayList<>();
+        allResourceFile.addAll(videoFiles);
+        allResourceFile.addAll(audioFiles);
+
+        //将名称包含allResourceUUID的过滤掉
+         allResourceFile = allResourceFile.stream().filter(f -> !allResourceUUID.contains(f.getName().substring(0,f.getName().lastIndexOf(".")))).collect(Collectors.toList());
+
+        //删除
+        for (File file : allResourceFile) {
+            boolean b = FileUtils.deleteQuietly(file);
+            LOGGER.info("文件："+file.getName()+(b==true?"删除成功":"删除失败"));
+        }
+    }
+
+    /**
+     * 删除channel表中没有的resource记录
+     */
+    public static void clearNotSubscribeResourceData(){
+        //获取资源uuid
+        List<String> channelAllUuid = channelService.getAllUuid();
+        List<String> resourcesAllXmlUuid = channelService.getResourcesAllXmlUuid();
+
+        //将resourcesAllXmlUuid存在的订阅uuid过滤掉，剩下就是要删除的订阅资源记录
+        resourcesAllXmlUuid = resourcesAllXmlUuid.stream().filter(u -> !channelAllUuid.contains(u)).collect(Collectors.toList());
+
+        //删除资源记录
+        for (String uuid : resourcesAllXmlUuid) {
+            channelService.deleteResourceByXmlUUID(uuid);
+        }
+    }
+
+    @Test
+    public void t1(){
+        clearNotCompleted();
     }
 }
