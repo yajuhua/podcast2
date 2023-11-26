@@ -193,9 +193,7 @@ public class N_m3u8DL_RE {
                         download.setPercentage(100);
 
                         //通过WS推送到前端
-                        if (WebSocketServerDownload._session!=null && WebSocketServerDownload._session.isOpen()){
-                            WebSocketServerDownload._session.getBasicRemote().sendText(gson.toJson(download));
-                        }
+                        WebSocketServerDownload.send(download);
 
                         //将记录存入数据库
                         download.setStatus(1);
@@ -205,9 +203,7 @@ public class N_m3u8DL_RE {
                     }
 
                     //通过WS推送到前端
-                    if (WebSocketServerDownload._session!=null && WebSocketServerDownload._session.isOpen()){
-                        WebSocketServerDownload._session.getBasicRemote().sendText(gson.toJson(download));
-                    }
+                    WebSocketServerDownload.send(download);
                 }
 
                 //将记录存入数据库

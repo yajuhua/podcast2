@@ -132,13 +132,13 @@ public class Aria2c {
 
                     if (downloadStatus.contains("complete")){
                         //通过WS推送到前端
-                        if (WebSocketServerDownload._session!=null && WebSocketServerDownload._session.isOpen()){
+
                             download.setPercentage(100.0);
-                            WebSocketServerDownload._session.getBasicRemote().sendText(gson.toJson(download));
+                            WebSocketServerDownload.send(download);
                             //将记录存入数据库
                             download.setStatus(1);
                             channelService.completeDownload(download);
-                        }
+
                         return true;
                     }
 
@@ -174,11 +174,9 @@ public class Aria2c {
                         download.setETA(duration);
 
                         //通过WS推送到前端
-                        if (WebSocketServerDownload._session!=null && WebSocketServerDownload._session.isOpen()){
-                            WebSocketServerDownload._session.getBasicRemote().sendText(gson.toJson(download));
+                            WebSocketServerDownload.send(download);
                             //延时1秒,避免推送过快导致前端页面无法渲染
                             Thread.sleep(1000);
-                        }
                     }
 
 

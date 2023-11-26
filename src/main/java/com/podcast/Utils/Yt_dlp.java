@@ -283,18 +283,14 @@ public class Yt_dlp {
                         }*/
 
                         //通过WS推送到前端
-                        if (WebSocketServerDownload._session!=null && WebSocketServerDownload._session.isOpen()){
-                            WebSocketServerDownload._session.getBasicRemote().sendText(gson.toJson(download));
-                        }
+                        WebSocketServerDownload.send(download);
                     }
                 }
 
               /*  //将记录存入数据库
                 download.setStatus(0);
                 channelService.completeDownload(download);*/
-                if (WebSocketServerDownload._session!=null && WebSocketServerDownload._session.isOpen()){
-                    WebSocketServerDownload._session.getBasicRemote().sendText(gson.toJson(download));
-                }
+                WebSocketServerDownload.send(download);
 
                 //将记录存入数据库
                 download.setStatus(1);
