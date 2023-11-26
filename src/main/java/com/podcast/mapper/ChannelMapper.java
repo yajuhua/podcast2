@@ -85,8 +85,16 @@ public interface ChannelMapper {
      * 根据resourceUuid 删除数据库记录
      * @param resourceUUID
      */
-    @Delete("DELETE FROM resources WHERE resource_uuid = #{resourceUuid}")
+    @Delete("DELETE * FROM resources WHERE resource_uuid = #{resourceUuid}")
     void deleteByResourceUUID(String resourceUUID);
+
+
+    /**
+     * 根据xmlUUID删除resources表中记录
+     * @param XmlUUID
+     */
+    @Delete("DELETE FROM resources WHERE xml_uuid = #{xml_uuid}")
+    void deleteResourceByXmlUUID(String XmlUUID);
 
     /**
      * 通过uuid查询channel的存活时间
@@ -102,6 +110,13 @@ public interface ChannelMapper {
      */
     @Select("SELECT uuid FROM channel")
     List<String> getAllUuid();
+
+    /**
+     * 获取resources表中所有的xml_uuid
+     * @return resources表中所有的xml_uuid集合
+     */
+    @Select("SELECT xml_uuid FROM resources")
+    List<String> getResourcesAllXmlUuid();
 
     /**
      * 更新频道状态
@@ -164,4 +179,11 @@ public interface ChannelMapper {
      */
     @Select("select plugin from channel where uuid = #{uuid}")
     String getPluginNameByUuid(@Param("uuid") String uuid);
+
+    /**
+     * 获取所有资源的UUID
+     * @return 资源UUID集合
+     */
+    @Select("select resource_uuid from resources")
+    List<String> getAllResourceUUID();
 }

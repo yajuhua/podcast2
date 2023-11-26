@@ -128,6 +128,18 @@ public class ChannelService {
     }
 
     /**
+     * 根据xmlUUID删除resources表中记录
+     * @param xmlUUID
+     */
+    public void deleteResourceByXmlUUID(String xmlUUID){
+        SqlSession sqlSession = factory.openSession();
+        ChannelMapper mapper = sqlSession.getMapper(ChannelMapper.class);
+        mapper.deleteResourceByXmlUUID(xmlUUID);
+        sqlSession.commit();
+        sqlSession.close();
+    }
+
+    /**
      * 通过uuid获取channel节目的存活时间，秒
      * @param uuid xml的uuid
      * @return
@@ -150,6 +162,18 @@ public class ChannelService {
         List<String> allUuid = mapper.getAllUuid();
         sqlSession.close();
         return allUuid;
+    }
+
+    /**
+     * 获取resources表中所有的xml_uuid
+     * @return resources表中所有的xml_uuid集合
+     */
+    public List<String> getResourcesAllXmlUuid(){
+        SqlSession sqlSession = factory.openSession();
+        ChannelMapper mapper = sqlSession.getMapper(ChannelMapper.class);
+        List<String> ResourcesAllXmlUuid = mapper.getResourcesAllXmlUuid();
+        sqlSession.close();
+        return ResourcesAllXmlUuid;
     }
 
     /**
@@ -249,5 +273,17 @@ public class ChannelService {
         String pluginName = mapper.getPluginNameByUuid(uuid);
         sqlSession.close();
         return pluginName;
+    }
+
+    /**
+     * 获取所有资源的UUID
+     * @return 资源UUID集合
+     */
+    public List<String> getAllResourceUUID(){
+        SqlSession sqlSession = factory.openSession();
+        ChannelMapper mapper = sqlSession.getMapper(ChannelMapper.class);
+        List<String> allResourceUUID = mapper.getAllResourceUUID();
+        sqlSession.close();
+        return allResourceUUID;
     }
 }
