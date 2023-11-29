@@ -212,10 +212,10 @@
                                 prop="status"
                                 label="状态">
                             <div slot-scope="scope">
-                                <div v-if="scope.row.status === 1">
+                                <div v-if="scope.row.status === 0">
                                     <i class="el-icon-success">成功</i>
                                 </div>
-                                <div v-if="scope.row.status != 1">
+                                <div v-if="scope.row.status != 0">
                                     <i class="el-icon-error">失败</i>
                                 </div>
                             </div>
@@ -236,10 +236,10 @@
                                 label="下载进度">
                             <!--使用slot-scope="scope"来访问表格中每行的数据-->
                             <div slot-scope="scope">
-                                <div v-if="scope.row.status === 1">
+                                <div v-if="scope.row.status === 0">
                                     <el-progress :text-inside="true" :stroke-width="26" :percentage="scope.row.percentage"></el-progress>
                                 </div>
-                                <div v-if="scope.row.status != 1">
+                                <div v-if="scope.row.status != 0">
                                     <el-progress :text-inside="true" :stroke-width="26" :percentage="scope.row.percentage" status="exception"></el-progress>
                                 </div>
                             </div>
