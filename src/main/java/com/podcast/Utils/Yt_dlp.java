@@ -197,6 +197,9 @@ public class Yt_dlp {
                 //获取描述
                 String DestinationReg = "Destination:.+";
 
+                //获取最终合成的文件
+                String mergerReg = "\\[Merger\\] Merging formats into.+";
+
                 //获取下载进度
                 double percentage;
                 //获取总MB
@@ -229,6 +232,15 @@ public class Yt_dlp {
 
                     while(DestinationMatcher.find()){
                         destination = DestinationMatcher.group().replace("Destination: ","");
+                        download.setDescription(destination);
+                    }
+
+                    //最终合并的文件
+                    Pattern MergerPattern = Pattern.compile(mergerReg);
+                    Matcher MergerMatcher = MergerPattern.matcher(line);
+
+                    while(MergerMatcher.find()){
+                        destination = MergerMatcher.group().replace("[Merger] Merging formats into ","").replaceAll("\"","");
                         download.setDescription(destination);
                     }
 
