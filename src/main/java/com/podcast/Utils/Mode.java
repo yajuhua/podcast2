@@ -90,7 +90,10 @@ public class Mode {
             LOGGER.debug("enclosureSavePath:"+enclosureSavePath);
 
             //执行startDownload方法
-            startDownload.invoke(o1);
+            boolean result = (boolean)startDownload.invoke(o1);
+            if (result == false){
+                return null;//下载失败
+            }
         } catch (Exception e) {
             LOGGER.error("开始下载时出错！"+" 详细:"+e);
         }
@@ -124,6 +127,11 @@ public class Mode {
     public String A1(){
         //1.下载
         String fileabsolutePath = startDownload();
+
+        if (fileabsolutePath == null){
+            return null;//下载失败
+        }
+
         //判断是否需要转换，否则会误删
         int index = fileabsolutePath.lastIndexOf(".");
         String format = fileabsolutePath.substring(index+1);
@@ -159,6 +167,10 @@ public class Mode {
     public String V1(){
         //1.下载
         String fileabsolutePath = startDownload();
+
+        if (fileabsolutePath == null){
+            return null;//下载失败
+        }
 
         //判断是否需要转换，否则会误删
         int index = fileabsolutePath.lastIndexOf(".");
@@ -223,13 +235,19 @@ public class Mode {
                     LOGGER.info("yt-dlp执行:"+command);
                     Yt_dlp ytDlp = new Yt_dlp();
                     download = ytDlp.ytDlpCmd(command);
+                    if (download.getStatus()!=0){
+                        return null;//下载失败
+                    }
                     format = download.getDescription().substring(download.getDescription().lastIndexOf("."));
                     LOGGER.info("yt-dlpResult:"+result);
                     break;
                 case "N_m3u8DL-RE":
                     LOGGER.info("N_m3u8DL-RE执行:"+command);
                     N_m3u8DL_RE n_m3u8DL_re = new N_m3u8DL_RE();
-                    n_m3u8DL_re.nM3u8DLRECmd(command);
+                    Download download1 = n_m3u8DL_re.nM3u8DLRECmd(command);
+                    if (download1.getStatus()!=0){
+                        return null;//下载失败
+                    }
                     LOGGER.info("N_m3u8DL-REResult:"+result);
                     break;
                 case "ffmpeg":

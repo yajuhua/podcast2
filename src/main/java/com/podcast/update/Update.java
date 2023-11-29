@@ -209,6 +209,9 @@ public class Update extends Thread{
                 switch (videoMode){
                     case "V1":
                         enclosureLink = mode.V1();
+                        if (enclosureLink == null){
+                            return false;//下载失败
+                        }
                         writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
@@ -216,11 +219,17 @@ public class Update extends Thread{
 
                     case "V2" :
                         enclosureLink = mode.V2();
+                        if (enclosureLink == null){
+                            return false;//下载失败
+                        }
                         writeItem(item,type,enclosureLink,xmlPath);
                         break;
 
                     case "customize" :
                         enclosureLink = mode.customize();
+                        if (enclosureLink == null){
+                            return false;//下载失败
+                        }
                         writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
@@ -231,6 +240,9 @@ public class Update extends Thread{
                 switch (audioMode){
                     case "A1":
                         enclosureLink = mode.A1();
+                        if (enclosureLink == null){
+                            return false;//下载失败
+                        }
                         writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
@@ -238,12 +250,18 @@ public class Update extends Thread{
 
                     case "A2" :
                         enclosureLink = mode.A2();
+                        if (enclosureLink == null){
+                            return false;//下载失败
+                        }
                         writeItem(item,type,enclosureLink,xmlPath);
                         break;
 
                     case "customize" :
                         LOGGER.debug("进入audioCustomize");
                         enclosureLink = mode.customize();
+                        if (enclosureLink == null){
+                            return false;//下载失败
+                        }
                         writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
@@ -373,6 +391,9 @@ public class Update extends Thread{
                 switch (videoMode){
                     case "V1":
                         enclosureLink = mode.V1();
+                        if (enclosureLink == null){
+                            return false;//下载失败
+                        }
                         LOGGER.info("转换后的链接："+enclosureLink);
                         writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
@@ -381,11 +402,17 @@ public class Update extends Thread{
                         return true;
                     case "V2" :
                         enclosureLink = mode.V2();
+                        if (enclosureLink == null){
+                            return false;//下载失败
+                        }
                         writeItem(item,type,enclosureLink,xmlPath);
                         channelService.UpdateForEqual(item.getEqual(),uuid);
                         return true;
                     case "customize" :
                         enclosureLink = mode.customize();
+                        if (enclosureLink == null){
+                            return false;//下载失败
+                        }
                         writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
@@ -399,6 +426,9 @@ public class Update extends Thread{
                 switch (audioMode){
                     case "A1":
                         enclosureLink = mode.A1();
+                        if (enclosureLink == null){
+                            return false;//下载失败
+                        }
                         writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
@@ -406,11 +436,17 @@ public class Update extends Thread{
                         return true;
                     case "A2" :
                         enclosureLink = mode.A2();
+                        if (enclosureLink == null){
+                            return false;//下载失败
+                        }
                         writeItem(item,type,enclosureLink,xmlPath);
                         channelService.UpdateForEqual(item.getEqual(),uuid);
                         return true;
                     case "customize" :
                         enclosureLink = mode.customize();
+                        if (enclosureLink == null){
+                            return false;//下载失败
+                        }
                         writeItem(item,type,enclosureLink,xmlPath);
                         //将资源uuid添加到数据库
                         channelService.addResource(xmlUuid,resourceUuid);
