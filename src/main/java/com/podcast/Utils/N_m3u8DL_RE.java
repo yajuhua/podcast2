@@ -140,7 +140,7 @@ public class N_m3u8DL_RE {
      * 解析N_m3u8DL-RE的日志
      * @param command 命令
      */
-    public void nM3u8DLRECmd(String command) throws IOException {
+    public Download nM3u8DLRECmd(String command) throws IOException {
         //封装信息
         Download download = new Download();
         download.setId(UUID.randomUUID().toString());
@@ -149,12 +149,13 @@ public class N_m3u8DL_RE {
         download.setCurrentSpeed("暂无");
         download.setTotalSize("暂无 ");//后面得加个空格，不然会报错
 
+        int exitCode = 0;
 
         try {
             BufferedReader br = null;
             try {
                 Process p = Runtime.getRuntime().exec(command);
-
+                exitCode = p.waitFor();
                 br = new BufferedReader(new InputStreamReader(p.getInputStream(),"UTF-8"));//解决中文乱码 GBK是汉字编码//二维码会乱码
                 String line = null;
                 while ((line = br.readLine()) != null) {
@@ -162,7 +163,7 @@ public class N_m3u8DL_RE {
                     if (Thread.currentThread().isInterrupted()){
                         //结束下载
                         LOGGER.info("该订阅已删除，结束下载");
-                        return;
+                        return download;
                     }
 
                     String destinationReg = "保存文件名: .{1,}";
@@ -196,10 +197,10 @@ public class N_m3u8DL_RE {
                         WebSocketServerDownload.send(download);
 
                         //将记录存入数据库
-                        download.setStatus(1);
+                        download.setStatus(exitCode);
                         channelService.completeDownload(download);
 
-                        return;
+                        return download;
                     }
 
                     //通过WS推送到前端
@@ -207,7 +208,7 @@ public class N_m3u8DL_RE {
                 }
 
                 //将记录存入数据库
-                download.setStatus(0);
+                download.setStatus(exitCode);
                 channelService.completeDownload(download);
 
             } catch (Exception e) {
@@ -225,6 +226,8 @@ public class N_m3u8DL_RE {
         } catch (Exception e) {
 
         }
+
+        return download;
     }
 
     /**

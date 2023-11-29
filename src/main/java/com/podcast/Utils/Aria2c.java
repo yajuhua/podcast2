@@ -81,7 +81,7 @@ public class Aria2c {
      */
     public  boolean startDownload() throws IOException {
         Aria2Client aria2Client = null;
-        boolean status = false;
+        Download download = new Download();
         //读取Properties文件中的配置信息
         // aria2_RPO_URL
         // aira2_RPO_secret
@@ -105,7 +105,6 @@ public class Aria2c {
             System.out.println(response);
 
             //封装下载信息
-            Download download = new Download();
             download.setDownloaderName("Aria2");
 
             String[] keys = {"status","totalLength","completedLength","downloadSpeed","dir"};
@@ -136,7 +135,7 @@ public class Aria2c {
                             download.setPercentage(100.0);
                             WebSocketServerDownload.send(download);
                             //将记录存入数据库
-                            download.setStatus(1);
+                            download.setStatus(0);//下载成功状态码：0
                             channelService.completeDownload(download);
 
                         return true;
@@ -182,7 +181,7 @@ public class Aria2c {
 
                 }else {
                     //将记录存入数据库
-                    download.setStatus(0);
+                    download.setStatus(1);
                     channelService.completeDownload(download);
                     return false;
                 }
@@ -191,7 +190,7 @@ public class Aria2c {
         } catch (Exception e) {
             LOGGER.error("使用startDownload时出错！"+"详细:"+e);
         }
-       return status;
+       return download.getStatus()==0;
     }
 
 

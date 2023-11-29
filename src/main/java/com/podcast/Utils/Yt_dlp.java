@@ -162,8 +162,8 @@ public class Yt_dlp {
      * @return 是否正确下载,错误返回false，否则返回true
      * @throws IOException
      */
-    public  void startDownload() throws IOException {
-       ytDlpCmd(getDownloadCmd());
+    public  boolean startDownload() throws IOException {
+        return ytDlpCmd(getDownloadCmd()).getStatus()==0;//等于0说明下载成功
     }
 
     /**
@@ -172,10 +172,12 @@ public class Yt_dlp {
      */
     public Download ytDlpCmd(String command) throws IOException {
         Download download  = new Download();
+        int exitCode = 0;
         try {
             BufferedReader br = null;
             try {
                 Process p = Runtime.getRuntime().exec(command);
+                exitCode = p.waitFor(); //状态码：0代表成功
 
                 br = new BufferedReader(new InputStreamReader(p.getInputStream(),"UTF-8"));//解决中文乱码 GBK是汉字编码//二维码会乱码
                 String line = null;
@@ -267,33 +269,16 @@ public class Yt_dlp {
                             download.setETA(ETA);
                         }
 
-
-                    /*    if (download.getPercentage() == 100.0){
-                            //通过WS推送到前端
-                            if (WebSocketServerDownload._session!=null && WebSocketServerDownload._session.isOpen()){
-                                WebSocketServerDownload._session.getBasicRemote().sendText(gson.toJson(download));
-                            }
-
-                            //将记录存入数据库
-                            download.setStatus(1);
-                            channelService.completeDownload(download);
-
-                            //结束
-                            return download;
-                        }*/
-
                         //通过WS推送到前端
                         WebSocketServerDownload.send(download);
                     }
                 }
 
-              /*  //将记录存入数据库
-                download.setStatus(0);
-                channelService.completeDownload(download);*/
                 WebSocketServerDownload.send(download);
 
+
                 //将记录存入数据库
-                download.setStatus(1);
+                download.setStatus(exitCode);
                 channelService.completeDownload(download);
             } catch (Exception e) {
                 e.printStackTrace();
