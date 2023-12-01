@@ -2,7 +2,7 @@
 
 <br>
 <p align="center">
-<img src="https://img.shields.io/badge/release-1.3.0-<COLOR>.svg" alt="Release" />
+<img src="https://img.shields.io/badge/release-1.3.2-<COLOR>.svg" alt="Release" />
 <img src="https://img.shields.io/badge/jdk-17-blue.svg" alt="JDK" />
 <img src="https://img.shields.io/badge/tomcat-8.5.59-blue.svg" alt="Tomcat" />
 <img src="https://img.shields.io/badge/license-Apache2.0-green.svg" alt="apache-licenses" />
