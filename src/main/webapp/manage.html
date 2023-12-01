@@ -36,6 +36,7 @@
                     <template slot="title">用户</template>
                     <el-menu-item index="changePassword">修改</el-menu-item>
                     <el-menu-item index="dataMigration">数据迁移</el-menu-item>
+                    <el-menu-item index="customDomainName">自定义域名</el-menu-item>
                 </el-submenu>
 
                 <el-submenu index="download">
@@ -97,6 +98,17 @@
                         <el-button type="primary" @click="changeUserPasswd">修改</el-button>
                     </el-form-item>
                 </el-form></div>
+
+            <!--自定义域名-->
+            <div v-show="activeMenu === 'customDomainName'"><el-form :inline="true" :model="customDomainNameData"
+                                                                   class="demo-form-inline">
+                <el-form-item label="自定义域名">
+                    <el-input v-model="customDomainNameData" placeholder="如http://t.podcast2.org:8088"></el-input>
+                </el-form-item>
+
+                    <el-button type="primary" @click="customDomainName">确定</el-button>
+                </el-form-item>
+            </el-form></div>
 
 
             <!--数据迁移-->

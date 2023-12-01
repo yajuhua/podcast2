@@ -28,7 +28,8 @@ new Vue({
             channelData:null,
             importData:null,
             multipleSelectImportData:null,
-            importDataDialog:false
+            importDataDialog:false,
+            customDomainNameData:null
         };
     }, mounted: function () {
         // 页面加载完成后，发送异步请求，查询数据
@@ -604,6 +605,45 @@ new Vue({
             })
 
             this.importDataDialog = false;
+        },
+        //自定义域名
+        customDomainName(){
+            _this = this;
+            if (this.customDomainNameData == null || this.customDomainNameData == ""){
+                //不能为空
+                this.$message.error('不能为空！');
+            }else {
+                this.$confirm('此操作将自定义域名, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+
+                    //发送到服务端
+                    axios({
+                        method:"post",
+                        url:"./user/customDomainNameServlet",
+                        data:"customDomainName="+_this.customDomainNameData
+                    }).then(function (resp) {
+                        if (resp.data == "ok"){
+                            //提示成功
+                            _this.$message({
+                                message: '自定义域名成功！',
+                                type: 'success'
+                            });
+                        }else {
+                            //失败
+                            _this.$message.error('自定义域名失败！,请重新试试。');
+                        }
+                    })
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消'
+                    });
+                });
+
+            }
         }
     },
 });

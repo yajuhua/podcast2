@@ -85,7 +85,7 @@ public interface ChannelMapper {
      * 根据resourceUuid 删除数据库记录
      * @param resourceUUID
      */
-    @Delete("DELETE * FROM resources WHERE resource_uuid = #{resourceUuid}")
+    @Delete("DELETE FROM resources WHERE resource_uuid = #{resourceUuid}")
     void deleteByResourceUUID(String resourceUUID);
 
 

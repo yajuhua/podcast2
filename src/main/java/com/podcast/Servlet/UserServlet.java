@@ -42,8 +42,8 @@ import java.util.*;
  */
 @WebServlet("/user/*")
 public class UserServlet  extends BaseServlet{
-    private PodcastUserService service = new PodcastUserService();
-    private ChannelService channelService = new ChannelService();
+    public static PodcastUserService service = new PodcastUserService();
+    public static ChannelService channelService = new ChannelService();
     public static List<String> CREATE_UUID = new ArrayList<>();//首次更新的UUID
     public static Map<String,Update> FIRST_UPDATE = new HashMap<>();
     private static final Logger LOGGER = LoggerFactory.getLogger("UserServlet");
@@ -57,7 +57,6 @@ public class UserServlet  extends BaseServlet{
      * @throws IOException
      */
     public void changeServlet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        PodcastUserService service = new PodcastUserService();
 
         //获取参数
         String username = request.getParameter("username");
@@ -253,8 +252,16 @@ public class UserServlet  extends BaseServlet{
 
             LOGGER.debug("episodes:"+episodes);
 
-            //更新IP地址
-            service.UpdateIP(requestUrl);//存入数据库
+            //自定义域名：http://t.podcast2.org:8088 ->域名:端口
+            //1.判断数据库的IP详细，如果包含[customize]说明是自定义域名，创建订阅时就不更新域名了
+            String ipAddress = service.getIP();
+            if (ipAddress.contains("null") || ipAddress == null || !ipAddress.contains("[customize]") ){
+                //使用默认IP地址
+                //更新IP地址
+                service.UpdateIP(requestUrl);//存入数据库
+            }
+
+
             LOGGER.info("开始创建！");
             String uuid = create(request);
             LOGGER.info("创建完成！"+uuid);
@@ -575,6 +582,20 @@ public class UserServlet  extends BaseServlet{
         }
 
 
+    }
+
+
+    /**
+     * 自定义域名
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    public void customDomainNameServlet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String customDomainName = request.getParameter("customDomainName");
+        service.UpdateIP("[customize]"+customDomainName + "/podcast2");
+        response.getWriter().write("ok");
     }
 
 }
