@@ -36,8 +36,8 @@ public class Update extends Thread{
         this.episodes = episodes;
     }
     private static final Logger LOGGER = LoggerFactory.getLogger("Update");
-    private static ChannelService channelService = new ChannelService();
-    private static PodcastUserService service = new PodcastUserService();
+    private static ChannelService channelService = UserServlet.channelService;
+    private static PodcastUserService service = UserServlet.service;
 
     @Override
     public void run() {
@@ -157,7 +157,9 @@ public class Update extends Thread{
         LOGGER.debug(items.toString());
 
         //IP地址
-        String IP = service.getIP();
+        String IP = service.getIP().replace("[customize]","");
+        LOGGER.info("IP地址/域名："+IP);
+
 
         //获取插件mode
         String audioMode = (String)pluginProperties.get("audioMode");
@@ -357,8 +359,9 @@ public class Update extends Thread{
             //生成资源的UUID
             String resourceUuid = UUID.randomUUID().toString();
 
-            //获取IP地址
-            String IP = service.getIP();
+            //IP地址
+            String IP = service.getIP().replace("[customize]","");
+            LOGGER.info("IP地址/域名："+IP);
 
             //读取下载器类
             String downloader = (String)pluginProperties.get("downloader");
