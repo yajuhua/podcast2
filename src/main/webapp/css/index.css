@@ -9,11 +9,11 @@
 .footer {
     position: fixed;
     bottom: 20px;
-    /* 上提的距离 */
-    left: 0;
-    width: 100%;
+    left: 50%;
+    transform: translateX(-50%);
     text-align: center;
 }
+
 
 .footer a {
     /*color: #01A2FF;*/
