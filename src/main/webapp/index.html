@@ -2,21 +2,40 @@
 <html lang="zh" xmlns:v-bind="http://www.w3.org/1999/xhtml">
 
 <head>
+<!--    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订阅列表</title>
+    &lt;!&ndash; vue2 &ndash;&gt;
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.13/vue.js"></script>
+    &lt;!&ndash; 引入样式 &ndash;&gt;
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    &lt;!&ndash; 引入组件库 &ndash;&gt;
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    &lt;!&ndash;    引入axios&ndash;&gt;
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    &lt;!&ndash; 引入订阅列表css   &ndash;&gt;
+    <link rel="stylesheet" href="css/index.css">
+    &lt;!&ndash; 引入qrcode &ndash;&gt;
+    <script src="https://cdn.bootcdn.net/ajax/libs/qrcodejs/1.0.0/qrcode.js"></script>
+    &lt;!&ndash;网页logo&ndash;&gt;
+    <link rel="icon" href="imgs/logo_favicon.ico">-->
+
+    <!--  本地引用  -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>订阅列表</title>
     <!-- vue2 -->
-    <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.13/vue.js"></script>
+    <script src="js/vue.js"></script>
     <!-- 引入样式 -->
-    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="js/element-ui/lib/theme-chalk/index.css">
     <!-- 引入组件库 -->
-    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
-    <!--    引入axios-->
-    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <!-- 引入订阅列表css   -->
+    <script src="js/element-ui/lib/index.js"></script>
+    <!-- 引入axios -->
+    <script src="js/axios.min.js"></script>
+    <!--引入订阅列表css  -->
     <link rel="stylesheet" href="css/index.css">
     <!-- 引入qrcode -->
-    <script src="https://cdn.bootcdn.net/ajax/libs/qrcodejs/1.0.0/qrcode.js"></script>
+    <script src="js/qrcode.js"></script>
     <!--网页logo-->
     <link rel="icon" href="imgs/logo_favicon.ico">
 </head>
@@ -47,7 +66,6 @@
             </el-table-column>
         </el-table>
 
-        </el-table>
 
         <!-- 页面底部的控制按钮 -->
         <div class="footer">
