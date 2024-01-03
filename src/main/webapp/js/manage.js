@@ -331,7 +331,8 @@ new Vue({
                     message: '添加成功！',
                     type: 'success'
                 });
-                window.location.reload();
+                this.getSystemAllData();//重新获取系统信息
+                this.fileList=[];//清空
             } else {
                 this.$message.error('添加失败！');
             }
