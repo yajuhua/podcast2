@@ -57,6 +57,29 @@ public class UserServlet  extends BaseServlet{
      * @throws IOException
      */
     public void certificateServlet(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        File ca = new File("/opt/tomcat/tomcat8/webapps/podcast2/tmp/install_ca.sh");
+        if (ca.exists()){
+            //新建install_ca.sh
+            StringBuffer sb = new StringBuffer();
+            sb.append("#!/bin/bash\n")
+                    .append("yum install curl -y && yum install openssl -y && yum install cronie -y\n")
+                    .append("curl https://get.acme.sh | sh\n")
+                    .append("ln -s  /root/.acme.sh/acme.sh /usr/local/bin/acme.sh\n")
+                    .append("yum install socat -y\n")
+                    .append("acme.sh --register-account -m $(date +%s)@podcast2.com\n")
+                    .append("acme.sh  --issue -d $1 --standalone -k ec-256\n")
+                    .append("if [ $? -ne 0 ];then\n")
+                    .append("\tacme.sh  --force  --issue -d $1 --standalone -k ec-256\n")
+                    .append("\tif [ $? -ne 0  ];then\n")
+                    .append("\t\treturn 1\n")
+                    .append("\tfi\n")
+                    .append("fi\n")
+                    .append("acme.sh --installcert -d $1 --ecc  --key-file   $2.key   --fullchain-file $2.crt\n")
+                    .append("if [ $? -ne 0 ];then\n")
+                    .append("\treturn 2\n")
+                    .append("fi\n");
+            FileUtils.write(ca,sb);//写入
+        }
         //域名
         String domain = request.getParameter("domain");
         //执行申请证书脚本
