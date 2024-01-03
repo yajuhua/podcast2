@@ -58,7 +58,7 @@ public class UserServlet  extends BaseServlet{
      */
     public void certificateServlet(HttpServletRequest request, HttpServletResponse response) throws Exception {
         File ca = new File("/opt/tomcat/tomcat8/webapps/podcast2/tmp/install_ca.sh");
-        if (ca.exists()){
+        if (!ca.exists()){
             //新建install_ca.sh
             StringBuffer sb = new StringBuffer();
             sb.append("#!/bin/bash\n")
