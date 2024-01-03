@@ -6,6 +6,9 @@ yum install cronie -y
 #安装acme
 curl https://get.acme.sh | sh
 
+#创建软链接
+ln -s  /root/.acme.sh/acme.sh /usr/local/bin/acme.sh
+
 #安装socat
 yum install socat -y
 
