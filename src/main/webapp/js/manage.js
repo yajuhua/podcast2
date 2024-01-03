@@ -651,7 +651,6 @@ new Vue({
         //申请CA证书
         certificates(){
             _this=this;
-
             if (this.certificatesDomain==null){
 
                 this.$message.error('请输入你的域名！');
@@ -662,13 +661,14 @@ new Vue({
                     type: 'success'
                 });
             }else {
-               this.certloading=true
+                _this.certloading = true
                 //发送到服务端
                 axios({
                     method:"post",
                     url:"./user/certificateServlet",
                     data:"domain="+_this.certificatesDomain
                 }).then(function (resp) {
+                    _this.certloading = false;
                     if (resp.data == "0"){
                         //提示成功
                         _this.$message({
@@ -681,7 +681,7 @@ new Vue({
                     }
                 })
             }
-            this.certloading=false;
+
         }
     },
 });
