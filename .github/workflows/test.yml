@@ -1,0 +1,58 @@
+# 构建测试镜像
+name: Test Images
+# 手动触发
+on: workflow_dispatch
+
+jobs:
+  build-Push-Image:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+          
+      # git checkout 代码
+      - name: Checkout
+        uses: actions/checkout@v2
+        
+      # 设置 QEMU, 后面 docker buildx 依赖此.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        
+      # 设置 Docker buildx, 方便构建 Multi platform 镜像
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+     
+      # 登录 docker hub
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          # GitHub Repo => Settings => Secrets 增加 docker hub 登录密钥信息
+          # DOCKERHUB_USERNAME 是 docker hub 账号名.
+          # DOCKERHUB_TOKEN: docker hub => Account Setting => Security 创建.
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PWD }}
+
+        # maven 打包  
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
+
+        # 要将war包移动到其他位置，不然到后面就清空了
+      - run: mkdir staging && cp target/*.war staging
+      
+      # 解压podcast2.war
+      - name: unzip podcast2.war
+        run: unzip staging/podcast2.war -d podcast2
+            
+      # 构建 Docker 并推送到 Docker hub
+      - name: Build the Docker image
+        run: docker build . --file Dockerfile --tag yajuhua/podcast2:$(date +test-%Y-%m-%d)
+        
+      # 推送到docker hub
+      - name: Push Docker images
+        run: docker push yajuhua/podcast2:$(date +test-%Y-%m-%d)
