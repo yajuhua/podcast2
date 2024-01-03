@@ -50,6 +50,26 @@ public class UserServlet  extends BaseServlet{
     private Gson gson = new Gson();
 
     /**
+     * 申请CA证书
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    public void certificateServlet(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        //域名
+        String domain = request.getParameter("domain");
+        //执行申请证书脚本
+        Process exec = Runtime.getRuntime()
+                .exec("/opt/tomcat/tomcat8/webapps/podcast2/tmp/install_ca.sh " + domain + " /opt/tomcat/tomcat8/cert/podcast2");
+        int exitCode = exec.waitFor();
+
+        //返回退出码
+        response.getWriter().write(exitCode);
+
+    }
+
+    /**
      * 修改用户名和密码
      * @param request
      * @param response

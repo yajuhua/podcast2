@@ -29,7 +29,9 @@ new Vue({
             importData:null,
             multipleSelectImportData:null,
             importDataDialog:false,
-            customDomainNameData:null
+            customDomainNameData:null,
+            certificatesDomain:null,
+            certloading: false
         };
     }, mounted: function () {
         // 页面加载完成后，发送异步请求，查询数据
@@ -645,6 +647,41 @@ new Vue({
                 });
 
             }
+        },
+        //申请CA证书
+        certificates(){
+            _this=this;
+
+            if (this.certificatesDomain==null){
+
+                this.$message.error('请输入你的域名！');
+
+            } else if (window.location.protocol == 'https:'){
+                this.$message({
+                    message: '目前已经开启https！',
+                    type: 'success'
+                });
+            }else {
+               this.certloading=true
+                //发送到服务端
+                axios({
+                    method:"post",
+                    url:"./user/certificateServlet",
+                    data:"domain="+_this.certificatesDomain
+                }).then(function (resp) {
+                    if (resp.data == "0"){
+                        //提示成功
+                        _this.$message({
+                            message: '申请CA证书成功！请重启容器,并使用https端口访问。',
+                            type: 'success'
+                        });
+                    }else {
+                        //失败
+                        _this.$message.error('申请CA证书失败！请检测域名是否正确或容器是否开放80端口');
+                    }
+                })
+            }
+            this.certloading=false;
         }
     },
 });

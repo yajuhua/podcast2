@@ -37,7 +37,8 @@
 </head>
 
 <body>
-    <div id="app">
+    <div id="app" v-loading="certloading"
+         element-loading-text="正在申请CA证书中，请稍等片刻...">
 
         <!--面包屑-->
         <div class="sidebar">
@@ -54,6 +55,7 @@
                     <el-menu-item index="changePassword">修改</el-menu-item>
                     <el-menu-item index="dataMigration">数据迁移</el-menu-item>
                     <el-menu-item index="customDomainName">自定义域名</el-menu-item>
+                    <el-menu-item index="certificates">开启https</el-menu-item>
                 </el-submenu>
 
                 <el-submenu index="download">
@@ -124,6 +126,17 @@
                 </el-form-item>
 
                     <el-button type="primary" @click="customDomainName">确定</el-button>
+                </el-form-item>
+            </el-form></div>
+
+            <!-- 开启https -->
+            <div v-show="activeMenu === 'certificates'"><el-form :inline="true" :model="certificatesDomain"
+                                                                     class="demo-form-inline">
+                <el-form-item label="开启https">
+                    <el-input v-model="certificatesDomain" placeholder="如www.domain.org"></el-input>
+                </el-form-item>
+
+                <el-button type="primary" @click="certificates">申请</el-button>
                 </el-form-item>
             </el-form></div>
 
