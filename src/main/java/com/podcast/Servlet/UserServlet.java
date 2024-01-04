@@ -7,13 +7,11 @@ import com.google.gson.reflect.TypeToken;
 import com.podcast.Type.Type;
 import com.podcast.Utils.TimeFormat;
 import com.podcast.loader.PluginLoader;
-import com.podcast.pojo.ChannelDataShow;
-import com.podcast.pojo.ChannelDate;
-import com.podcast.pojo.Download;
-import com.podcast.pojo.PodcastUser;
+import com.podcast.pojo.*;
 import com.podcast.service.ChannelService;
 import com.podcast.service.PodcastUserService;
 import com.podcast.update.Update;
+import com.podcast.update.UpdateInit;
 import org.apache.commons.io.FileUtils;
 import io.github.yajuhua.podcast2API.*;
 import org.slf4j.Logger;
@@ -47,7 +45,66 @@ public class UserServlet  extends BaseServlet{
     public static List<String> CREATE_UUID = new ArrayList<>();//首次更新的UUID
     public static Map<String,Update> FIRST_UPDATE = new HashMap<>();
     private static final Logger LOGGER = LoggerFactory.getLogger("UserServlet");
+    private static final String CERT_PATH="/opt/tomcat/tomcat8/cert/";//证书和密钥存放位置
     private Gson gson = new Gson();
+
+    /**
+     * 上传CA证书
+     * 证书文件 podcast2.crt
+     * 密钥文件 podcast2.key
+     * @param request
+     * @param response
+     * @throws Exception
+     */
+    public void uploadCertServlet(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        //上传CA证书
+        LOGGER.debug("certPath:"+CERT_PATH);
+        SystemServlet.upload(request,response,CERT_PATH);
+    }
+
+    /**
+     * 删除CA认证
+     * @param request
+     * @param response
+     * @throws Exception
+     */
+    public void deleteCertServlet(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        File[] certList = new File(CERT_PATH).listFiles();
+        String fileName = request.getParameter("fileName");
+        System.out.println("fileName" + fileName);
+        for (File file : certList) {
+            if (file.getName().equals(fileName)){
+                boolean flag = FileUtils.deleteQuietly(file);
+                response.getWriter().write(flag==true?"deleteCertOK":"deleteCertErr");
+                break;
+            }
+        }
+    }
+
+    /**
+     * 删除所有CA认证
+     * @param request
+     * @param response
+     * @throws Exception
+     */
+    public void deleteAllCertServlet(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        File[] certList = new File(CERT_PATH).listFiles();
+        for (File cert : certList) {
+            FileUtils.deleteQuietly(cert);
+        }
+        //删除成功！
+        response.getWriter().write("deleteAllCertOK");
+    }
+
+    public void getAllCertInfoServlet(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        File[] certList = new File(CERT_PATH).listFiles();
+        List<CertFile> certName = new ArrayList<>();
+        for (File cert : certList) {
+            certName.add(new CertFile(cert.getName()));
+        }
+        //删除成功！
+        response.getWriter().write(gson.toJson(certName));
+    }
 
     /**
      * 申请CA证书

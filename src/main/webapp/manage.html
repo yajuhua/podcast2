@@ -132,13 +132,51 @@
             <!-- 开启https -->
             <div v-show="activeMenu === 'certificates'"><el-form :inline="true" :model="certificatesDomain"
                                                                      class="demo-form-inline">
-                <el-form-item label="开启https">
+                <el-form-item label="申请CA证书">
                     <el-input v-model="certificatesDomain" placeholder="如www.domain.org"></el-input>
                 </el-form-item>
 
-                <el-button type="primary" @click="certificates">申请</el-button>
+                <el-button type="primary" @click="certificates" >申请</el-button>
+                <br>
                 </el-form-item>
-            </el-form></div>
+
+
+                <el-upload class="upload-demo" ref="uploadCert" action="./user/uploadCertServlet" :on-preview="certHandlePreview"
+                           :on-remove="certHandleRemove" :file-list="certFileList" :auto-upload="false"
+                           :on-success="certHandleResponse"
+                           :before-upload="certBeforeUpload">
+                    <el-button slot="trigger" size="small" type="primary">手动导入</el-button>
+                    <el-button style="margin-left: 10px;" size="small" type="success"
+                               @click="uploadCert">上传到服务器</el-button>
+                </el-upload>
+                <!-- 显示证书和密钥 -->
+                <el-table ref="multipleCertFile" :data="certFileData" tooltip-effect="dark" style="width: 100%"
+                          @selection-change="certFileHandleSelectionChange">
+                    <el-table-column type="selection" width="55">
+                    </el-table-column>
+                    <el-table-column type="index" width="50">
+                    </el-table-column>
+                    <el-table-column label="证书和密钥文件" width="120" prop="fileName">
+                    </el-table-column>
+                    <el-table-column
+                            label="类型">
+                        <el-tag :type="success" slot-scope="scope">{{scope.row.fileName=="podcast2.crt"?"证书":"密钥"}}</el-tag>
+                    </el-table-column>
+
+                    <!-- 相关操作 -->
+                    <el-table-column label="操作">
+                        <template slot-scope="scope">
+                            <el-button size="mini" type="danger" plain @click="deleteCert(scope.row.fileName)">删除</el-button>
+                        </template>
+                    </el-table-column>
+
+                </el-table>
+
+            </el-form>
+                <div class="footer">
+                    <el-button type="danger"  size="small" round v-if="multipleCertFile.length > 1" @click="multipleDeleteCert">批量删除</el-button>
+                </div>
+            </div>
 
 
             <!--数据迁移-->

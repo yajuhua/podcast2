@@ -18,6 +18,7 @@ new Vue({
                 { key: "代号", value: "" }
             ],
             fileList: [],
+            certFileList: [],
             multipleSelection: [],
             preparingForUpdates:false,
             downloadData:[],
@@ -31,7 +32,9 @@ new Vue({
             importDataDialog:false,
             customDomainNameData:null,
             certificatesDomain:null,
-            certloading: false
+            certloading: false,
+            multipleCertFile: [],
+            certFileData: []
         };
     }, mounted: function () {
         // 页面加载完成后，发送异步请求，查询数据
@@ -41,6 +44,9 @@ new Vue({
 
         //获取频道所有信息
         this.getAllChannelData();
+
+        //获取CA认证信息
+        this.getAllCertInfo();
 
         //获取下载器信息
         this.getDownloaderInfo();
@@ -324,7 +330,13 @@ new Vue({
         handleRemove(file, fileList) {
             console.log(file, fileList);
         },
+        certHandleRemove(file, fileList) {
+            console.log(file, fileList);
+        },
         handlePreview(file) {
+            console.log(file);
+        },
+        certHandlePreview(file) {
             console.log(file);
         },
         handleResponse(response, file, fileList) {
@@ -337,6 +349,18 @@ new Vue({
                 this.fileList=[];//清空
             } else {
                 this.$message.error('添加失败！');
+            }
+        },
+        certHandleResponse(response, file, fileList) {
+            if (response == "uploadok") {
+                this.$message({
+                    message: '导入成功！',
+                    type: 'success'
+                });
+                this.certFileList=[];//清空
+                this.getAllCertInfo();//重新获取证书信息
+            } else {
+                this.$message.error('导入失败！');
             }
         },
         handleRemove2(file, fileList) {
@@ -487,6 +511,11 @@ new Vue({
         handleSelectionDoneChange(val) {
             this.multipleDoneSelection = val;
             console.log(this.multipleDoneSelection);
+        },
+        //选择删除要的下载记录
+        certFileHandleSelectionChange(val) {
+            this.multipleCertFile = val;
+            console.log(this.multipleCertFile);
         },
         //批量删除下载完成记录
         deleteDownloadRecords(){
@@ -651,37 +680,139 @@ new Vue({
         //申请CA证书
         certificates(){
             _this=this;
-            if (this.certificatesDomain==null){
+            //确认删除提示框
+            this.$confirm('即将开始申请,预计2分钟左右,是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                if (this.certificatesDomain==null){
 
-                this.$message.error('请输入你的域名！');
+                    this.$message.error('请输入你的域名！');
 
-            } else if (window.location.protocol == 'https:'){
+                } else if (window.location.protocol == 'https:'){
+                    this.$message({
+                        message: '目前已经开启https！',
+                        type: 'success'
+                    });
+                }else {
+                    _this.certloading = true
+                    //发送到服务端
+                    axios({
+                        method:"post",
+                        url:"./user/certificateServlet",
+                        data:"domain="+_this.certificatesDomain
+                    }).then(function (resp) {
+                        _this.certloading = false;
+                        if (resp.data == "0"){
+                            //提示成功
+                            _this.$message({
+                                message: '申请CA证书成功！请重启容器,并使用https端口访问。',
+                                type: 'success'
+                            });
+                        }else {
+                            //失败
+                            _this.$message.error('申请CA证书失败！请检测域名是否正确或容器是否开放80端口');
+                        }
+                    })
+                }
+            }).catch(() => {
                 this.$message({
-                    message: '目前已经开启https！',
-                    type: 'success'
+                    type: 'info',
+                    message: '已取消申请'
                 });
-            }else {
-                _this.certloading = true
-                //发送到服务端
+            });
+
+        },
+        //上传证书到服务器
+        uploadCert(){
+            var rs = this.$refs.uploadCert.submit().data;
+            alert(rs)
+        },
+        certBeforeUpload(file){
+            // 获取文件名
+            const fileName = file.name;
+
+            // 校验文件名是否符合要求
+            if (fileName !== 'podcast2.key' && fileName !== 'podcast2.crt') {
+                this.$message.error('文件名错误！必须以podcast2.key和podcast2.cert命名');
+                return false; // 中止上传
+            }
+            // 继续上传
+            return true;
+        },
+        getAllCertInfo(){
+            _this=this;
+            axios({
+                method:"get",
+                url:"./user/getAllCertInfoServlet",
+            }).then(function (resp) {
+                _this.certFileData=resp.data;
+            })
+        },
+        //删除证书
+        deleteCert(fileName){
+            _this=this;
+
+            //确认删除提示框
+            this.$confirm('此操作将永久删除'+ fileName +'文件, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
                 axios({
                     method:"post",
-                    url:"./user/certificateServlet",
-                    data:"domain="+_this.certificatesDomain
+                    url:"./user/deleteCertServlet",
+                    data:"fileName="+fileName
                 }).then(function (resp) {
-                    _this.certloading = false;
-                    if (resp.data == "0"){
+                    if (resp.data=='deleteCertOK'){
+                        _this.getAllCertInfo();//重新获取证书信息
                         //提示成功
                         _this.$message({
-                            message: '申请CA证书成功！请重启容器,并使用https端口访问。',
+                            message: '删除 '+ fileName +' 成功！',
                             type: 'success'
                         });
                     }else {
                         //失败
-                        _this.$message.error('申请CA证书失败！请检测域名是否正确或容器是否开放80端口');
+                        _this.$message.error('删除 '+ fileName +' 失败！');
                     }
                 })
-            }
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消删除'
+                });
+            });
+        },
+        //批量删除证书
+        multipleDeleteCert(){
+            _this=this;
 
+            //确认删除提示框
+            this.$confirm('此操作将永久删除批量所选文件, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                for (let i = 0; i < _this.multipleCertFile.length; i++) {
+                    axios({
+                        method:"post",
+                        url:"./user/deleteCertServlet",
+                        data:"fileName="+_this.multipleCertFile[i].fileName
+                    })
+                }
+                _this.getAllCertInfo();//重新获取证书信息
+                //提示成功
+                _this.$message({
+                    message: '删除成功！',
+                    type: 'success'
+                });
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消删除'
+                });
+            });
         }
     },
 });
