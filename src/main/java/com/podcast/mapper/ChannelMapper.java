@@ -11,6 +11,14 @@ import java.util.List;
 public interface ChannelMapper {
 
 
+    /**
+     * 更新频道信息
+     * @param channelDate
+     * @return
+     */
+    @Update("UPDATE channel SET type = #{type}, frequency = #{frequency}, survival_time = #{survival}, status = #{status}, args = #{args} WHERE uuid = #{uuid}")
+    boolean updateChannel(ChannelDate channelDate);
+
 
     /**
      * 查询所有

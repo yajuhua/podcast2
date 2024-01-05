@@ -7,7 +7,12 @@ new Vue({
             dialogVisible: false,
             qrurl: "",
             selecteUuid: [],
-            _uuid: ""
+            _uuid: "",
+            editDialogVisible: false,
+            editChannelData:'',
+            editChannelDataShow:'',
+            frequency:''
+
         }
     },
     mounted() {
@@ -195,6 +200,53 @@ new Vue({
         //二维码显示
         qrCodeOpen(val) {
             this.dialogVisible = true;
+        },
+        //编辑对话框
+        editDialog(uuid){
+            _this = this;
+            axios({
+                method:"post",
+                url:"./user/selectChannelByIdServlet",
+                data:"uuid="+uuid
+            }).then(function (resp) {
+                _this.editChannelData=resp.data;
+                _this.editChannelData.frequency=resp.data.frequency+""
+                _this.editChannelData.survival=resp.data.survival+""
+                _this.editChannelData.status=resp.data.status+""
+                _this.editDialogVisible=true;
+                console.log(_this.editChannelData)
+            })
+            },
+        //提交编辑
+        submitEdit(){
+            if (this.editChannelData.args=='customize' && this.editChannelData.customArgs==null){
+                this.$message.error('自定义下载器选项不能为空！');
+            }else {
+                _this = this
+                let args = null;
+                if (this.editChannelData.args=='customize'){
+                    args=this.editChannelData.customArgs
+                }
+                axios({
+                    method:"post",
+                    url:"./user/updateChannelByIdServlet",
+                    data:"uuid="+_this.editChannelData.uuid+"&type="
+                        +_this.editChannelData.type+"&survival="+_this.editChannelData.survival
+                        +"&status="+_this.editChannelData.status
+                        +"&frequency="+_this.editChannelData.frequency
+                        +"&args="+args
+                }).then(function (resp) {
+                    if (resp.data=='ok'){
+                        _this.$message({
+                            message: '修改成功！',
+                            type: 'success'
+                        });
+                       _this.editDialogVisible=false;
+                    }else {
+                        _this.$message.error('修改失败,请再试一次！');
+                    }
+                })
+            }
         }
     }
 })

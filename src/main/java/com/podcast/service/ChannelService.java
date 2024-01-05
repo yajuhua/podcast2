@@ -2,6 +2,7 @@ package com.podcast.service;
 
 import com.podcast.Utils.SqlSessionFactoryUtils;
 import com.podcast.mapper.ChannelMapper;
+import com.podcast.mapper.PodcastUserMapper;
 import com.podcast.pojo.ChannelDate;
 import com.podcast.pojo.Download;
 import org.apache.ibatis.session.SqlSession;
@@ -14,6 +15,23 @@ import java.util.List;
  */
 public class ChannelService {
     SqlSessionFactory factory = SqlSessionFactoryUtils.getSqlSessionFactory();
+
+
+
+    /**
+     * 更新频道信息
+     * @param channelDate
+     * @return
+     */
+    public boolean updateChannel(ChannelDate channelDate){
+        SqlSession sqlSession = factory.openSession();
+        ChannelMapper mapper = sqlSession.getMapper(ChannelMapper.class);
+        boolean b = mapper.updateChannel(channelDate);
+        sqlSession.commit();
+        sqlSession.close();
+        return b;
+    }
+
 
     /**
      * 查询频道的所有信息

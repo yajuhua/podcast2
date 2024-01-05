@@ -48,6 +48,53 @@ public class UserServlet  extends BaseServlet{
     private static final String CERT_PATH="/opt/tomcat/tomcat8/cert/";//证书和密钥存放位置
     private Gson gson = new Gson();
 
+
+    /**
+     * 获取channel表中的所有数据
+     * @param request
+     * @param response
+     * @throws Exception
+     */
+    public void selectChannelByIdServlet(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        String uuid = request.getParameter("uuid");
+        ChannelDate channelDate = channelService.selectAllByUuid(uuid);
+        response.setContentType("text/json;charset=utf-8");
+        response.getWriter().write(gson.toJson(channelDate));
+    }
+
+    /**
+     * 根据uuid更新channel表
+     * @param request
+     * @param response
+     * @throws Exception
+     */
+    public void updateChannelByIdServlet(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        boolean flag = false;
+        try {
+            String uuid = request.getParameter("uuid");
+            String type = request.getParameter("type");
+            String frequency = request.getParameter("frequency");
+            String survival = request.getParameter("survival");
+            String status = request.getParameter("status");
+            String args = request.getParameter("args");
+
+            //封装更新信息
+            ChannelDate channelDate = channelService.selectAllByUuid(uuid);
+            if (type!=null){channelDate.setType(type);}
+            if (frequency!=null){channelDate.setFrequency(Long.parseLong(frequency));}
+            if (survival!=null){channelDate.setSurvival(Long.parseLong(survival));}
+            if (status!=null){channelDate.setStatus(Integer.parseInt(status));}
+            if (args!=null){channelDate.setArgs(args);}
+
+            //更新
+            flag = channelService.updateChannel(channelDate);
+        } catch (NumberFormatException e) {
+            flag=false;
+        }finally {
+            response.getWriter().write(flag?"ok":"no");
+        }
+    }
+
     /**
      * 上传CA证书
      * 证书文件 podcast2.crt

@@ -18,12 +18,17 @@ public class ChannelDate {
   private String type;
   private String plugin;
 
+  private Integer status;
+
 
 
     public ChannelDate() {
     }
 
-    public ChannelDate(String uuid, String channelTitle, Long updateTimestamp, Long frequency, Long latestCheckTimestamp, String channelFace, Long survival) {
+    public ChannelDate(String uuid, String channelTitle, Long updateTimestamp,
+                       Long frequency, Long latestCheckTimestamp, String channelFace,
+                       Long survival, String args, String link, String equal, String description,
+                       String type, String plugin, Integer status) {
         this.uuid = uuid;
         this.channelTitle = channelTitle;
         this.updateTimestamp = updateTimestamp;
@@ -31,54 +36,13 @@ public class ChannelDate {
         this.latestCheckTimestamp = latestCheckTimestamp;
         this.channelFace = channelFace;
         this.survival = survival;
-    }
-
-    public String getArgs() {
-        return args;
-    }
-
-    public void setArgs(String args) {
         this.args = args;
-    }
-
-    public String getLink() {
-        return link;
-    }
-
-    public void setLink(String link) {
         this.link = link;
-    }
-
-    public String getEqual() {
-        return equal;
-    }
-
-    public void setEqual(String equal) {
         this.equal = equal;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
         this.description = description;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
         this.type = type;
-    }
-
-    public String getPlugin() {
-        return plugin;
-    }
-
-    public void setPlugin(String plugin) {
         this.plugin = plugin;
+        this.status = status;
     }
 
     public String getUuid() {
@@ -137,6 +101,62 @@ public class ChannelDate {
         this.survival = survival;
     }
 
+    public String getArgs() {
+        return args;
+    }
+
+    public void setArgs(String args) {
+        this.args = args;
+    }
+
+    public String getLink() {
+        return link;
+    }
+
+    public void setLink(String link) {
+        this.link = link;
+    }
+
+    public String getEqual() {
+        return equal;
+    }
+
+    public void setEqual(String equal) {
+        this.equal = equal;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getPlugin() {
+        return plugin;
+    }
+
+    public void setPlugin(String plugin) {
+        this.plugin = plugin;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
     @Override
     public String toString() {
         return "ChannelDate{" +
@@ -153,6 +173,7 @@ public class ChannelDate {
                 ", description='" + description + '\'' +
                 ", type='" + type + '\'' +
                 ", plugin='" + plugin + '\'' +
+                ", status=" + status +
                 '}';
     }
 }
