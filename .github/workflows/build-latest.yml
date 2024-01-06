@@ -63,12 +63,12 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PWD }}
 
       # 下载最新release
-      - name: Download lastest release
-        run: wget "https://github.com/yajuhua/podcast2/releases/download/${{ env.APP_VERSION }}/podcast2.war" 
+ #     - name: Download lastest release
+ #       run: wget "https://github.com/yajuhua/podcast2/releases/download/${{ env.APP_VERSION }}/podcast2.war"
 
       # 解压podcast2.war
       - name: unzip podcast2.war
-        run: unzip podcast2.war -d podcast2
+        run: unzip staging/podcast2.war -d ./podcast2
         
       # 构建 Docker 并推送到 Docker hub
       - name: Build the Docker image
