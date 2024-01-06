@@ -34,7 +34,8 @@ new Vue({
             certificatesDomain:null,
             certloading: false,
             multipleCertFile: [],
-            certFileData: []
+            certFileData: [],
+            showButton: false
         };
     }, mounted: function () {
         // 页面加载完成后，发送异步请求，查询数据
@@ -58,7 +59,12 @@ new Vue({
         this.setupLogSocket();
         this.setupDownloadSocket();
 
-
+        // 添加滚动事件监听器
+        window.addEventListener('scroll', this.handleScroll);
+    },
+    beforeDestroy() {
+        // 在组件销毁前移除滚动事件监听器，以防止内存泄漏
+        window.removeEventListener('scroll', this.handleScroll);
     },
     created() {
     },
@@ -107,7 +113,7 @@ new Vue({
                 url:"./user/selectCompleteDownloadServlet"
             }).then(function (resp) {
                 console.log(resp.data);
-                _this.downloadDone = resp.data;
+                _this.downloadDone = resp.data.reverse();
             })
         },
         //根据id删除记录
@@ -813,6 +819,18 @@ new Vue({
                     message: '已取消删除'
                 });
             });
+        },
+        //倒序完成下载的信息
+        reverseDownloadDone(){
+            this.downloadDone.reverse();
+        },
+        scrollToTop() {
+            // 使用 smooth 滚动到顶部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+        handleScroll() {
+            // 根据页面滚动位置决定按钮是否显示
+            this.showButton = window.scrollY > window.innerHeight;
         }
     },
 });

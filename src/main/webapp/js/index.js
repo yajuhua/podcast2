@@ -11,7 +11,8 @@ new Vue({
             editDialogVisible: false,
             editChannelData:'',
             editChannelDataShow:'',
-            frequency:''
+            frequency:'',
+            showButton: false
 
         }
     },
@@ -24,6 +25,12 @@ new Vue({
         }).then(function (resp) {
             _this.tableData = resp.data;
         })
+        // 添加滚动事件监听器
+        window.addEventListener('scroll', this.handleScroll);
+    },
+    beforeDestroy() {
+        // 在组件销毁前移除滚动事件监听器，以防止内存泄漏
+        window.removeEventListener('scroll', this.handleScroll);
     },
     methods: {
         // 跳转到管理页面
@@ -247,6 +254,19 @@ new Vue({
                     }
                 })
             }
-        }
-    }
+        },
+        //反转订阅排序
+        reverseSubscribe(){
+            this.tableData.reverse();
+        },
+        scrollToTop() {
+            // 使用 smooth 滚动到顶部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+        handleScroll() {
+            // 根据页面滚动位置决定按钮是否显示
+            this.showButton = window.scrollY > window.innerHeight;
+        },
+    },
+
 })

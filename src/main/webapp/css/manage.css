@@ -56,3 +56,23 @@
     height: 30vh;
     overflow-y: scroll;
 }
+
+/*排序按钮*/
+.reverse-button {
+    position: fixed;
+    bottom: 2%;
+    right: 2%;
+    cursor: pointer;
+    font-size: 16px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.up-button {
+    position: fixed;
+    bottom: 7%;
+    right: 2%;
+    cursor: pointer;
+    font-size: 16px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    margin-bottom: 1.5em;
+}

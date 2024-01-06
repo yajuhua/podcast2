@@ -347,6 +347,9 @@
                     <div class="footer">
                         <el-button type="danger" round v-if="multipleDoneSelection.length > 1" @click="deleteDownloadRecords">批量删除</el-button>
                     </div>
+                    <!-- 右下角的按钮  -->
+                    <el-button type="primary" icon="el-icon-arrow-up" circle class="up-button"  @click="scrollToTop" title="回到顶部" v-show="showButton" ></el-button>
+                    <el-button type="primary" icon="el-icon-d-caret" circle  class="reverse-button" @click="reverseSubscribe" title="反转排序" ></el-button>
                 </div>
             </div>
 
