@@ -2,7 +2,8 @@
 
 <br>
 <p align="center">
-<img src="https://img.shields.io/badge/release-1.3.2-<COLOR>.svg" alt="Release" />
+<img src="https://img.shields.io/github/v/release/yajuhua/podcast2?color=&label=release" alt="Release" />
+<img src="https://shields.io/docker/pulls/yajuhua/podcast2" alt="docker-pull" />
 <img src="https://img.shields.io/badge/jdk-17-blue.svg" alt="JDK" />
 <img src="https://img.shields.io/badge/tomcat-8.5.59-blue.svg" alt="Tomcat" />
 <img src="https://img.shields.io/badge/license-Apache2.0-green.svg" alt="apache-licenses" />
@@ -24,7 +25,7 @@
 curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh && systemctl start docker
 ```
 
-#### 2.创建并启动容器(http)
+#### 2.创建并启动容器
 
 ````shell
 mkdir  ~/podcast2
@@ -32,31 +33,8 @@ cd ~/podcast2
 docker run -id --name=podcast2 \
 --restart=always \
 -p 8088:8088 \
--v ~/podcast2/init:/opt/tomcat/tomcat8/webapps/podcast2/init/ \
--v ~/podcast2/xml:/opt/tomcat/tomcat8/webapps/podcast2/xml/ \
--v ~/podcast2/video:/opt/tomcat/tomcat8/webapps/podcast2/video/ \
--v ~/podcast2/audio:/opt/tomcat/tomcat8/webapps/podcast2/audio/ \
--v ~/podcast2/plugin:/opt/tomcat/tomcat8/webapps/podcast2/plugin/ \
--v ~/podcast2/logs:/logs \
-yajuhua/podcast2:latest
-````
-#### 创建并启动容器(https)
-```shell
-#申请证书
-安装acme：curl https://get.acme.sh | sh
-安装socat：yum install socat
-添加软链接：ln -s  /root/.acme.sh/acme.sh /usr/local/bin/acme.sh
-注册账号： acme.sh --register-account -m 你的邮箱
-开放80端口：firewall-cmd --add-port=80/tcp --permanent && firewall-cmd --reload
-申请证书： acme.sh  --issue -d 你的域名  --standalone -k ec-256 
-安装证书： acme.sh --installcert -d 你的域名 --ecc  --key-file   ~/podcast2/cert/podcast2.key   --fullchain-file ~/podcast2/cert/podcast2.crt 
-
-#创建并启动容器
-mkdir  ~/podcast2
-cd ~/podcast2
-docker run -id --name=podcast2 \
---restart=always \
 -p 443:443 \
+-p 80:80 \
 -v ~/podcast2/cert:/opt/tomcat/tomcat8/cert/ \
 -v ~/podcast2/init:/opt/tomcat/tomcat8/webapps/podcast2/init/ \
 -v ~/podcast2/xml:/opt/tomcat/tomcat8/webapps/podcast2/xml/ \
@@ -65,11 +43,11 @@ docker run -id --name=podcast2 \
 -v ~/podcast2/plugin:/opt/tomcat/tomcat8/webapps/podcast2/plugin/ \
 -v ~/podcast2/logs:/logs \
 yajuhua/podcast2:latest
-```
-### 3.防火墙放行8088端口
+````
+### 3.防火墙放行端口
 ````shell
 #以下是centos7，其他系统自行搜索。
-firewall-cmd --add-port=8088/tcp --permanent
+firewall-cmd --add-port=8088/tcp --add-port=80/tcp --add-port=443/tcp --permanent
 firewall-cmd --reload
 ````
 #### 4.进入面板
