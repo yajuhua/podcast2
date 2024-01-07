@@ -118,6 +118,15 @@ firewall-cmd --reload
 
 ## 交流群
 **945797272**
+## Star History
+![Star History](https://api.star-history.com/svg?repos=yajuhua/podcast2)
+## 使用到的项目
+- [https://github.com/yt-dlp/yt-dlp](https://github.com/yt-dlp/yt-dlp)
+- [https://github.com/nilaoda/N_m3u8DL-RE](https://github.com/nilaoda/N_m3u8DL-RE)
+- [https://github.com/aria2/aria2](https://github.com/aria2/aria2)
+- [https://github.com/SocialSisterYi/bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect)
+## 参考
+- [https://github.com/mxpv/podsync](https://github.com/mxpv/podsync)
 ## 免责声明
 
 **此项目仅供研究、学习和交流，请勿用于商业或非法用途， 开发者与协作者不对使用者负任何法律责任， 使用者自行承担因不当使用所产生的后果与责任。**
