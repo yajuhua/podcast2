@@ -43,6 +43,7 @@ docker run -id --name=podcast2 \
 -v ~/podcast2/plugin:/opt/tomcat/tomcat8/webapps/podcast2/plugin/ \
 -v ~/podcast2/logs:/logs \
 yajuhua/podcast2:latest
+#arm32v7系统请使用yajuhua/podcast2:arm32v7
 ````
 ### 3.防火墙放行端口
 ````shell
