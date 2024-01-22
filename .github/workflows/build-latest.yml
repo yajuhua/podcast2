@@ -24,14 +24,14 @@ jobs:
       - run: mkdir staging && cp target/*.war staging
 
       # 上传文件并发布 Release
-      - uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "${{ env.RELEASE_VERSION }}"
-          prerelease: false
-          title: "v${{ env.RELEASE_VERSION }}"
-          files: |
-            staging/*.war
+#      - uses: "marvinpinto/action-automatic-releases@latest"
+#        with:
+#          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+#          automatic_release_tag: "${{ env.RELEASE_VERSION }}"
+#          prerelease: false
+#          title: "v${{ env.RELEASE_VERSION }}"
+#          files: |
+#            staging/*.war
 
       # 设置 QEMU, 后面 docker buildx 依赖此.
       - name: Set up QEMU
