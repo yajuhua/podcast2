@@ -52,7 +52,7 @@ jobs:
       # 构建 amd64 Docker 并推送到 Docker hub
       - name: Build the amd64 Docker image
         run: |
-          docker buildx build . --file Dockerfile --tag yajuhua/podcast2:amd64-$(date +test-%Y-%m-%d) --platform linux/amd64
+          docker build . --file Dockerfile --tag yajuhua/podcast2:amd64-$(date +test-%Y-%m-%d)
           docker push yajuhua/podcast2:amd64-$(date +test-%Y-%m-%d)
           
       # 构建 arm64 Docker 并推送到 Docker hub
@@ -64,7 +64,7 @@ jobs:
           LABEL author.email="2136243599@qq.com"  author.name="yajuhua"
           EOF
 
-          docker buildx build . --file Dockerfile --tag yajuhua/podcast2:arm64-$(date +test-%Y-%m-%d) --platform linux/arm64
+          docker build . --file Dockerfile --tag yajuhua/podcast2:arm64-$(date +test-%Y-%m-%d)
           docker push yajuhua/podcast2:arm64-$(date +test-%Y-%m-%d)
           
       # 构建 arm32v7 Docker 并推送到 Docker hub
@@ -76,5 +76,5 @@ jobs:
           LABEL author.email="2136243599@qq.com"  author.name="yajuhua"
           EOF
 
-          docker buildx build . --file Dockerfile --tag yajuhua/podcast2:arm32v7-$(date +test-%Y-%m-%d) --platform linux/arm32v7
+          docker build . --file Dockerfile --tag yajuhua/podcast2:arm32v7-$(date +test-%Y-%m-%d)
           docker push yajuhua/podcast2:arm32v7-$(date +test-%Y-%m-%d)
