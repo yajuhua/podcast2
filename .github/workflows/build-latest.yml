@@ -58,10 +58,30 @@ jobs:
       - name: unzip podcast2.war
         run: unzip staging/podcast2.war -d ./podcast2
 
-      # 构建 Docker 并推送到 Docker hub
-      - name: Build the Docker image
-        run: docker build . --file Dockerfile --tag yajuhua/podcast2:latest
-
-      # 推送到docker hub
-      - name: Push Docker images
-        run: docker push yajuhua/podcast2:latest
+      # 构建 amd64 Docker 并推送到 Docker hub
+      - name: Build the amd64 Docker image
+        run: |
+          docker build . --file Dockerfile --tag yajuhua/podcast2:latest
+          docker push yajuhua/podcast2:latest
+          
+      # 构建 arm64 Docker 并推送到 Docker hub
+      - name: Build the arm64 Docker image
+        run: |
+          cat << EOF > Dockerfile
+          FROM yajuhua/podcast2-base:arm64
+          ADD podcast2 /opt/tomcat/tomcat8/webapps/podcast2
+          LABEL author.email="2136243599@qq.com"  author.name="yajuhua"
+          EOF
+          docker build . --file Dockerfile --tag yajuhua/podcast2:arm64
+          docker push yajuhua/podcast2:arm64
+          
+      # 构建 arm32v7 Docker 并推送到 Docker hub
+      - name: Build the arm32v7 Docker image
+        run: |
+          cat << EOF > Dockerfile
+          FROM yajuhua/podcast2-base:arm32v7
+          ADD podcast2 /opt/tomcat/tomcat8/webapps/podcast2
+          LABEL author.email="2136243599@qq.com"  author.name="yajuhua"
+          EOF
+          docker build . --file Dockerfile --tag yajuhua/podcast2:arm32v7
+          docker push yajuhua/podcast2:arm32v7
