@@ -44,6 +44,7 @@ docker run -id --name=podcast2 \
 -v ~/podcast2/logs:/logs \
 yajuhua/podcast2:latest
 #arm32v7平台请使用yajuhua/podcast2:arm32v7
+#arm64平台请使用yajuhua/podcast2:arm64
 ````
 ### 3.防火墙放行端口
 ````shell
