@@ -69,7 +69,7 @@ firewall-cmd --reload
 <!-- plugin-list-start -->
 | 网站 <img width=200/>                  | 名称<img width=200/> | 版本<img width=200/> | 下载地址<img width=200/>                                                                                             |
 |:-------------------------------------| -------------------- |--------------------|------------------------------------------------------------------------------------------------------------------|
-| [干净世界](https://ganjing.com/)         | ganjing              | 1.3.2              | [点击下载](https://github.com/yajuhua/plugin/raw/master/ganjing/1.3/1.3.2/Ganjing-1.3.2-jar-with-dependencies.jar)   |
+| [干净世界](https://ganjing.com/)         | ganjing              | 1.3.3              | [点击下载](https://github.com/yajuhua/plugin/raw/master/ganjing/1.3/1.3.3/ganjing-1.3.3-jar-with-dependencies.jar)   |
 | [ntdm](https://www.ntdm.tv)          | ntdm8                | 1.3.1              | [点击下载](https://github.com/yajuhua/plugin/raw/master/ntdm8/1.3/1.3.1/ntdm8-1.3.1-jar-with-dependencies.jar)       |
 | [youtube](https://www.youtube.com)   | youtube              | 1.3.2              | [点击下载](https://github.com/yajuhua/plugin/raw/master/youtube/1.3/1.3.2/Youtube-1.3.2-jar-with-dependencies.jar)   |
 | [bilibili](https://www.bilibili.com) | bilibili              | 1.3.2              | [点击下载](https://github.com/yajuhua/plugin/raw/master/bilibili/1.3/1.3.2/bilibili-1.3.2-jar-with-dependencies.jar) |
