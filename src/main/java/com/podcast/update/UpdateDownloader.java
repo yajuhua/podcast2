@@ -14,7 +14,8 @@ public class UpdateDownloader implements Runnable{
     @Override
     public void run() {
         try {
-            while (!(Target.UPDATE_STATUS == 0 && UserServlet.CREATE_UUID.size() == 0)){
+            //UPDATE_STATUS也有可能等于null
+            while ( Target.UPDATE_STATUS != null || !(Target.UPDATE_STATUS == 0 && UserServlet.CREATE_UUID.size() == 0)){
                 LOGGER.info("有订阅更新无法更新yt-dlp,等待10s");
                 Thread.sleep(10*1000);
             }
