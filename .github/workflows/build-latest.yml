@@ -1,4 +1,4 @@
-name: Build And Push Latest
+name: v2 Build And Push Latest
 on: workflow_dispatch
 
 jobs:
@@ -53,7 +53,7 @@ jobs:
         run: |
           docker build . --file Dockerfile --tag yajuhua/podcast2:amd64
           docker push yajuhua/podcast2:amd64
-          
+
   build-arm64:
     permissions: write-all
     runs-on: ubuntu-latest
