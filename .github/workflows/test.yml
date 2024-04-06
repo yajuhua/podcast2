@@ -119,4 +119,4 @@ jobs:
           docker manifest create yajuhua/podcast2:beta yajuhua/podcast2:arm64-$(date +test-%Y-%m-%d) yajuhua/podcast2:amd64-$(date +test-%Y-%m-%d)
       - name: push manifest
         run: |
-          docker manifest push yajuhua/podcast2:beta
+          docker manifest push yajuhua/podcast2:beta-$(date +%Y-%m-%d)
