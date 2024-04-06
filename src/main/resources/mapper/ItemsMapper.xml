@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.github.yajuhua.podcast2.mapper.ItemsMapper">
+    <update id="update">
+        update items
+        <set>
+            <if test="channelUuid != null">channel_uuid = #{channelUuid},</if>
+            <if test="uuid != null">uuid = #{uuid},</if>
+            <if test="title != null">title = #{title},</if>
+            <if test="image != null">image = #{image},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="link != null">link = #{link},</if>
+            <if test="enclosure != null">enclosure = #{enclosure},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="duration != null">duration = #{duration},</if>
+            <if test="downloader != null">downloader = #{downloader},</if>
+            <if test="fileName != null">file_name = #{fileName},</if>
+            <if test="format != null">format = #{format},</if>
+            <if test="downloadProgress != null">download_progress = #{downloadProgress},</if>
+            <if test="downloadTimeLeft != null">download_time_left = #{downloadTimeLeft},</if>
+            <if test="totalSize != null">total_size = #{totalSize},</if>
+            <if test="downloadSpeed != null">download_speed = #{downloadSpeed},</if>
+            <if test="operation != null">operation = #{operation},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="args != null">args = #{args},</if>
+            <if test="links != null">links = #{links},</if>
+        </set>
+            where uuid = #{uuid}
+    </update>
+
+    <select id="selectByMap" resultType="io.github.yajuhua.podcast2.pojo.entity.Items">
+        select * from items
+        <where>
+            <if test="channelUuid != null">
+                and channel_uuid = #{channelUuid}
+            </if>
+            <if test="uuid != null">
+                and uuid = #{uuid}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+    </select>
+</mapper>

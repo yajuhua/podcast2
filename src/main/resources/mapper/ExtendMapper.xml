@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.github.yajuhua.podcast2.mapper.ExtendMapper">
+    <insert id="batchExtend" parameterType="java.util.List">
+            INSERT INTO extend (channel_uuid, plugin, content, name) VALUES
+            <foreach collection="list" item="extend" separator="," >
+                (#{extend.channelUuid}, #{extend.plugin}, #{extend.content}, #{extend.name})
+            </foreach>
+    </insert>
+</mapper>

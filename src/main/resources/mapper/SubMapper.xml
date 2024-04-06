@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.github.yajuhua.podcast2.mapper.SubMapper">
+    <update id="update">
+        update sub
+        <set>
+            <if test="equal != null">
+                equal = #{equal},
+            </if>
+            <if test="title != null">
+                title = #{title},
+            </if>
+            <if test="link != null">
+                link = #{link},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="description != null">
+                description = #{description},
+            </if>
+            <if test="image != null">
+                image = #{image},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime},
+            </if>
+            <if test="checkTime != null">
+                check_time = #{checkTime},
+            </if>
+            <if test="type != null">
+                type = #{type},
+            </if>
+            <if test="survivalTime != null">
+                survival_time = #{survivalTime},
+            </if>
+            <if test="cron != null">
+                cron = #{cron},
+            </if>
+            <if test="plugin != null">
+                plugin = #{plugin},
+            </if>
+            <if test="episodes != null">
+                episodes = #{episodes},
+            </if>
+            <if test="customEpisodes != null">
+                custom_episodes = #{customEpisodes},
+            </if>
+            <if test="isUpdate != null">
+                is_update = #{isUpdate},
+            </if>
+            <if test="isFirst != null">
+                is_first = #{isFirst},
+            </if>
+            <if test="pluginUuid != null">
+                plugin_uuid = #{pluginUuid},
+            </if>
+            <if test="isFilter != null">
+                is_filter = #{isFilter},
+            </if>
+            <if test="minDuration != null">
+                min_duration = #{minDuration},
+            </if>
+            <if test="maxDuration != null">
+                max_duration = #{maxDuration},
+            </if>
+            <if test="titleKeywords != null">
+                title_keywords = #{titleKeywords},
+            </if>
+            <if test="descKeywords != null">
+                desc_keywords = #{descKeywords},
+            </if>
+            <if test="isExtend != null">
+                is_extend = #{isExtend},
+            </if>
+        </set>
+        WHERE uuid = #{uuid}
+    </update>
+
+    <select id="selectByMap" resultType="io.github.yajuhua.podcast2.pojo.entity.Sub">
+        select * from sub
+        <where>
+            <if test="status != null and isUpdate!= null">
+                and status = #{status} and is_update = #{isUpdate}
+            </if>
+            <if test="uuid != null">
+                and uuid = #{uuid}
+            </if>
+            <if test="plugin != null">
+                and plugin = #{plugin}
+            </if>
+        </where>
+    </select>
+    <select id="selectListByMap" resultType="io.github.yajuhua.podcast2.pojo.entity.Sub">
+        select * from sub
+        <where>
+            <if test="status != null and isUpdate!= null">
+                and status = #{status} and is_update = #{isUpdate}
+            </if>
+            <if test="uuid != null">
+                and uuid = #{uuid}
+            </if>
+            <if test="plugin != null">
+                and plugin = #{plugin}
+            </if>
+        </where>
+    </select>
+</mapper>

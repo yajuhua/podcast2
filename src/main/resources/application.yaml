@@ -1,0 +1,45 @@
+server:
+  port: 8088
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+      enabled: true
+  ssl:
+    enabled: false
+spring:
+  profiles:
+    active: pro
+  servlet:
+    #限制文件上传大小限制
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 10MB
+logging:
+  config: classpath:logback-spring.xml
+
+mybatis:
+  #mapper配置文件
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: io.github.yajuhua.podcast2.pojo.entity
+  configuration:
+    #开启驼峰命名
+    map-underscore-to-camel-case: true
+
+podcast2:
+  jwt:
+    user-secret-key: podcast2
+    user-ttl: 7200000
+    user-token-name: token
+  data:
+    data-path: ${podcast2.data.data-path}
+  repo:
+    plugin-url: "https://plugin-podcast2.pages.dev/metadata.json"
+  info:
+    update: ${timestamp}
+    version: ${project.version}
+
+
+
+
+

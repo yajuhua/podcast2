@@ -2,15 +2,15 @@ name: Build And Push Latest
 on: workflow_dispatch
 
 jobs:
-  build-Package:
+  build-jar:
     permissions: write-all
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Set up JDK 17
+      - name: Set up JDK 8
         uses: actions/setup-java@v3
         with:
-          java-version: '17'
+          java-version: '8'
           distribution: 'temurin'
           cache: maven
       - name: Build with Maven
@@ -21,17 +21,51 @@ jobs:
         id: get_version
         run: |
           echo "RELEASE_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
-      - run: mkdir staging && cp target/*.war staging
+      - run: cp target/*.jar .
 
-      # 上传文件并发布 Release
-      - uses: "marvinpinto/action-automatic-releases@latest"
+  build-amd64:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      # 设置 QEMU, 后面 docker buildx 依赖此.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      # 设置 Docker buildx, 方便构建 Multi platform 镜像
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      # 通过 git 命令获取当前 tag 信息, 存入环境变量 APP_VERSION
+      - name: Generate App Version
+        run: echo "APP_VERSION=$(curl --silent "https://api.github.com/repos/yajuhua/podcast2/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')" >> $GITHUB_ENV
+
+      # 登录 docker hub
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "${{ env.RELEASE_VERSION }}"
-          prerelease: false
-          title: "v${{ env.RELEASE_VERSION }}"
-          files: |
-            staging/*.war
+          # GitHub Repo => Settings => Secrets 增加 docker hub 登录密钥信息
+          # DOCKERHUB_USERNAME 是 docker hub 账号名.
+          # DOCKERHUB_TOKEN: docker hub => Account Setting => Security 创建.
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PWD }}
+
+      # 构建 amd64 Docker镜像
+      - name: Build the amd64 Docker image
+        run: |
+          docker build . --file Dockerfile --tag yajuhua/podcast2:amd64
+          docker push yajuhua/podcast2:amd64
+          
+  build-arm64:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: maven
+          arch: aarch64
 
       # 设置 QEMU, 后面 docker buildx 依赖此.
       - name: Set up QEMU
@@ -54,34 +88,23 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PWD }}
 
-      # 解压podcast2.war
-      - name: unzip podcast2.war
-        run: unzip staging/podcast2.war -d ./podcast2
-
       # 构建 amd64 Docker 并推送到 Docker hub
       - name: Build the amd64 Docker image
         run: |
-          docker build . --file Dockerfile --tag yajuhua/podcast2:latest
-          docker push yajuhua/podcast2:latest
-          
-      # 构建 arm64 Docker 并推送到 Docker hub
-      - name: Build the arm64 Docker image
-        run: |
-          cat << EOF > Dockerfile
-          FROM yajuhua/podcast2-base:arm64
-          ADD podcast2 /opt/tomcat/tomcat8/webapps/podcast2
-          LABEL author.email="2136243599@qq.com"  author.name="yajuhua"
-          EOF
           docker build . --file Dockerfile --tag yajuhua/podcast2:arm64
           docker push yajuhua/podcast2:arm64
-          
-      # 构建 arm32v7 Docker 并推送到 Docker hub
-      - name: Build the arm32v7 Docker image
+
+  push-docker-hub:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - name: pull amd4 and arm64 docker images
         run: |
-          cat << EOF > Dockerfile
-          FROM yajuhua/podcast2-base:arm32v7
-          ADD podcast2 /opt/tomcat/tomcat8/webapps/podcast2
-          LABEL author.email="2136243599@qq.com"  author.name="yajuhua"
-          EOF
-          docker build . --file Dockerfile --tag yajuhua/podcast2:arm32v7
-          docker push yajuhua/podcast2:arm32v7
+          docker pull yajuhua/podcast2:arm64
+          docker pull yajuhua/podcast2:amd64
+      - name: create manifest
+        run: |
+          docker manifest create yajuhua/podcast2 yajuhua/podcast2:arm64 yajuhua/podcast2:amd64
+      - name: push manifest
+        run: |
+          docker manifest push yajuhua/podcast2

@@ -1,0 +1,2 @@
+"use strict";(self["webpackChunkPodcast2"]=self["webpackChunkPodcast2"]||[]).push([[505],{1505:function(t,n,u){u.r(n),u.d(n,{default:function(){return a}});var s=function(){var t=this;t._self._c;return t._m(0)},c=[function(){var t=this,n=t._self._c;return n("div",{staticClass:"about"},[n("h1",[t._v("404页面不存在")])])}],e=u(1656),l={},r=(0,e.A)(l,s,c,!1,null,null,null),a=r.exports}}]);
+//# sourceMappingURL=505.b5857a35.js.map

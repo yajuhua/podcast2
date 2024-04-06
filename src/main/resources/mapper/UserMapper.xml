@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.github.yajuhua.podcast2.mapper.UserMapper">
+    <update id="update">
+        update user
+        <set>
+            <if test="username != null">
+                username = #{username},
+            </if>
+            <if test="password != null">
+                password = #{password},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime},
+            </if>
+            <if test="uuid != null">
+                uuid = #{uuid},
+            </if>
+            <if test="firstVersion != null">
+                first_version = #{firstVersion},
+            </if>
+            <if test="hostname != null">
+                hostname = #{hostname},
+            </if>
+            <if test="autoUpdatePlugin != null">
+                auto_update_plugin = #{autoUpdatePlugin},
+            </if>
+            <if test="isSsl != null">
+                is_ssl = #{isSsl},
+            </if>
+            <if test="hasSsl != null">
+                has_ssl = #{hasSsl}
+            </if>
+        </set>
+    </update>
+</mapper>

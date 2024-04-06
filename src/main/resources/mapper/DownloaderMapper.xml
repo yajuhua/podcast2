@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.github.yajuhua.podcast2.mapper.DownloaderMapper">
+    <update id="update">
+        update downloader
+        <set>
+            <if test="version != null">
+                version = #{version},
+            </if>
+            <if test="refreshDuration != null">
+                refresh_duration = #{refreshDuration},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime},
+            </if>
+            <if test="isUpdate != null">
+                is_update = #{isUpdate}
+            </if>
+        </set>
+        where name = #{name}
+    </update>
+</mapper>
