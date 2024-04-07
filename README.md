@@ -16,7 +16,7 @@
 
 ## 快速开始
 
-### 1.安装并启动Docker
+#### 1.安装并启动Docker
 
 ```shell
 curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh && systemctl start docker
@@ -30,10 +30,10 @@ docker run -id --name=podcast2 \
 -p 8088:8088 \
 --restart=always \
 --mount source=podcast2,destination=/data \
-yajuhua/podcast2:beta
+yajuhua/podcast2:beta-2024-04-07
 # 目前为测试版
 ````
-### 3.防火墙放行端口
+#### 3.防火墙放行端口
 ````shell
 #以下是centos7，其他系统自行搜索。
 firewall-cmd --add-port=8088/tcp --permanent
@@ -91,8 +91,8 @@ firewall-cmd --reload
 
 
 
-
-## 哔哩哔哩设置
+## 常见问题
+#### 哔哩哔哩设置
 > 风控太严，只能选择授权的方式
 ##### 参考
 - [Web端Cookie刷新](https://socialsisteryi.github.io/bilibili-API-collect/docs/login/cookie_refresh.html)
@@ -104,11 +104,11 @@ firewall-cmd --reload
 ##### 复制ac_time_value
 ![复制ac_time_valu](./images/ac_time_value.png)
 
-#### 注意！这样子相当于登录了，复制后要清理哔哩哔哩浏览器记录，否则会与本插件冲突
+##### 注意！这样子相当于登录了，复制后要清理哔哩哔哩浏览器记录，否则会与本插件冲突
 
 <br>
 
-## 忘记密码
+#### 忘记密码
 ##### 进入数据卷目录
 ````shell
 [root@centos7 ~]# docker volume inspect podcast2
@@ -137,7 +137,7 @@ cert  config  database  logs  plugin  resources  tmp
 > 用户名 admin
 > 密码 123456
 
-## 开启HTTPS
+#### 开启HTTPS
 > 目前仅支持通过上传证书和密钥文件来实现
 ##### 文件格式要求
 ````shell
@@ -147,7 +147,7 @@ cert  config  database  logs  plugin  resources  tmp
 ##### 重启后并以https访问
 <br>
 
-## 更新podcast2
+##### 更新podcast2
 > 数据保留
 ````shell
 # 停止容器
@@ -170,7 +170,7 @@ docker run -id --name=podcast2 \
 yajuhua/podcast2:latest
 
 ````
-## 插件bug或失效
+#### 插件bug或失效
 由于插件是并非使用官方接口，难免存在不稳定性。若发现插件失效，请[issues](https://github.com/yajuhua/podcast2/issues/new/choose)
 
 
