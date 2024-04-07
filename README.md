@@ -13,6 +13,7 @@
 <h2 align=center><p>Podcast2</p></h2>
 <hr>
 
+## 新版本v2.0.0-beta[先睹为快](https://github.com/yajuhua/podcast2/tree/v2)
 ## 项目说明
 
 将视频网站转换成播客订阅。
@@ -59,7 +60,7 @@ firewall-cmd --reload
 > 默认用户名：admin <br>
 > 默认密码：1
 
-![登录](https://yajuhua.github.io/images/login.png)
+![登录](./images/login.png)
 
 ## 添加插件
 
@@ -77,17 +78,17 @@ firewall-cmd --reload
 | <!-- plugin-list-end -->             ||||
 #### 2.进入管理页面
 
-![管理页面](https://yajuhua.github.io/images/manage.png)
+![管理页面](./images/manage.png)
 
 #### 3.点击选取插件
 
-![添加插件](https://yajuhua.github.io/images/add-plugin.png)
+![添加插件](./images/add-plugin.png)
 
 #### 4.点击上传到服务器
 
-![上传到服务器](https://yajuhua.github.io/images/upload-plugin.png)
+![上传到服务器](./images/upload-plugin.png)
 
-![上传成功](https://yajuhua.github.io/images/upload-plugin-ok.png)
+![上传成功](./images/upload-plugin-ok.png)
 
 
 
@@ -97,19 +98,19 @@ firewall-cmd --reload
 
 #### 1.复制主页链接
 
-![复制主页链接](https://yajuhua.github.io/images/add-sub-example.png)
+![复制主页链接](./images/add-sub-example.png)
 
 #### 2.粘贴并点击Add
 
-![粘贴并点击](https://yajuhua.github.io/images/add-sub-example-2.png)
+![粘贴并点击](./images/add-sub-example-2.png)
 
 #### 3.添加成功后会跳转到订阅列表
 
-![订阅列表](https://yajuhua.github.io/images/add-sub-example-ok.png)
+![订阅列表](./images/add-sub-example-ok.png)
 
 #### 4.扫描二维码添加到播客APP（如：AntennaPod）
 
-<img width="500" src="https://yajuhua.github.io/images/AntennaPod-1.jpg" alt="链接地址" style="zoom:25%;" /><img width="500" src="https://yajuhua.github.io/images/AntennaPod-2.jpg" alt="AntennaPod-2" style="zoom:25%;" />
+<img width="500" src="./images/AntennaPod-1.jpg" alt="链接地址" style="zoom:25%;" /><img width="500" src="./images/AntennaPod-2.jpg" alt="AntennaPod-2" style="zoom:25%;" />
 
 ## 播客APP
 
