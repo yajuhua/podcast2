@@ -55,7 +55,6 @@ public class Update implements Runnable {
     private ItemsMapper itemsMapper;
     private SettingsMapper settingsMapper;
 
-
     @Autowired
     public Update(Sub sub, SubService subService, ExtendMapper extendMapper, DataPathProperties dataPathProperties
             , SubMapper subMapper, ItemsMapper itemsMapper, SettingsMapper settingsMapper) {
@@ -291,6 +290,10 @@ public class Update implements Runnable {
                         items1.setDownloadSpeed((double) progress.getDownloadTimeLeft());
                         items1.setDownloadTimeLeft((double) progress.getDownloadTimeLeft());
                         items1.setDownloadProgress(progress.getDownloadProgress());
+                        items1.setFormat(progress.getFinalFormat());
+                        items1.setType(progress.getType());
+                        items1.setTotalSize(progress.getTotalSize());
+                        items1.setOperation(progress.getOperation());
                         itemsMapper.update(items1);
                     }
                 }
