@@ -1,5 +1,6 @@
 package io.github.yajuhua.podcast2.config;
 
+import com.zaxxer.hikari.HikariDataSource;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -48,9 +49,11 @@ public class SQLiteConfig {
                 e.printStackTrace();
             }
         }
-        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+//        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        HikariDataSource dataSource = new HikariDataSource();
         dataSource.setDriverClassName("org.sqlite.JDBC");
-        dataSource.setUrl(dataPathProperties.getSqliteUrl());
+        dataSource.setMaximumPoolSize(1);//设置单线程避免高并发
+        dataSource.setJdbcUrl(dataPathProperties.getSqliteUrl());
         return dataSource;
     }
 }
