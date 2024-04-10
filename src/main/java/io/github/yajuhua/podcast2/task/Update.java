@@ -117,13 +117,8 @@ public class Update implements Runnable {
             params.setEpisodes(es);
             //传入插件设置
             List<Settings> settingsFromDB = settingsMapper.selectByPluginName(sub.getPlugin());
-            //去重
-            Set<Settings> settingsSet = new HashSet<>();
-            for (Settings settings : settingsFromDB) {
-                settingsSet.add(settings);
-            }
             List<Setting> settings = new ArrayList<>();
-            for (Settings settings1 : settingsSet) {
+            for (Settings settings1 : settingsFromDB) {
                 Setting setting = new Setting();
                 BeanUtils.copyProperties(settings1,setting);
                 settings.add(setting);
