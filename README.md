@@ -30,7 +30,7 @@ docker run -id --name=podcast2 \
 -p 8088:8088 \
 --restart=always \
 --mount source=podcast2,destination=/data \
-yajuhua/podcast2:beta-2024-04-08
+yajuhua/podcast2:beta-2024-04-10
 # 目前为测试版
 ````
 #### 3.防火墙放行端口
