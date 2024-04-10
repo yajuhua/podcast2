@@ -1,10 +1,7 @@
 package io.github.yajuhua.podcast2.mapper;
 
 import io.github.yajuhua.podcast2.pojo.entity.Settings;
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -29,10 +26,15 @@ public interface SettingsMapper {
 
 
     /**
-     * 根据插件名称查询设置
+     * 根据插件名称查询设置，根据plugin,name来分组，并取最新更新时间的
      * @param pluginName
      * @return
      */
-    @Select("select * from settings where plugin = #{pluginName}")
+    @Select("select plugin, name, content, tip, MAX(update_time) from settings where plugin = #{pluginName} GROUP BY plugin, name")
     List<Settings> selectByPluginName(String pluginName);
+
+    /**
+     * 更新
+     */
+    void update(Settings settings);
 }
