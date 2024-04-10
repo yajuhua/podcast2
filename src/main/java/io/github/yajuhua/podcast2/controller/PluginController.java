@@ -535,15 +535,11 @@ public class PluginController {
     @PutMapping("/settings")
     public Result updateSettings(@RequestBody List<Settings> settings){
         if (settings.size() != 0){
-            String plugin = settings.get(0).getPlugin();
-            settingsMapper.deleteByPlugin(plugin);
             for (Settings setting : settings) {
                 setting.setUpdateTime(System.currentTimeMillis());
-                settingsMapper.insert(setting);
+                settingsMapper.update(setting);
             }
         }
         return Result.success();
     }
-
-
 }
