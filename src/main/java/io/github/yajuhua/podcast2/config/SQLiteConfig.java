@@ -49,10 +49,13 @@ public class SQLiteConfig {
                 e.printStackTrace();
             }
         }
-//        DriverManagerDataSource dataSource = new DriverManagerDataSource();
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setDriverClassName("org.sqlite.JDBC");
-        dataSource.setMaximumPoolSize(1);//设置单线程避免高并发
+        dataSource.setMaximumPoolSize(10);
+        dataSource.setMinimumIdle(10);
+        dataSource.setMaxLifetime(0);
+        dataSource.setIdleTimeout(60000);
+        dataSource.setConnectionTimeout(60000);
         dataSource.setJdbcUrl(dataPathProperties.getSqliteUrl());
         return dataSource;
     }
