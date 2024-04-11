@@ -63,7 +63,9 @@ public class DownloadWebSocketServer {
         for (Session session : sessions) {
             try {
                 //服务器向客户端发送消息
-                session.getBasicRemote().sendText(message);
+                if (session.isOpen()){
+                    session.getBasicRemote().sendText(message);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
