@@ -89,18 +89,36 @@ public class StartupRunner implements ApplicationRunner{
 
         //如果下载少于3个则写入,检查更新下载器信息
         if (downloaderMapper.list().isEmpty() || downloaderMapper.list().size() < DownloaderUtils.Downloader.values().length){
+            String osArch = System.getProperty("os.arch");
+            log.info("系统架构:{}",osArch);
             log.info("更新下载器信息");
             downloaderMapper.deleteAll();
-            for (DownloaderUtils.Downloader downloader : DownloaderUtils.Downloader.values()) {
-                Downloader build = Downloader.builder()
-                        .name(downloader.toString())
-                        .version(DownloaderUtils.getDownloaderVersion(downloader))
-                        //只更新yt-dlp
-                        .isUpdate(downloader.equals(DownloaderUtils.Downloader.YtDlp) ? 1 : 0)
-                        .refreshDuration(24)
-                        .updateTime(System.currentTimeMillis())
-                        .build();
-                downloaderMapper.insert(build);
+            if (osArch.equals("arm")){
+                for (DownloaderUtils.Downloader downloader : DownloaderUtils.Downloader.values()) {
+                    if (!downloader.name().equals("Nm3u8DlRe")){
+                        Downloader build = Downloader.builder()
+                                .name(downloader.toString())
+                                .version(DownloaderUtils.getDownloaderVersion(downloader))
+                                //只更新yt-dlp
+                                .isUpdate(downloader.equals(DownloaderUtils.Downloader.YtDlp) ? 1 : 0)
+                                .refreshDuration(24)
+                                .updateTime(System.currentTimeMillis())
+                                .build();
+                        downloaderMapper.insert(build);
+                    }
+                }
+            }else {
+                for (DownloaderUtils.Downloader downloader : DownloaderUtils.Downloader.values()) {
+                    Downloader build = Downloader.builder()
+                            .name(downloader.toString())
+                            .version(DownloaderUtils.getDownloaderVersion(downloader))
+                            //只更新yt-dlp
+                            .isUpdate(downloader.equals(DownloaderUtils.Downloader.YtDlp) ? 1 : 0)
+                            .refreshDuration(24)
+                            .updateTime(System.currentTimeMillis())
+                            .build();
+                    downloaderMapper.insert(build);
+                }
             }
             log.info("下载器信息更新完成");
         }

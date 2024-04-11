@@ -29,8 +29,6 @@ import io.github.yajuhua.podcast2API.extension.reception.InputAndSelectData;
 import io.github.yajuhua.podcast2API.setting.Setting;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.ui.context.Theme;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
@@ -55,7 +53,7 @@ public class Update implements Runnable {
     private ItemsMapper itemsMapper;
     private SettingsMapper settingsMapper;
 
-    @Autowired
+
     public Update(Sub sub, SubService subService, ExtendMapper extendMapper, DataPathProperties dataPathProperties
             , SubMapper subMapper, ItemsMapper itemsMapper, SettingsMapper settingsMapper) {
         this.sub = sub;
@@ -226,6 +224,15 @@ public class Update implements Runnable {
                 request.setUuid(UUID.randomUUID().toString());
                 request.setChannelUuid(sub.getUuid());
                 request.setDir(new File(dataPathProperties.getResourcesPath()));
+
+                //arm32v7没有N_m3u8DL-RE,将下载请求提交的yt-dlp
+                boolean isNm3u8DlRe = request.getDownloader().equals(DownloadManager.Downloader.Nm3u8DlRe);
+                String osArch = System.getProperty("os.arch");
+
+                if (isNm3u8DlRe && "arm".equals(osArch)){
+                    request.setDownloader(DownloadManager.Downloader.YtDlp);
+                }
+
                 item.setRequest(request);
                 filterItems.add(item);
                 downloadManager.add(request);
