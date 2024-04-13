@@ -25,6 +25,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -64,7 +65,7 @@ public class StartupRunner implements ApplicationRunner{
 
 
     @Override
-    public void run(ApplicationArguments args) throws Exception {
+    public void run(ApplicationArguments args){
 
         //记录启动时间
         SystemController.startTime = LocalDateTime.now();
@@ -145,24 +146,28 @@ public class StartupRunner implements ApplicationRunner{
     /**
      * 初始化配置
      */
-    public void initConfig() throws Exception{
-        File config = new File(dataPathProperties.getConfigPath());
-        Config config2 = new Config();
-        if (config.exists()){
-            String configJson = FileUtils.readFileToString(config);
-            Config config1 = gson.fromJson(configJson, Config.class);
-            if (config1 != null && config1.isInitUserNameAndPassword()){
-                String username = config1.isInitUserNameAndPassword()? Default.USERNAME:null;
-                String password = config1.isInitUserNameAndPassword()? Default.PASSWORD:null;
-                User user = userMapper.list().get(0);
-                user.setUsername(username);
-                user.setPassword(password);
-                userMapper.update(user);
-                log.info("修改为默认用户名和密码");
+    public void initConfig(){
+        try {
+            File config = new File(dataPathProperties.getConfigPath());
+            Config config2 = new Config();
+            if (config.exists()){
+                String configJson = FileUtils.readFileToString(config);
+                Config config1 = gson.fromJson(configJson, Config.class);
+                if (config1 != null && config1.isInitUserNameAndPassword()){
+                    String username = config1.isInitUserNameAndPassword()? Default.USERNAME:null;
+                    String password = config1.isInitUserNameAndPassword()? Default.PASSWORD:null;
+                    User user = userMapper.list().get(0);
+                    user.setUsername(username);
+                    user.setPassword(password);
+                    userMapper.update(user);
+                    log.info("修改为默认用户名和密码");
+                }
             }
+            //初始化
+            FileUtils.write(config,gson.toJson(config2));
+        } catch (Exception e) {
+            log.error("初始化配置错误:{}",e.getMessage());
         }
-        //初始化
-        FileUtils.write(config,gson.toJson(config2));
     }
 
     /**
