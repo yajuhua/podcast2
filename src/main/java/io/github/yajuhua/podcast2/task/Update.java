@@ -164,7 +164,7 @@ public class Update implements Runnable {
                 items.add(item);
             }
 
-            DownloadManager downloadManager = new DownloadManager();
+            DownloadManager downloadManager = new DownloadManager(1,1);
             //过滤器
             List<String> titlekeyWords = Arrays.asList(sub.getTitleKeywords());
             List<String> desckeyWords = Arrays.asList(sub.getDescKeywords());
