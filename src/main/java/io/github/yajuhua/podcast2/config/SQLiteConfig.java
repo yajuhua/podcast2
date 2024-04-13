@@ -51,8 +51,8 @@ public class SQLiteConfig {
         }
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setDriverClassName("org.sqlite.JDBC");
-        dataSource.setMaximumPoolSize(10);
-        dataSource.setMinimumIdle(10);
+        dataSource.setMaximumPoolSize(30);
+        dataSource.setMinimumIdle(30);
         dataSource.setMaxLifetime(0);
         dataSource.setIdleTimeout(60000);
         dataSource.setConnectionTimeout(60000);
