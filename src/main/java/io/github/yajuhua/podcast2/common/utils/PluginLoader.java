@@ -89,6 +89,7 @@ public class PluginLoader {
         InputStream propertiesStream = classLoader.getResourceAsStream(propertiesName);
         Properties properties = new Properties();
         properties.load(propertiesStream);
+        propertiesStream.close();
         return properties;
     }
 
@@ -267,9 +268,13 @@ public class PluginLoader {
     /**
      * 关闭所有classLoader
      */
-    public static void closeAll() throws Exception{
-        for (URLClassLoader loader : classLoaderList) {
-            loader.close();
+    public static void closeAll(){
+        try {
+            for (URLClassLoader loader : classLoaderList) {
+                loader.close();
+            }
+        } catch (IOException e) {
+            log.error("异常信息:{}",e.getMessage());
         }
     }
 }
