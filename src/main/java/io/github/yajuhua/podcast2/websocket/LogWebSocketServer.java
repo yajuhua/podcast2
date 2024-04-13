@@ -85,9 +85,13 @@ public class LogWebSocketServer {
         for (Session session : sessions) {
             try {
                 //服务器向客户端发送消息
-                session.getBasicRemote().sendText(message);
+                if (session != null && session.isOpen() && message != null){
+                    synchronized (session){
+                        session.getBasicRemote().sendText(message);
+                    }
+                }
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("群发错误:{}",e.getMessage());
             }
         }
     }

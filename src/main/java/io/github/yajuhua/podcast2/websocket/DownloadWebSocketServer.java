@@ -64,7 +64,9 @@ public class DownloadWebSocketServer {
             try {
                 //服务器向客户端发送消息
                 if (session != null && session.isOpen() && message != null){
-                    session.getBasicRemote().sendText(message);
+                    synchronized (session){
+                        session.getBasicRemote().sendText(message);
+                    }
                 }
             } catch (Exception e) {
                 log.error("群发错误:{}",e.getMessage());
