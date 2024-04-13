@@ -67,6 +67,7 @@ public class Update implements Runnable {
 
     @Override
     public void run() {
+        Class aClass = null;
         try {
             //修改订阅状态
             sub.setStatus(StatusCode.ACTION_ING);
@@ -123,7 +124,7 @@ public class Update implements Runnable {
             }
             params.setSettings(settings);
 
-            Class aClass = PluginLoader.selectByName(sub.getPlugin(), dataPathProperties).get(0);
+            aClass = PluginLoader.selectByName(sub.getPlugin(), dataPathProperties).get(0);
             Gson gson = new Gson();
             Constructor constructor = aClass.getConstructor(String.class);
             Object o = constructor.newInstance(gson.toJson(params));
@@ -238,7 +239,8 @@ public class Update implements Runnable {
                 downloadManager.add(request);
             }
             items = filterItems;
-            downloadManager.startDownload();
+            Thread downloadManagerThread = new Thread(downloadManager);
+            downloadManagerThread.start();
             log.info("{}:{}下载",sub.getTitle(),items.size() > 0 ? "开始" : "无");
             Set<DownloadProgress> downloadProgresses = downloadManager.allDownloadProgress();
 
@@ -307,7 +309,6 @@ public class Update implements Runnable {
             sub.setCheckTime(System.currentTimeMillis());
             sub.setStatus(StatusCode.NO_ACTION);
             sub.setIsFirst(StatusCode.NO);
-            subMapper.update(sub);
             log.info("{}:更新完成",sub.getTitle());
         } catch (InvocationTargetException e){
             if (e.getTargetException() != null){
@@ -319,6 +320,5 @@ public class Update implements Runnable {
             sub.setStatus(StatusCode.NO_ACTION);
             subMapper.update(sub);
         }
-
     }
 }
