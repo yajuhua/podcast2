@@ -71,7 +71,7 @@ public class Task {
 
             //1.获取需要更新的订阅
             List<Sub> subList = subService.selectUpdateList();
-            subList =  subList.stream().filter(sub -> sub.getStatus().equals(StatusCode.NO_ACTION)).collect(Collectors.toList());
+            //subList =  subList.stream().filter(sub -> sub.getStatus().equals(StatusCode.NO_ACTION)).collect(Collectors.toList());
             for (Sub sub : subList) {
                 //标记正在更新
                 pool.submit(new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,settingsMapper));

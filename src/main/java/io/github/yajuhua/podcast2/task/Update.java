@@ -70,7 +70,7 @@ public class Update implements Runnable {
         Class aClass = null;
         try {
             //修改订阅状态
-            sub.setStatus(StatusCode.ACTION_ING);
+            //sub.setStatus(StatusCode.ACTION_ING);
             subMapper.update(sub);
             List<Extend> anExtends = extendMapper.selectByUuid(sub.getUuid());
             List<InputAndSelectData> inputAndSelectDataList = new ArrayList<>();
