@@ -2,7 +2,7 @@
 
 <br>
 <p align="center">
-<img src="https://img.shields.io/github/v/release/yajuhua/podcast2?color=&label=release" alt="Release" />
+<img src="https://img.shields.io/github/v/release/yajuhua/podcast2?include_prereleases" alt="Release" />
 <img src="https://shields.io/docker/pulls/yajuhua/podcast2" alt="docker-pull" />
 <img src="https://img.shields.io/badge/jdk-8-blue.svg" alt="JDK" />
 <img src="https://img.shields.io/badge/license-Apache2.0-green.svg" alt="apache-licenses" />
@@ -30,7 +30,7 @@ docker run -id --name=podcast2 \
 -p 8088:8088 \
 --restart=always \
 --mount source=podcast2,destination=/data \
-yajuhua/podcast2:beta-2024-04-10
+yajuhua/podcast2:beta-2024-04-14
 # 目前为测试版
 ````
 #### 3.防火墙放行端口
@@ -157,17 +157,17 @@ docker stop podcast2
 docker rm podcast2
 
 # 删除本地镜像
-docker rmi yajuhua/podcast2:latest
+docker rmi yajuhua/podcast2:beta-2024-04-14
 
 # 拉取最新镜像
-docker pull yajuhua/podcast2:latest
+docker pull yajuhua/podcast2:beta-2024-04-14
 
 #创建新的容器
 docker run -id --name=podcast2 \
 -p 8088:8088 \
 --restart=always \
 --mount source=podcast2,destination=/data \
-yajuhua/podcast2:latest
+yajuhua/podcast2:beta-2024-04-14
 
 ````
 #### 插件bug或失效
