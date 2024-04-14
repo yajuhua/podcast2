@@ -65,7 +65,7 @@ public class Task {
     public void updateSub(){
         try {
             //开启线程池
-            ExecutorService pool = new ThreadPoolExecutor(3, 3, 8L,
+            ExecutorService pool = new ThreadPoolExecutor(1, 1, 8L,
                     TimeUnit.SECONDS, new ArrayBlockingQueue(4), Executors.defaultThreadFactory(),
                     new ThreadPoolExecutor.CallerRunsPolicy());
 
