@@ -23,6 +23,7 @@ import io.github.yajuhua.podcast2.pojo.entity.Settings;
 import io.github.yajuhua.podcast2.pojo.entity.Sub;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
 import io.github.yajuhua.podcast2.service.SubService;
+import io.github.yajuhua.podcast2API.Channel;
 import io.github.yajuhua.podcast2API.Item;
 import io.github.yajuhua.podcast2API.Params;
 import io.github.yajuhua.podcast2API.extension.reception.InputAndSelectData;
@@ -168,6 +169,13 @@ public class Update implements Runnable {
             //过滤器
             List<String> titlekeyWords = Arrays.asList(sub.getTitleKeywords());
             List<String> desckeyWords = Arrays.asList(sub.getDescKeywords());
+
+            //检查该订阅是否继续更新
+            String channelJson = gson.toJson(aClass.getMethod(ReflectionMethodName.CHANNEL).invoke(o));
+            Channel channel = gson.fromJson(channelJson, Channel.class);
+            sub.setIsUpdate(channel.getStatus());
+
+            //获取节目列表
             List<Item> filterItems = new ArrayList<>();
             for (Item item : items) {
                 if (item.getEqual().equals(sub.getEqual())) {
@@ -308,6 +316,7 @@ public class Update implements Runnable {
             sub.setUpdateTime(System.currentTimeMillis());
             sub.setStatus(StatusCode.NO_ACTION);
             sub.setIsFirst(StatusCode.NO);
+
             log.info("{}:更新完成",sub.getTitle());
         } catch (InvocationTargetException e){
             if (e.getTargetException() != null){
