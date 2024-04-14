@@ -306,7 +306,6 @@ public class Update implements Runnable {
 
             //更新sub表
             sub.setUpdateTime(System.currentTimeMillis());
-            sub.setCheckTime(System.currentTimeMillis());
             sub.setStatus(StatusCode.NO_ACTION);
             sub.setIsFirst(StatusCode.NO);
             log.info("{}:更新完成",sub.getTitle());
@@ -318,6 +317,7 @@ public class Update implements Runnable {
             log.error("异常信息:{}",e.getMessage());
         }finally {
             sub.setStatus(StatusCode.NO_ACTION);
+            sub.setCheckTime(System.currentTimeMillis());
             subMapper.update(sub);
         }
     }
