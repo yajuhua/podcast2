@@ -273,6 +273,7 @@ public class PluginLoader {
             for (URLClassLoader loader : classLoaderList) {
                 loader.close();
             }
+            classLoaderList.clear();
         } catch (IOException e) {
             log.error("异常信息:{}",e.getMessage());
         }

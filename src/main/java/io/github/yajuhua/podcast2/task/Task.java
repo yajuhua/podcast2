@@ -1,8 +1,8 @@
 package io.github.yajuhua.podcast2.task;
 
-import io.github.yajuhua.podcast2.common.constant.StatusCode;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
+import io.github.yajuhua.podcast2.common.utils.PluginLoader;
 import io.github.yajuhua.podcast2.controller.PluginController;
 import io.github.yajuhua.podcast2.mapper.*;
 import io.github.yajuhua.podcast2.pojo.entity.Downloader;
@@ -59,33 +59,26 @@ public class Task {
     }
 
     /**
-     * 每隔分钟检查一次频道是否需要更新和yt-dlp
+     * 每隔分钟检查一次频道是否需要更新
      */
     @Scheduled(fixedDelay = 60000)
     public void updateSub(){
         try {
-            //开启线程池
-            ExecutorService pool = new ThreadPoolExecutor(1, 1, 8L,
-                    TimeUnit.SECONDS, new ArrayBlockingQueue(4), Executors.defaultThreadFactory(),
-                    new ThreadPoolExecutor.CallerRunsPolicy());
-
             //1.获取需要更新的订阅
             List<Sub> subList = subService.selectUpdateList();
-            //subList =  subList.stream().filter(sub -> sub.getStatus().equals(StatusCode.NO_ACTION)).collect(Collectors.toList());
             for (Sub sub : subList) {
                 //标记正在更新
-                pool.submit(new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,settingsMapper));
+                Update update = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper, settingsMapper);
+                update.run();
             }
-            pool.shutdown();
-            pool.awaitTermination(60,TimeUnit.MINUTES);
         } catch (Exception e) {
             log.error("更新异常:{}详细:{}",e.getMessage(),e.getStackTrace());
         }finally {
             Task.updateStatus = false;
+            PluginLoader.closeAll();
             if (Task.downloadProgressVOSet != null){
                 Task.downloadProgressVOSet.clear();
             }
-            System.gc();
         }
     }
 
@@ -176,6 +169,7 @@ public class Task {
                     //执行更新命令
                     log.info("执行更新yt-dlp");
                     DownloaderUtils.cmd("yt-dlp-update");
+                    //TODO 更新数据库
                 }
             }
             log.info("已完成检查更新yt-dlp");
