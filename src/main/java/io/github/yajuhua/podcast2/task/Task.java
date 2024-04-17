@@ -63,12 +63,13 @@ public class Task {
      */
     @Scheduled(fixedDelay = 60000)
     public void updateSub(){
+        Update update;
         try {
             //1.获取需要更新的订阅
             List<Sub> subList = subService.selectUpdateList();
             for (Sub sub : subList) {
                 //标记正在更新
-                Update update = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper, settingsMapper);
+                update = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper, settingsMapper);
                 update.run();
             }
         } catch (Exception e) {

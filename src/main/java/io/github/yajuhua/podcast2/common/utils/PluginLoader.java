@@ -66,7 +66,7 @@ public class PluginLoader {
      * @return
      * @throws MalformedURLException
      */
-    private static final ClassLoader getClassLoader(String jarFilePath) throws MalformedURLException {
+    private static ClassLoader getClassLoader(String jarFilePath) throws MalformedURLException {
         File jarFile = new File(jarFilePath);
         if (!jarFile.exists()) {
             return null;
