@@ -30,7 +30,7 @@ docker run -id --name=podcast2 \
 -p 8088:8088 \
 --restart=always \
 --mount source=podcast2,destination=/data \
-yajuhua/podcast2:beta-2024-04-14
+yajuhua/podcast2:beta-2024-04-19
 # 目前为测试版
 ````
 #### 3.防火墙放行端口
@@ -157,17 +157,17 @@ docker stop podcast2
 docker rm podcast2
 
 # 删除本地镜像
-docker rmi yajuhua/podcast2:beta-2024-04-14
+docker rmi yajuhua/podcast2:旧的版本号
 
 # 拉取最新镜像
-docker pull yajuhua/podcast2:beta-2024-04-14
+docker pull yajuhua/podcast2:最新版本号
 
 #创建新的容器
 docker run -id --name=podcast2 \
 -p 8088:8088 \
 --restart=always \
 --mount source=podcast2,destination=/data \
-yajuhua/podcast2:beta-2024-04-14
+yajuhua/podcast2:最新版本号
 
 ````
 #### 插件bug或失效
