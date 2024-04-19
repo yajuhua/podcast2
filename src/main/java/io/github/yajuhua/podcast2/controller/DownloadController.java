@@ -104,6 +104,8 @@ public class DownloadController {
             map.put("uuid",item.getChannelUuid());
             Sub sub = subMapper.selectByMap(map);
             if (sub == null){
+                //删除没有记录的
+                itemsMapper.deleteByChannelUuid(item.getChannelUuid());
                 throw new ItemNotFoundException(MessageConstant.ITEMS_NOT_FOUND_FAILED);
             }
             String itemName = item.getTitle();
