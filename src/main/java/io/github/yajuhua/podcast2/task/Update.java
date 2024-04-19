@@ -331,6 +331,8 @@ public class Update implements Runnable {
             sub.setStatus(StatusCode.NO_ACTION);
             sub.setCheckTime(System.currentTimeMillis());
             subMapper.update(sub);
+            PluginLoader.closeAll();
+            System.gc();
         }
     }
 }

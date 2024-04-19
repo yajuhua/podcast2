@@ -76,7 +76,6 @@ public class Task {
             log.error("更新异常:{}详细:{}",e.getMessage(),e.getStackTrace());
         }finally {
             Task.updateStatus = false;
-            PluginLoader.closeAll();
             if (Task.downloadProgressVOSet != null){
                 Task.downloadProgressVOSet.clear();
             }
