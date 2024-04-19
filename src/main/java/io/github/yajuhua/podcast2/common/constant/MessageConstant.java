@@ -4,6 +4,7 @@ public class MessageConstant {
     public static final String PASSWORD_ERROR = "密码错误";
     public static final String ACCOUNT_NOT_FOUND = "账号不存在";
     public static final String USERNAME_OR_PASSWORD_NULL = "用户名或密码为空";
+    public static final String USERNAME_OR_PASSWORD_ERROR = "用户名或密码错误";
     public static final String PLUGIN_UUID_NOT_FOUND = "无该uuid插件";
     public static final String PLUGIN_NOT_FOUND = "该插件找不到";
     public static final String UPLOAD_FAILED = "文件上传失败";
