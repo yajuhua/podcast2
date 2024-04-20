@@ -159,6 +159,20 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
 
+      - uses: actions/checkout@v3
+      - name: Set up JDK 8
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: maven
+
+      # 获取 Maven 项目版本
+      - name: Get Maven Project Version
+        id: get_version
+        run: |
+          echo "RELEASE_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV      
+
       # 设置 Docker buildx, 方便构建 Multi platform 镜像
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
