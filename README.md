@@ -13,7 +13,7 @@
 <h2 align=center><p>Podcast2</p></h2>
 <hr>
 
-## 新版本v2.0.0-beta[先睹为快](https://github.com/yajuhua/podcast2/tree/v2)
+## 新版本[v2.0.0](https://github.com/yajuhua/podcast2/tree/v2)
 ## 项目说明
 
 将视频网站转换成播客订阅。
@@ -43,9 +43,7 @@ docker run -id --name=podcast2 \
 -v ~/podcast2/audio:/opt/tomcat/tomcat8/webapps/podcast2/audio/ \
 -v ~/podcast2/plugin:/opt/tomcat/tomcat8/webapps/podcast2/plugin/ \
 -v ~/podcast2/logs:/logs \
-yajuhua/podcast2:latest
-#arm32v7平台请使用yajuhua/podcast2:arm32v7
-#arm64平台请使用yajuhua/podcast2:arm64
+yajuhua/podcast2:v1.3.3
 ````
 ### 3.防火墙放行端口
 ````shell
