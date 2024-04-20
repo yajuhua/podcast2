@@ -151,9 +151,9 @@ public class Task {
     }
 
     /**
-     * 更新yt-dlp,每周日的23点执行
+     * 更新yt-dlp,每小时执行一次
      */
-    @Scheduled(cron = "0 0 23 * * 7 ")
+    @Scheduled(fixedDelay = 3600000)
     public void updateYtDlp() {
         try {
             log.info("检查更新yt-dlp");
@@ -165,11 +165,17 @@ public class Task {
                 Downloader ytDlp = downloaderMapper.selectByName("YtDlp");
                 Long latestUpdateTime = ytDlp.getUpdateTime();
                 Integer refreshDuration = ytDlp.getRefreshDuration()*3600*1000;
-                if ((latestUpdateTime + refreshDuration) > System.currentTimeMillis()){
+                if ((latestUpdateTime + refreshDuration) < System.currentTimeMillis()){
                     //执行更新命令
                     log.info("执行更新yt-dlp");
-                    DownloaderUtils.cmd("yt-dlp-update");
-                    //TODO 更新数据库
+                    String rs = DownloaderUtils.cmd("sh yt-dlp-update");
+                    log.info("sh yt-dlp-update:{}",rs);
+
+                    ytDlp.setUpdateTime(System.currentTimeMillis());
+                    ytDlp.setVersion(DownloaderUtils.cmd("yt-dlp --version"));
+
+                    //更新数据库
+                    downloaderMapper.update(ytDlp);
                 }
             }
             log.info("已完成检查更新yt-dlp");
