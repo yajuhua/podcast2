@@ -14,6 +14,8 @@
 - 基于spring boot开发
 - 将视频网站转换成播客订阅
 
+## 旧版请移步到[1.3.3](https://github.com/yajuhua/podcast2/tree/v1)
+
 ## 快速开始
 
 #### 1.安装并启动Docker
@@ -30,8 +32,7 @@ docker run -id --name=podcast2 \
 -p 8088:8088 \
 --restart=always \
 --mount source=podcast2,destination=/data \
-yajuhua/podcast2:beta-2024-04-19
-# 目前为测试版
+yajuhua/podcast2:latest
 ````
 #### 3.防火墙放行端口
 ````shell
@@ -157,17 +158,17 @@ docker stop podcast2
 docker rm podcast2
 
 # 删除本地镜像
-docker rmi yajuhua/podcast2:旧的版本号
+docker rmi yajuhua/podcast2:latest
 
 # 拉取最新镜像
-docker pull yajuhua/podcast2:最新版本号
+docker pull yajuhua/podcast2:latest
 
 #创建新的容器
 docker run -id --name=podcast2 \
 -p 8088:8088 \
 --restart=always \
 --mount source=podcast2,destination=/data \
-yajuhua/podcast2:最新版本号
+yajuhua/podcast2:latest
 
 ````
 #### 插件bug或失效
