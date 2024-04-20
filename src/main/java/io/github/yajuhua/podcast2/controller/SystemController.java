@@ -90,7 +90,7 @@ public class SystemController {
 
         if (versionStr != null){
             version = versionStr.split("v")[1];
-            int compareVersion = PluginLoader.compareVersion(version,infoProperties.getVersion());
+            int compareVersion = PluginLoader.compareVersion(version,infoProperties.getVersion().substring(1));
             if (compareVersion == 0){
                 return Result.success("当前版本已是最新版");
             }else if(compareVersion == 1){
