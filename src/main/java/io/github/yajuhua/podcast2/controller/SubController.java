@@ -125,7 +125,8 @@ public class SubController {
             if (item.getStatus() == Context.COMPLETED){
                 Item item1 = new Item();
                 BeanUtils.copyProperties(item,item1);
-                String url = request.getScheme() + "://" + enclosureDomain + ":" + request.getServerPort()
+                String pro = user.getIsSsl()?"https":"http";
+                String url = pro + "://" + enclosureDomain + ":" + request.getServerPort()
                         + "/resources/" + item.getFileName();
                 item1.setEnclosure(url);
                 itemList.add(item1);
