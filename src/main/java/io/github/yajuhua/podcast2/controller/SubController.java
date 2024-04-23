@@ -116,7 +116,7 @@ public class SubController {
         }
         User user = userMapper.list().get(0);
         String enclosureDomain = user.getHostname()==null || user.getHostname().contains(" ") || user.getHostname().length() == 0?null:user.getHostname();
-        enclosureDomain = enclosureDomain==null?request.getServerName():enclosureDomain;
+        enclosureDomain = enclosureDomain==null? request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort():enclosureDomain;
         Channel channel = new Channel();
         BeanUtils.copyProperties(sub,channel);
         List<Items> items = itemsService.selectByChannelUuid(uuid);
@@ -125,9 +125,7 @@ public class SubController {
             if (item.getStatus() == Context.COMPLETED){
                 Item item1 = new Item();
                 BeanUtils.copyProperties(item,item1);
-                String pro = user.getIsSsl()?"https":"http";
-                String url = pro + "://" + enclosureDomain + ":" + request.getServerPort()
-                        + "/resources/" + item.getFileName();
+                String url = enclosureDomain + "/resources/" + item.getFileName();
                 item1.setEnclosure(url);
                 itemList.add(item1);
             }
