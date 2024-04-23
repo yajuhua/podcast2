@@ -140,7 +140,7 @@ public class StartupRunner implements ApplicationRunner{
                     downloadWebSocketServer.sendToAllClient(gson.toJson(downloadProgressVOSet));
                 }
             }
-        },0,1, TimeUnit.SECONDS);
+        },0,300, TimeUnit.MILLISECONDS);
     }
 
     /**
