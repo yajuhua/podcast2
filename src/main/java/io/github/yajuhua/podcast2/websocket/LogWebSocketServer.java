@@ -7,13 +7,12 @@ import org.apache.commons.io.input.Tailer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.websocket.OnClose;
-import javax.websocket.OnMessage;
-import javax.websocket.OnOpen;
-import javax.websocket.Session;
+import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
+import java.io.EOFException;
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -73,6 +72,22 @@ public class LogWebSocketServer {
         log.info("连接断开:" + sid);
         tailer.close();
         sessionMap.remove(sid);
+    }
+
+    @OnError
+    public void onError(Session session, Throwable throwable) {
+        if ((throwable instanceof EOFException) && throwable.getCause() == null) {
+            log.warn("客户端异常退出：{}", session.getId());
+        } else {
+            log.error("socket发生异常：{}", session.getId());
+            log.error("异常信息", throwable);
+        }
+
+        try {
+            session.close();
+        } catch (IOException e) {
+            log.error("关闭socket发生异常", e);
+        }
     }
 
     /**
