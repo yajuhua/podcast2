@@ -76,7 +76,7 @@ public class UserController {
         log.info("用户登录:{}",userLoginDTO);
         String username = userLoginDTO.getUsername();
         String password = userLoginDTO.getPassword();
-        if(username == null || username.length() > 12 || password == null || password.length() > 12){
+        if(username == null || username.length() > 30 || password == null || password.length() > 12){
             throw new UserException(MessageConstant.USERNAME_OR_PASSWORD_ERROR);
         }
 
