@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.github.yajuhua</groupId>
     <artifactId>podcast2</artifactId>
-    <version>v2.0.3</version>
+    <version>v2.0.4</version>
     <name>podcast2</name>
     <description>podcast2</description>
     <properties>
@@ -62,10 +62,16 @@
             <groupId>io.github.yajuhua</groupId>
             <artifactId>podcast2API</artifactId>
             <version>${podcast2API.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
