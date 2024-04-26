@@ -76,7 +76,7 @@ public class UserController {
         log.info("用户登录:{}",userLoginDTO);
         String username = userLoginDTO.getUsername();
         String password = userLoginDTO.getPassword();
-        if(username == null || username.length() > 30 || password == null || password.length() > 12){
+        if(username == null || username.length() > 30 || password == null || password.length() > 30){
             throw new UserException(MessageConstant.USERNAME_OR_PASSWORD_ERROR);
         }
 
@@ -108,19 +108,18 @@ public class UserController {
 
     /**
      * 修改用户名和密码
-     * @param username
-     * @param password
+     * @param userLoginDTO
      * @return
      */
     @ApiOperation("修改用户名和密码")
     @PostMapping("/change")
-    public Result change(@RequestParam String username,@RequestParam String password){
-        if (username == null || password == null || username.contains(" ") || password.contains(" ")){
+    public Result change(@RequestBody UserLoginDTO userLoginDTO){
+        if (userLoginDTO == null){
             throw new UserException(MessageConstant.USERNAME_OR_PASSWORD_NULL);
         }
         User user = new User();
-        user.setUsername(username);
-        user.setPassword(password);
+        user.setUsername(userLoginDTO.getUsername());
+        user.setPassword(userLoginDTO.getPassword());
         userMapper.update(user);
         return Result.success();
     }
