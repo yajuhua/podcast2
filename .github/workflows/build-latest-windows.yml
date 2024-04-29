@@ -1,0 +1,38 @@
+name: v2 Build Latest Windows
+on: workflow_dispatch
+
+jobs:
+  build-amd64:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 8
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: |
+          mvn -B package --file pom.xml
+          cp target/*.jar .
+          cp target/app.jar platform/windows/
+          zip -f windows.zip platform/windows/ 
+
+      # 获取 Maven 项目版本
+      - name: Get Maven Project Version
+        id: get_version
+        run: |
+          echo "RELEASE_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
+
+      # 上传文件并发布 Release
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "${{ env.RELEASE_VERSION }}"
+          prerelease: false
+          title: "v${{ env.RELEASE_VERSION }}"
+          files: |
+            windows.zip
