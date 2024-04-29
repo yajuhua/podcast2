@@ -17,9 +17,8 @@ jobs:
       - name: Build with Maven
         run: |
           mvn -B package --file pom.xml
-          cp target/*.jar .
           cp target/app.jar platform/windows/
-          zip -f windows.zip platform/windows/ 
+          zip -r windows.zip platform/windows/ 
 
       # 获取 Maven 项目版本
       - name: Get Maven Project Version
