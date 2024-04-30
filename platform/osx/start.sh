@@ -3,7 +3,7 @@
 JAVA="$PWD/jre8/bin"
 DATA="$PWD/data"
 YTDLP="$PWD/yt-dlp"
-PATH="$JAVA:$PWD:$YTDLP:$PATH"
+$PATH="$JAVA:$PWD:$YTDLP:$PATH"
 directory="$PWD/lib"
 classpath="$PWD/classes"
 
