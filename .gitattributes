@@ -1,0 +1,3 @@
+# 设置多级目录下的文件视为 Java 文件
+platform/**/*.* linguist-language=Java
+
