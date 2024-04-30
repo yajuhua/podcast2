@@ -48,7 +48,7 @@ firewall-cmd --reload
 2. 解压得到 platform文件夹
 3. 赋执行权限
 ````shell
-chmod -R platform
+chmod -R a+x platform
 ````
 4. 启动
 ````shell
