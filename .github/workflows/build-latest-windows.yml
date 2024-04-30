@@ -17,13 +17,9 @@ jobs:
       - name: Build with Maven
         run: |
           mvn -B package --file pom.xml
-          cp target/app.jar platform/windows/
-          unzip platform/windows/app.jar
-          ls target
-          ls platform/windows
-          mv platform/windows/BOOT-INF/classes platform/windows/BOOT-INF/lib platform/windows/
-          rm -rf platform/windows/BOOT-INF/classes platform/windows/BOOT-INF/lib platform/windows/app.jar
-          zip -r windows.zip platform/windows/ 
+          unzip target/app.jar
+          cp -rf BOOT-INF/classes BOOT-INF/lib platform/windows/
+          zip -r podcast2-win-x64.zip platform/windows/ 
 
       # 获取 Maven 项目版本
       - name: Get Maven Project Version
@@ -39,4 +35,4 @@ jobs:
           prerelease: false
           title: "${{ env.RELEASE_VERSION }}"
           files: |
-            windows.zip
+            podcast2-win-x64.zip
