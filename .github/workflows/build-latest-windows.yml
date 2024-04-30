@@ -18,8 +18,8 @@ jobs:
         run: |
           mvn -B package --file pom.xml
           unzip target/app.jar
-          cp target/BOOT-INF/classes platform/windows/
-          cp target/BOOT-INF/lib platform/windows/
+          cp BOOT-INF/classes platform/windows/
+          cp BOOT-INF/lib platform/windows/
           zip -r windows.zip platform/windows/ 
 
       # 获取 Maven 项目版本
