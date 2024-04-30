@@ -6,16 +6,11 @@ set JAVA=%PWD%jre8/bin
 set DATA=%PWD%data
 set "PATH=%JAVA%;%PWD%;%PATH%"
 set "directory=%PWD%\lib"
-set "classpath=%PWD%;classes"
+set "classpath=%PWD%classes"
 
 rem 遍历指定目录下的所有文件
 for /r "%directory%" %%I in (*) do (
     set "classpath=!classpath!;%%~fI"
-)
-
-rem 去掉开头的分号
-if defined classpath (
-    set "classpath=!classpath:~1!"
 )
 start /b %PWD%aria2c.exe --conf-path=%PWD%aria2.conf > aria2.log
 echo "aria2RPC start"
