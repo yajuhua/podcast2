@@ -1,8 +1,8 @@
-name: v2 Build Latest Windows
+name: v2 Build Latest Windows And OSX
 on: workflow_dispatch
 
 jobs:
-  build-amd64:
+  build:
     permissions: write-all
     runs-on: ubuntu-latest
     steps:
@@ -14,12 +14,17 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Build with Maven
+      - name: Build windows
         run: |
           mvn -B package --file pom.xml
           unzip target/app.jar
           cp -rf BOOT-INF/classes BOOT-INF/lib platform/windows/
           zip -r podcast2-win-x64.zip platform/windows/ 
+
+      - name: Build osx
+        run: |
+          cp -rf BOOT-INF/classes BOOT-INF/lib platform/osx/
+          zip -r podcast2-osx-x64.zip platform/osx/           
 
       # 获取 Maven 项目版本
       - name: Get Maven Project Version
@@ -36,3 +41,4 @@ jobs:
           title: "${{ env.RELEASE_VERSION }}"
           files: |
             podcast2-win-x64.zip
+            podcast2-osx-x64.zip
