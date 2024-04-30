@@ -39,10 +39,22 @@ firewall-cmd --add-port=8088/tcp --permanent
 firewall-cmd --reload
 ````
 #### 使用Windows
-1. 下载[windows.zip](https://github.com/yajuhua/podcast2/releases/latest)
+1. 下载[podcast2-win-x64.zip](https://github.com/yajuhua/podcast2/releases/latest)
 2. 双击启动
 ![windows-start](./images/windows-start.jpg)
 
+#### 使用macOS
+1. 下载[podcast2-osx-x64.zip](https://github.com/yajuhua/podcast2/releases/latest)
+2. 解压得到 platform文件夹
+3. 赋执行权限
+````shell
+chmod -R platform
+````
+4. 启动
+````shell
+#进入platform/osx
+./start.sh
+````
 #### 进入面板
 
 > 默认访问地址 [http://你的IP地址:8088]()
