@@ -203,8 +203,11 @@ yajuhua/podcast2:latest
 ## 参考
 - [https://github.com/mxpv/podsync](https://github.com/mxpv/podsync)
 ## 免责声明
-
 **此项目仅供研究、学习和交流，请勿用于商业或非法用途， 开发者与协作者不对使用者负任何法律责任， 使用者自行承担因不当使用所产生的后果与责任。**
+
+## 鸣谢
+特别感谢 [JetBrains](https://www.jetbrains.com) 为开源项目提供免费的 [IntelliJ IDEA](https://www.jetbrains.com/idea)的授权  
+[<img src="./images/jetbrains.svg" width="200"/>](https://www.jetbrains.com)
 
 
 
