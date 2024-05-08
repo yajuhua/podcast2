@@ -47,6 +47,7 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @RestController
@@ -103,6 +104,40 @@ public class SubController {
     //TODO 搜索订阅
 
     /**
+     * 搜索订阅
+     * @param keywords
+     * @return
+     */
+    @ApiOperation("搜索订阅")
+    @GetMapping("/search")
+    public Result<List<SubVO>> search(String keywords){
+        List<Sub> list = subService.list();
+
+        //关键词过滤
+        list = list.stream().filter(new Predicate<Sub>() {
+            @Override
+            public boolean test(Sub sub) {
+                return sub.getTitle().contains(keywords) || sub.getDescription().contains(keywords)
+                        || sub.getPlugin().contains(keywords) || sub.getLink().contains(keywords)
+                        || sub.getUuid().contains(keywords);
+            }
+        }).sorted(new Comparator<Sub>() {
+            @Override
+            public int compare(Sub o1, Sub o2) {
+                return Long.compare(o2.getUpdateTime(), o1.getUpdateTime());
+            }
+        }).collect(Collectors.toList());
+
+        //封装
+        List<SubVO> subVOList = new ArrayList<>();
+        for (Sub channel : list) {
+            subVOList.add(new SubVO(TimeFormat.formatDate(channel.getUpdateTime()/1000)
+                    ,channel.getTitle(),channel.getUuid()));
+        }
+        return Result.success(subVOList);
+    }
+
+    /**
      * 根据uuid获取订阅xml
      * @param uuid
      * @return
@@ -112,7 +147,7 @@ public class SubController {
     public String xml(@PathVariable String uuid, HttpServletRequest request){
         Sub sub = subService.selectByUuid(uuid);
         if (sub == null){
-            throw new SubNotFoundException(MessageConstant.SUB_NOT_FOUND_FAILED);
+            throw new SubNotFoundException(MessageConstant.SUB_NOT_FOUND_FAILED + ":" + uuid);
         }
         User user = userMapper.list().get(0);
         String enclosureDomain = user.getHostname()==null || user.getHostname().contains(" ") || user.getHostname().length() == 0?null:user.getHostname();
