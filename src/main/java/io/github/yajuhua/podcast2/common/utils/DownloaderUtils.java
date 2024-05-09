@@ -152,6 +152,7 @@ public class DownloaderUtils {
         map.put(17,"第二部分下载完成");
         map.put(18,"第一部分下载错误");
         map.put(19,"第二部分下载错误");
+        map.put(20,"移除下载");
         return map.get(code);
     }
 
@@ -163,7 +164,7 @@ public class DownloaderUtils {
         List<Integer> endStatusCode = new ArrayList<>();
         Collections.addAll(endStatusCode, Context.COMPLETED,Context.DOWNLOAD_ERR,Context.MERGE_ERR,
                 Context.TO_MP4_ERR,Context.DOWNLOAD_PATH1_ERR,Context.DOWNLOAD_PATH2_ERR,Context.UNKNOWN,
-                Context.TO_M4A_ERR);
+                Context.TO_M4A_ERR,Context.REMOVE);
         return endStatusCode;
     }
 
