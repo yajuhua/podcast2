@@ -1,8 +1,8 @@
 package io.github.yajuhua.podcast2.task;
 
+import io.github.yajuhua.download.manager.DownloadManager;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
-import io.github.yajuhua.podcast2.common.utils.PluginLoader;
 import io.github.yajuhua.podcast2.controller.PluginController;
 import io.github.yajuhua.podcast2.mapper.*;
 import io.github.yajuhua.podcast2.pojo.entity.Downloader;
@@ -31,6 +31,7 @@ public class Task {
     public static Set<DownloadProgressVO> downloadProgressVOSet = new CopyOnWriteArraySet<>();
     public static Boolean addSubStatus = false;//避免添加订阅时更新yt-dlp
     public static Boolean updateStatus = false;//避免更新订阅时更新插件之类的
+    public static List<DownloadManager> downloadManagerList = new ArrayList<>();//存放下载管理
     @Autowired
     private UserMapper userMapper;
     @Autowired
@@ -78,6 +79,9 @@ public class Task {
             Task.updateStatus = false;
             if (Task.downloadProgressVOSet != null){
                 Task.downloadProgressVOSet.clear();
+            }
+            if(Task.downloadManagerList != null){
+                Task.downloadManagerList.clear();
             }
         }
     }

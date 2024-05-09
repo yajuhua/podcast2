@@ -168,7 +168,16 @@ public class Update implements Runnable {
                 items.add(item);
             }
 
+            //添加后又立即删除
+            if (subMapper.selectByUuid(sub.getUuid()) == null){
+                //已经被删除了
+                log.info("已被删除:{}",sub.getTitle());
+                return;
+            }
+
+            //构建下载
             DownloadManager downloadManager = new DownloadManager(1,1);
+            Task.downloadManagerList.add(downloadManager);
             //过滤器
             List<String> titlekeyWords = Arrays.asList(sub.getTitleKeywords());
             List<String> desckeyWords = Arrays.asList(sub.getDescKeywords());

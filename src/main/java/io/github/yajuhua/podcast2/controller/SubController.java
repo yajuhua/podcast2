@@ -2,6 +2,7 @@ package io.github.yajuhua.podcast2.controller;
 
 import com.google.gson.Gson;
 import io.github.yajuhua.download.commons.Context;
+import io.github.yajuhua.download.manager.DownloadManager;
 import io.github.yajuhua.podcast2.common.constant.MessageConstant;
 import io.github.yajuhua.podcast2.common.constant.ReflectionMethodName;
 import io.github.yajuhua.podcast2.common.constant.StatusCode;
@@ -23,6 +24,7 @@ import io.github.yajuhua.podcast2.service.ExtendService;
 import io.github.yajuhua.podcast2.service.ItemsService;
 import io.github.yajuhua.podcast2.service.SubService;
 import io.github.yajuhua.podcast2.task.Task;
+import io.github.yajuhua.podcast2.websocket.DownloadWebSocketServer;
 import io.github.yajuhua.podcast2API.Channel;
 import io.github.yajuhua.podcast2API.Item;
 import io.github.yajuhua.podcast2API.Params;
@@ -178,18 +180,22 @@ public class SubController {
     public Result delete(@RequestParam List<String> uuids) throws Exception {
         log.info("delete uuids:{}",uuids);
         for (String uuid : uuids) {
+            //结束下载如果有的话
+            for (DownloadManager dm : Task.downloadManagerList) {
+                dm.killByChannelUuid(uuid);
+                Task.getDownloadProgressVOSet().clear();
+            }
+
+
             //删除相关资源
             List<Items> itemsList = itemsService.selectByChannelUuid(uuid);
             for (Items items : itemsList) {
-                //下载成功的删除文件和数据库记录，未成功则仅删除数据库记录
-                if (items.getStatus() == Context.COMPLETED){
-                    //删除文件
-                    File[] files = new File(dataPathProperties.getResourcesPath()).listFiles();
-                    for (File file : files) {
-                        if (file.getName().contains(items.getUuid())){
-                            log.info("删除文件:{}",file.getName());
-                            FileUtils.forceDelete(file);
-                        }
+                //删除文件
+                File[] files = new File(dataPathProperties.getResourcesPath()).listFiles();
+                for (File file : files) {
+                    if (file.getName().contains(items.getUuid())){
+                        log.info("删除文件:{}",file.getName());
+                        FileUtils.forceDelete(file);
                     }
                 }
             }
