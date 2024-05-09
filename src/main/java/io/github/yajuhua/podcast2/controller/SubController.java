@@ -171,6 +171,67 @@ public class SubController {
     }
 
     /**
+     * 组订阅
+     * @param uuids group
+     * @return
+     */
+    @ApiOperation("获取组xml")
+    @GetMapping(value = "/xml", produces = {MediaType.APPLICATION_XML_VALUE})
+    public String groupXml(@RequestParam("uuids") List<String> uuids, @RequestParam("group") String group, HttpServletRequest request){
+
+        String requestURL = request.getRequestURL() + "?" + request.getQueryString();
+
+        if (uuids != null && !uuids.isEmpty() && group != null){
+
+            List<Sub> subList = subMapper.list();
+            List<String> subUuid = new ArrayList<>();
+
+            for (Sub sub : subList) {
+                subUuid.add(sub.getUuid());
+            }
+
+            //只要有一个单独订阅找不到就抛异常
+            boolean isContainAll = subUuid.containsAll(uuids);
+            if (!isContainAll){
+                throw new SubNotFoundException(MessageConstant.SUB_NOT_FOUND_FAILED + ":" + uuids);
+            }
+
+            //获取附件域名
+            User user = userMapper.list().get(0);
+            String enclosureDomain = user.getHostname()==null || user.getHostname().contains(" ") || user.getHostname().length() == 0?null:user.getHostname();
+            enclosureDomain = enclosureDomain==null? request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort():enclosureDomain;
+
+            //组频道信息
+            Channel groupChannel = new Channel();
+            groupChannel.setTitle(group);
+            groupChannel.setDescription(group);
+            groupChannel.setLink(requestURL);
+
+            //聚合节目
+            List<Items> groupItems = new ArrayList<>();
+            for (String uuid : uuids) {
+                groupItems.addAll(itemsMapper.selectByChannelUUid(uuid));
+            }
+
+            //构建附件URL
+            List<Item> itemList = new ArrayList<>();
+            for (Items item : groupItems) {
+                if (item.getStatus() == Context.COMPLETED){
+                    Item item1 = new Item();
+                    BeanUtils.copyProperties(item,item1);
+                    String url = enclosureDomain + "/resources/" + item.getFileName();
+                    item1.setEnclosure(url);
+                    itemList.add(item1);
+                }
+            }
+            return Xml.build(groupChannel,itemList);
+
+        }else {
+            throw new SubNotFoundException( "请求参数不全:" + requestURL);
+        }
+    }
+
+    /**
      * 删除订阅
      * @param uuids
      * @return
