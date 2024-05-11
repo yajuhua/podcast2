@@ -73,7 +73,7 @@ public class UserController {
     @ApiOperation("用户登录")
     @PostMapping("login")
     public Result<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO){
-        log.info("用户登录:{}",userLoginDTO);
+        log.debug("用户登录:{}",userLoginDTO);
         String username = userLoginDTO.getUsername();
         String password = userLoginDTO.getPassword();
         if(username == null || username.length() > 30 || password == null || password.length() > 30){
