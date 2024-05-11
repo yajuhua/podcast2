@@ -259,8 +259,7 @@ public class Update implements Runnable {
                 downloadManager.add(request);
             }
             items = filterItems;
-            Thread downloadManagerThread = new Thread(downloadManager);
-            downloadManagerThread.start();
+            downloadManager.startDownload();
             log.info("{}:{}下载",sub.getTitle(),items.size() > 0 ? "开始" : "无");
             Set<DownloadProgress> downloadProgresses = downloadManager.allDownloadProgress();
 
@@ -279,6 +278,7 @@ public class Update implements Runnable {
                 itemsMapper.insert(items1);
             }
 
+
             int closeSize = 0;
             while (items.size() != closeSize) {
                 closeSize = downloadProgresses.stream().filter(new Predicate<DownloadProgress>() {
@@ -289,8 +289,18 @@ public class Update implements Runnable {
                     }
                 }).collect(Collectors.toList()).size();
 
+
                 //1.转换成VO
                 for (DownloadProgress progress : downloadProgresses) {
+                    List<Item> collect = items.stream().filter(new Predicate<Item>() {
+                        @Override
+                        public boolean test(Item item) {
+                            return item.getRequest().getUuid().equals(progress.getUuid());
+                        }
+                    }).collect(Collectors.toList());
+                    String itemName = collect.isEmpty() ? null : collect.get(0).getTitle();
+
+                    //构建进度vo推送到前端
                     DownloadProgressVO build = DownloadProgressVO.builder()
                             .channelUuid(progress.getChannelUuid())
                             .uuid(progress.getUuid())
@@ -304,44 +314,51 @@ public class Update implements Runnable {
                             .finalFormat(progress.getFinalFormat())
                             .downloader(items.get(0).getRequest().getDownloader().toString())
                             .channelName(sub.getTitle())
+                            .itemName(itemName.substring(0,30))
                             .build();
                     Task.getDownloadProgressVOSet().remove(build);
                     Task.getDownloadProgressVOSet().add(build);
                     if (DownloaderUtils.endStatusCode().contains(progress.getStatus())){
+
                         Items items1 = itemsMapper.selectByUuid(progress.getUuid());
-                        items1.setFileName(progress.getUuid() + "." + progress.getFinalFormat());
-                        items1.setStatus(progress.getStatus());
-                        items1.setDownloadSpeed((double) progress.getDownloadTimeLeft());
-                        items1.setDownloadTimeLeft((double) progress.getDownloadTimeLeft());
-                        items1.setDownloadProgress(progress.getDownloadProgress());
-                        items1.setFormat(progress.getFinalFormat());
-                        items1.setType(progress.getType());
-                        items1.setTotalSize(progress.getTotalSize());
-                        items1.setOperation(progress.getOperation());
-                        itemsMapper.update(items1);
+                        if (items1 != null) {
+                            items1.setFileName(progress.getUuid() + "." + progress.getFinalFormat());
+                            items1.setStatus(progress.getStatus());
+                            items1.setDownloadSpeed((double) progress.getDownloadTimeLeft());
+                            items1.setDownloadTimeLeft((double) progress.getDownloadTimeLeft());
+                            items1.setDownloadProgress(progress.getDownloadProgress());
+                            items1.setFormat(progress.getFinalFormat());
+                            items1.setType(progress.getType());
+                            items1.setTotalSize(progress.getTotalSize());
+                            items1.setOperation(progress.getOperation());
+                            itemsMapper.update(items1);
+                        }
+
+                        //remove操作
+                        if (progress.getStatus().equals(Context.REMOVE)) {
+                            itemsMapper.deleteByUuid(progress.getUuid());
+                        }
                     }
                 }
             }
             log.info("{}:下载完成",sub.getTitle());
-
-            //更新sub表
             sub.setUpdateTime(System.currentTimeMillis());
-            sub.setStatus(StatusCode.NO_ACTION);
-            sub.setIsFirst(StatusCode.NO);
 
-            log.info("{}:更新完成",sub.getTitle());
         } catch (InvocationTargetException e){
             if (e.getTargetException() != null){
                 log.error("{}:更新异常:{}",sub.getTitle(),e.getTargetException().getMessage());
             }
         } catch (Exception e) {
-            log.error("异常信息:{}",e.getMessage());
+            log.error("异常信息:{}",e.getStackTrace().toString());
         }finally {
+            //更新sub表
             sub.setStatus(StatusCode.NO_ACTION);
+            sub.setIsFirst(StatusCode.NO);
             sub.setCheckTime(System.currentTimeMillis());
             subMapper.update(sub);
             PluginLoader.closeAll();
             System.gc();
+            log.info("{}:更新完成",sub.getTitle());
         }
     }
 }
