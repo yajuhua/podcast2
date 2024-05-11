@@ -253,6 +253,15 @@ public class Update implements Runnable {
                 if (isNm3u8DlRe && "arm".equals(osArch)){
                     request.setDownloader(DownloadManager.Downloader.YtDlp);
                 }
+                if (isNm3u8DlRe){
+                    Map args = request.getArgs();
+                    if (args == null){
+                        args = new HashMap();
+                    }
+                    //以在非ansi环境显示进度信息 & 用于移除ANSI颜色 https://github.com/RikaCelery/N_m3u8DL-RE
+                    args.put("--force-ansi-console","");
+                    request.setArgs(args);
+                }
 
                 item.setRequest(request);
                 filterItems.add(item);
@@ -299,7 +308,9 @@ public class Update implements Runnable {
                         }
                     }).collect(Collectors.toList());
                     String itemName = collect.isEmpty() ? null : collect.get(0).getTitle();
-
+                    if (itemName.length() > 30){
+                        itemName = itemName.substring(0,30) + "...";
+                    }
                     //构建进度vo推送到前端
                     DownloadProgressVO build = DownloadProgressVO.builder()
                             .channelUuid(progress.getChannelUuid())
@@ -314,7 +325,7 @@ public class Update implements Runnable {
                             .finalFormat(progress.getFinalFormat())
                             .downloader(items.get(0).getRequest().getDownloader().toString())
                             .channelName(sub.getTitle())
-                            .itemName(itemName.substring(0,30))
+                            .itemName(itemName)
                             .build();
                     Task.getDownloadProgressVOSet().remove(build);
                     Task.getDownloadProgressVOSet().add(build);
@@ -349,7 +360,7 @@ public class Update implements Runnable {
                 log.error("{}:更新异常:{}",sub.getTitle(),e.getTargetException().getMessage());
             }
         } catch (Exception e) {
-            log.error("异常信息:{}",e.getStackTrace().toString());
+            e.printStackTrace();
         }finally {
             //更新sub表
             sub.setStatus(StatusCode.NO_ACTION);
