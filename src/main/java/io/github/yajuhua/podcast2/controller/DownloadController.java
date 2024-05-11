@@ -24,20 +24,18 @@ import io.github.yajuhua.podcast2.pojo.vo.DownloadCompletedVO;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadDetailVO;
 import io.github.yajuhua.podcast2.pojo.vo.DownloaderInfoVO;
 import io.github.yajuhua.podcast2.task.ReDownload;
-import io.github.yajuhua.podcast2API.Item;
+import io.github.yajuhua.podcast2.task.Task;
 import io.github.yajuhua.podcast2API.utils.TimeFormat;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
-import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -227,7 +225,7 @@ public class DownloadController {
         log.info("删除下载节目:{}",uuids);
         for (String uuid : uuids) {
             Items items = itemsMapper.selectByUuid(uuid);
-            if (DownloaderUtils.endStatusCode().contains(items.getStatus())){
+            if (items != null && DownloaderUtils.endStatusCode().contains(items.getStatus())){
                 //删除文件，如果有的话
                 List<File> deleteFiles = Arrays.stream(new File(dataPathProperties.getResourcesPath()).listFiles())
                         .filter(file -> file.getName().contains(items.getUuid())).collect(Collectors.toList());
@@ -240,6 +238,26 @@ public class DownloadController {
                 }
                 //删除数据库记录
                 itemsMapper.deleteByUuid(uuid);
+            }
+        }
+        return Result.success();
+    }
+
+    /**
+     * 移除正在下载的
+     * @param uuids
+     * @return
+     */
+    @ApiOperation("移除正在下载的")
+    @DeleteMapping("/downloading")
+    public Result removeDownload(@RequestParam List<String> uuids){
+        for (String uuid : uuids) {
+            try {
+                for (DownloadManager dm : Task.downloadManagerList) {
+                    dm.killByUuid(uuid);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(uuid+ "移除下载失败:" + e.getMessage());
             }
         }
         return Result.success();
