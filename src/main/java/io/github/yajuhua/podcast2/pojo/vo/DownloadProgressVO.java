@@ -24,6 +24,7 @@ public class DownloadProgressVO {
     private String finalFormat;
     private String downloader;
     private String channelName;
+    private String itemName;//节目名称
 
     @Override
     public boolean equals(Object o) {
