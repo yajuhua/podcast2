@@ -19,12 +19,12 @@ import io.github.yajuhua.podcast2.pojo.dto.GetExtendListDTO;
 import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.EditSubVO;
 import io.github.yajuhua.podcast2.pojo.vo.ExtendListVO;
+import io.github.yajuhua.podcast2.pojo.vo.SubDetailVO;
 import io.github.yajuhua.podcast2.pojo.vo.SubVO;
 import io.github.yajuhua.podcast2.service.ExtendService;
 import io.github.yajuhua.podcast2.service.ItemsService;
 import io.github.yajuhua.podcast2.service.SubService;
 import io.github.yajuhua.podcast2.task.Task;
-import io.github.yajuhua.podcast2.websocket.DownloadWebSocketServer;
 import io.github.yajuhua.podcast2API.Channel;
 import io.github.yajuhua.podcast2API.Item;
 import io.github.yajuhua.podcast2API.Params;
@@ -48,6 +48,10 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -529,5 +533,28 @@ public class SubController {
 
     }
 
+    /**
+     * 获取订阅详细信息
+     * @param uuid
+     * @return
+     */
+    @ApiOperation("获取订阅详细信息")
+    @GetMapping("/detail/{uuid}")
+    public Result<SubDetailVO> subDetail(@PathVariable String uuid){
+        Sub sub = subMapper.selectByUuid(uuid);
+        SubDetailVO subDetailVO = new SubDetailVO();
+        if (sub != null){
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String updateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(sub.getUpdateTime()), ZoneId.systemDefault()).format(formatter);
+            String checkTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(sub.getCheckTime()), ZoneId.systemDefault()).format(formatter);
+            String createTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(sub.getCreateTime()), ZoneId.systemDefault()).format(formatter);
+            BeanUtils.copyProperties(sub,subDetailVO);
+            subDetailVO.setUpdateTime(updateTime);
+            subDetailVO.setCheckTime(checkTime);
+            subDetailVO.setCreateTime(createTime);
 
+            return Result.success(subDetailVO);
+        }
+        return Result.error("找不到该订阅");
+    }
 }
