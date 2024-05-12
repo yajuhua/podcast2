@@ -1,5 +1,6 @@
 package io.github.yajuhua.podcast2.controller;
 
+import com.google.gson.Gson;
 import io.github.yajuhua.podcast2.common.constant.JwtClaimsConstant;
 import io.github.yajuhua.podcast2.common.constant.MessageConstant;
 import io.github.yajuhua.podcast2.common.constant.StatusCode;
@@ -15,11 +16,7 @@ import io.github.yajuhua.podcast2.mapper.ExtendMapper;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
 import io.github.yajuhua.podcast2.pojo.dto.UserLoginDTO;
-import io.github.yajuhua.podcast2.pojo.entity.DataExport;
-import io.github.yajuhua.podcast2.pojo.entity.Extend;
-import io.github.yajuhua.podcast2.pojo.entity.Sub;
-import io.github.yajuhua.podcast2.pojo.entity.User;
-import io.github.yajuhua.podcast2.pojo.vo.CertificateVO;
+import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.UserLoginVO;
 import io.github.yajuhua.podcast2.service.UserService;
 import io.swagger.annotations.Api;
@@ -28,23 +25,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.server.Ssl;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.Yaml;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @RestController
@@ -65,6 +55,8 @@ public class UserController {
     private ExtendMapper extendMapper;
     @Autowired
     private DataPathProperties dataPathProperties;
+    @Autowired
+    private Gson gson;
 
     /**
      * 用户登录
@@ -84,7 +76,11 @@ public class UserController {
 
         //生成JWT令牌
         Map<String, Object> claims = new HashMap<>();
-        claims.put(JwtClaimsConstant.UUID,user.getUuid());
+        //暂时无法扩展表,user.uuid字段当前是存入json字符串
+        String userMoreInfoJson = user.getUuid();
+        UserMoreInfo moreInfo = gson.fromJson(userMoreInfoJson, UserMoreInfo.class);
+
+        claims.put(JwtClaimsConstant.UUID,moreInfo.getUuid());
         String token = JwtUtil.createJWT(jwtProperties.getUserSecretKey(), jwtProperties.getUserTtl(), claims);
         UserLoginVO userLoginVO = UserLoginVO.builder()
                 .username(user.getUsername())
@@ -336,5 +332,52 @@ public class UserController {
     @GetMapping("/sslStatus")
     public Result isSsl(){
         return Result.success(userMapper.list().get(0).getIsSsl());
+    }
+
+    /**
+     * 更新登录页面访问路径
+     * @param path
+     * @return
+     */
+    @ApiOperation("更新登录页面访问路径")
+    @PostMapping("/path")
+    public Result updatePath(@RequestParam String path){
+        //获取user信息
+        User user = userMapper.list().get(0);
+        String userMoreInfoJson = user.getUuid();
+        UserMoreInfo moreInfo = gson.fromJson(userMoreInfoJson, UserMoreInfo.class);
+        moreInfo.setPath(path);
+
+        //更新user信息
+        userMoreInfoJson = gson.toJson(moreInfo);
+        user.setUuid(userMoreInfoJson);
+        userMapper.update(user);
+
+        return Result.success();
+    }
+
+
+    /**
+     * 移除登录页面访问路径
+     * @return
+     */
+    @ApiOperation("移除登录页面访问路径")
+    @DeleteMapping("/path")
+    public Result removePath(){
+        updatePath(null);
+        return Result.success();
+    }
+
+    /**
+     * 获取面板访问路径
+     * @return
+     */
+    @ApiOperation("获取面板访问路径")
+    @GetMapping("/path")
+    public Result getPath(){
+        User user = userMapper.list().get(0);
+        String userMoreInfoJson = user.getUuid();
+        UserMoreInfo moreInfo = gson.fromJson(userMoreInfoJson, UserMoreInfo.class);
+        return Result.success(moreInfo.getPath());
     }
 }
