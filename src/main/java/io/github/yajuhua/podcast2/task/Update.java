@@ -253,7 +253,7 @@ public class Update implements Runnable {
                 if (isNm3u8DlRe && "arm".equals(osArch)){
                     request.setDownloader(DownloadManager.Downloader.YtDlp);
                 }
-                if (isNm3u8DlRe){
+                if (isNm3u8DlRe && !"arm".equals(osArch)){
                     Map args = request.getArgs();
                     if (args == null){
                         args = new HashMap();
