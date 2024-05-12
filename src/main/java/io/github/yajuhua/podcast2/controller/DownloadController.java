@@ -84,8 +84,6 @@ public class DownloadController {
      * 获取下载完成的信息
      * @return
      */
-    @ApiOperation("获取完成下载的信息")
-    @GetMapping("/completed")
     public Result<List<DownloadCompletedVO>> downloadCompleted(){
         //1.查询items表
         List<Items> itemsList = itemsMapper.list();
@@ -124,7 +122,40 @@ public class DownloadController {
             downloadCompletedVOList.add(build);
         }
 
+        //倒序
+        Collections.reverse(downloadCompletedVOList);
+
         return Result.success(downloadCompletedVOList);
+    }
+
+    /**
+     * 获取下载完成的信息
+     * @return
+     */
+    @ApiOperation("获取完成下载的信息")
+    @GetMapping("/completed")
+    public Result<List<DownloadCompletedVO>> downloadDone(){
+        return Result.success(downloadCompleted().getData().stream().filter(new Predicate<DownloadCompletedVO>() {
+            @Override
+            public boolean test(DownloadCompletedVO downloadCompletedVO) {
+                return downloadCompletedVO.getStatus().equals(Context.COMPLETED);
+            }
+        }).collect(Collectors.toList()));
+    }
+
+    /**
+     * 获取下载错误的信息
+     * @return
+     */
+    @ApiOperation("获取下载错误的信息")
+    @GetMapping("/error")
+    public Result<List<DownloadCompletedVO>> downloadError(){
+     return Result.success(downloadCompleted().getData().stream().filter(new Predicate<DownloadCompletedVO>() {
+         @Override
+         public boolean test(DownloadCompletedVO downloadCompletedVO) {
+             return !downloadCompletedVO.getStatus().equals(Context.COMPLETED);
+         }
+     }).collect(Collectors.toList()));
     }
 
     /**
