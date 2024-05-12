@@ -48,6 +48,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -205,11 +206,35 @@ public class SubController {
             String enclosureDomain = user.getHostname()==null || user.getHostname().contains(" ") || user.getHostname().length() == 0?null:user.getHostname();
             enclosureDomain = enclosureDomain==null? request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort():enclosureDomain;
 
+            //生成一个封面https://img.shields.io/badge/-组名-颜色
+            // 将字节数组中的每个字节转换为十六进制表示
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : group.getBytes(StandardCharsets.UTF_8)) {
+                String hex = Integer.toHexString(b & 0xFF);
+                if (hex.length() == 1) {
+                    // 如果转换后的十六进制表示只有一位，则在前面补0
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            String color = "";
+            if (hexString.length() < 6){
+                hexString.reverse();
+            }
+            while (hexString.length() < 6){
+                hexString.append(0);
+            }
+            if (hexString.length() > 6){
+                color = hexString.substring(0,4) + hexString.substring(hexString.length()-2,hexString.length());
+            }
+
+            String imageUrl = "https://img.shields.io/badge/-" + group + "-" + color + ".png";
             //组频道信息
             Channel groupChannel = new Channel();
             groupChannel.setTitle(group);
             groupChannel.setDescription(group);
             groupChannel.setLink(requestURL);
+            groupChannel.setImage(imageUrl);
 
             //聚合节目
             List<Items> groupItems = new ArrayList<>();
