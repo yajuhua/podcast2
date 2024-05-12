@@ -1,6 +1,7 @@
 package io.github.yajuhua.podcast2.common.start;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import io.github.yajuhua.podcast2.common.constant.Default;
 import io.github.yajuhua.podcast2.common.constant.StatusCode;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
@@ -10,10 +11,7 @@ import io.github.yajuhua.podcast2.controller.SystemController;
 import io.github.yajuhua.podcast2.mapper.DownloaderMapper;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
-import io.github.yajuhua.podcast2.pojo.entity.Config;
-import io.github.yajuhua.podcast2.pojo.entity.Downloader;
-import io.github.yajuhua.podcast2.pojo.entity.Sub;
-import io.github.yajuhua.podcast2.pojo.entity.User;
+import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
 import io.github.yajuhua.podcast2.task.Task;
 import io.github.yajuhua.podcast2.websocket.DownloadWebSocketServer;
@@ -25,7 +23,6 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -158,23 +155,31 @@ public class StartupRunner implements ApplicationRunner{
      */
     public void initConfig(){
         try {
-            File config = new File(dataPathProperties.getConfigPath());
-            Config config2 = new Config();
-            if (config.exists()){
-                String configJson = FileUtils.readFileToString(config);
+            File configFile = new File(dataPathProperties.getConfigPath());
+            if (configFile.exists()){
+                User user = userMapper.list().get(0);
+                String configJson = FileUtils.readFileToString(configFile);
                 Config config1 = gson.fromJson(configJson, Config.class);
                 if (config1 != null && config1.isInitUserNameAndPassword()){
                     String username = config1.isInitUserNameAndPassword()? Default.USERNAME:null;
                     String password = config1.isInitUserNameAndPassword()? Default.PASSWORD:null;
-                    User user = userMapper.list().get(0);
                     user.setUsername(username);
                     user.setPassword(password);
-                    userMapper.update(user);
                     log.info("修改为默认用户名和密码");
                 }
+                if (config1 != null && config1.isInitPath()){
+                    UserMoreInfo moreInfo = UserMoreInfo.builder()
+                            .path(null)
+                            .uuid(UUID.randomUUID().toString())
+                            .build();
+                    user.setUuid(gson.toJson(moreInfo));
+                    log.info("清空path");
+                }
+
+                userMapper.update(user);
             }
             //初始化
-            FileUtils.write(config,gson.toJson(config2));
+            FileUtils.write(configFile,gson.toJson(new Config()));
         } catch (Exception e) {
             log.error("初始化配置错误:{}",e.getMessage());
         }
@@ -184,14 +189,20 @@ public class StartupRunner implements ApplicationRunner{
      * 首次配置user表信息
      */
     public void firstConfig(){
+        UserMoreInfo moreInfo = UserMoreInfo.builder()
+                .path(null)
+                .uuid(UUID.randomUUID().toString())
+                .build();
+        String userMoreInfoJson = gson.toJson(moreInfo);
+
         List<User> list = userMapper.list();
-        if (list.size() == 0){
+        if (list.isEmpty()){
             userMapper.clear();
             User user = User.builder()
                     .username(Default.USERNAME)
                     .password(Default.PASSWORD)
                     .createTime( System.currentTimeMillis())
-                    .uuid(UUID.randomUUID().toString())
+                    .uuid(userMoreInfoJson)
                     .firstVersion(infoProperties.getVersion())
                     .hostname(null)
                     .autoUpdatePlugin(true)
@@ -199,6 +210,18 @@ public class StartupRunner implements ApplicationRunner{
                     .hasSsl(false)
                     .build();
             userMapper.insert(user);
+        }else {
+            try {
+                gson.fromJson(list.get(0).getUuid(), UserMoreInfo.class);
+            } catch (Exception e) {
+                log.info("init userMoreInfo...");
+                String uuid = userMapper.list().get(0).getUuid();
+                moreInfo.setUuid(uuid);
+                User user = User.builder()
+                        .uuid(gson.toJson(moreInfo))
+                        .build();
+                userMapper.update(user);
+            }
         }
 
     }

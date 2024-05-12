@@ -11,4 +11,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Config {
     private boolean initUserNameAndPassword;
+    private boolean initPath;
 }
