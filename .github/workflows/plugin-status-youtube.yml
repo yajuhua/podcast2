@@ -15,7 +15,9 @@ jobs:
 
       - name: install yt-dlp
         run: |
-          sh sh/yt-dlp-update.sh
+          LASTEST_VERSION=$(curl --silent "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+          curl -o /usr/sbin/yt-dlp "https://github.moeyy.xyz/https://github.com/yt-dlp/yt-dlp/releases/download/${LASTEST_VERSION}/yt-dlp_linux"
+          chmod +x /usr/sbin/yt-dlp
           yt-dlp --version          
 
       - name: youtube
