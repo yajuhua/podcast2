@@ -13,12 +13,12 @@ jobs:
           java-version: '8'
           distribution: 'temurin'
 
-      - name: install yt-dlp
+      - name: Install yt-dlp
         run: |
-          LASTEST_VERSION=$(curl --silent "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-          curl -o /usr/sbin/yt-dlp "https://github.moeyy.xyz/https://github.com/yt-dlp/yt-dlp/releases/download/${LASTEST_VERSION}/yt-dlp_linux"
-          chmod +x /usr/sbin/yt-dlp
-          yt-dlp --version          
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip3 install yt-dlp
+          yt-dlp --version
 
       - name: youtube
         run: java -jar test/test-plugin-0.1-jar-with-dependencies.jar https://www.youtube.com/@laogao
