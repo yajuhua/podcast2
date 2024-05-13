@@ -1,4 +1,4 @@
-name: ntdm
+name: youtube
 on: workflow_dispatch
 
 jobs:
