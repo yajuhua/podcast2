@@ -1,0 +1,17 @@
+name: ntdm
+on: workflow_dispatch
+
+jobs:
+  test:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 8
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+
+      - name: bilibili
+        run: java -jar test/test-plugin-0.1-jar-with-dependencies.jar https://www.youtube.com/@laogao
