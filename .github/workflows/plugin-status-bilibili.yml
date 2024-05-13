@@ -14,4 +14,4 @@ jobs:
           distribution: 'temurin'
 
       - name: bilibili
-        run: java -jar test-plugin.jar https://space.bilibili.com/224267770
+        run: java -jar test/test-plugin-0.1-jar-with-dependencies.jar https://space.bilibili.com/224267770
