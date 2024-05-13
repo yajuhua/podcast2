@@ -13,10 +13,12 @@ jobs:
           java-version: '8'
           distribution: 'temurin'
 
-      - name: install yt-dlp
+      - name: Install yt-dlp
         run: |
-          sh sh/yt-dlp-update.sh
-          yt-dlp --version
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip3 install yt-dlp
+          yt-dlp --version 
 
       - name: bilibili
         run: java -jar test/test-plugin-0.1-jar-with-dependencies.jar https://space.bilibili.com/224267770

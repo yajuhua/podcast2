@@ -13,5 +13,10 @@ jobs:
           java-version: '8'
           distribution: 'temurin'
 
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg          
+
       - name: bilibili
         run: java -jar test/test-plugin-0.1-jar-with-dependencies.jar https://www.ntdm.tv/video/5775.html

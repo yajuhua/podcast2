@@ -18,7 +18,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y python3-pip
           pip3 install yt-dlp
-          yt-dlp --version
+          yt-dlp --version         
 
       - name: youtube
         run: java -jar test/test-plugin-0.1-jar-with-dependencies.jar https://www.youtube.com/@laogao
