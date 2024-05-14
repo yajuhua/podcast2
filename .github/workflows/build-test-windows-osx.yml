@@ -1,0 +1,47 @@
+name: v2 Build Latest Windows And OSX
+on: workflow_dispatch
+
+jobs:
+  build:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 8
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build windows
+        run: |
+          mvn -B package --file pom.xml
+          unzip target/app.jar
+          TAG=$(curl --silent "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+          curl -o yt-dlp.exe "https://github.com/yt-dlp/yt-dlp/releases/download/${TAG}/yt-dlp.exe"
+          cp -rf BOOT-INF/classes BOOT-INF/lib platform/windows/
+          zip -r podcast2-win-x64.zip platform/windows/ 
+
+      - name: Build osx
+        run: |
+          curl -o yt-dlp "https://github.com/yt-dlp/yt-dlp/releases/download/${TAG}/yt-dlp_macos_legacy"
+          cp -rf BOOT-INF/classes BOOT-INF/lib platform/osx/
+          zip -r podcast2-osx-x64.zip platform/osx/           
+
+      # 获取 Maven 项目版本
+      - name: Get Maven Project Version
+        id: get_version
+        run: |
+          echo "RELEASE_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
+
+      # 上传文件并发布 Release
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "${{ env.RELEASE_VERSION }}-beta"
+          prerelease: true
+          title: "${{ env.RELEASE_VERSION }}"
+          files: |
+            podcast2-win-x64.zip
+            podcast2-osx-x64.zip
