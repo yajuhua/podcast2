@@ -100,31 +100,4 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
         registry.addResourceHandler("/resources/**").addResourceLocations("file:" + dataPathProperties.getResourcesPath());
 
     }
-
-    /**
-     * 扩展spring MVC框架的消息转换器
-     * @param converters
-     */
-    protected void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
-        log.info("扩展消息转换器...");
-        //创建一个消息转换器
-        MappingJackson2HttpMessageConverter converter1 = new MappingJackson2HttpMessageConverter();
-        //需要为消息转换器设置一个对象转换器，对象转换器可以将Java对象序列化为json数据
-        converter1.setObjectMapper(new JacksonObjectMapper());
-        //将自己的消息转换器加入容器
-        converters.add(0,converter1);
-
-        //解决中文乱码问题
-        for (HttpMessageConverter<?> converter : converters) {
-            // 解决 Controller 返回普通文本中文乱码问题
-            if (converter instanceof StringHttpMessageConverter) {
-                ((StringHttpMessageConverter) converter).setDefaultCharset(StandardCharsets.UTF_8);
-            }
-
-            // 解决 Controller 返回json对象中文乱码问题
-            if (converter instanceof MappingJackson2HttpMessageConverter) {
-                ((MappingJackson2HttpMessageConverter) converter).setDefaultCharset(StandardCharsets.UTF_8);
-            }
-        }
-    }
 }
