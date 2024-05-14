@@ -1,14 +1,15 @@
 package io.github.yajuhua.podcast2.task;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import io.github.yajuhua.download.manager.DownloadManager;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
+import io.github.yajuhua.podcast2.common.utils.Http;
 import io.github.yajuhua.podcast2.controller.PluginController;
+import io.github.yajuhua.podcast2.downloader.ytdlp.YtDlpUpdate;
 import io.github.yajuhua.podcast2.mapper.*;
-import io.github.yajuhua.podcast2.pojo.entity.Downloader;
-import io.github.yajuhua.podcast2.pojo.entity.Items;
-import io.github.yajuhua.podcast2.pojo.entity.Sub;
-import io.github.yajuhua.podcast2.pojo.entity.User;
+import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
 import io.github.yajuhua.podcast2.pojo.vo.PluginVO;
 import io.github.yajuhua.podcast2.service.SubService;
@@ -50,6 +51,8 @@ public class Task {
     private SettingsMapper settingsMapper;
     @Autowired
     private PluginController pluginController;
+    @Autowired
+    private Gson gson;
 
     /**
      * 获取进度
@@ -170,16 +173,38 @@ public class Task {
                 Long latestUpdateTime = ytDlp.getUpdateTime();
                 Integer refreshDuration = ytDlp.getRefreshDuration()*3600*1000;
                 if ((latestUpdateTime + refreshDuration) < System.currentTimeMillis()){
-                    //执行更新命令
-                    log.info("执行更新yt-dlp");
-                    String rs = DownloaderUtils.cmd("sh yt-dlp-update");
-                    log.info("sh yt-dlp-update:{}",rs);
 
-                    ytDlp.setUpdateTime(System.currentTimeMillis());
-                    ytDlp.setVersion(DownloaderUtils.cmd("yt-dlp --version"));
+                    //获取最新tag
+                    String apiUrl  = "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest";
+                    String json = Http.get(apiUrl);
+                    String tagName = gson.fromJson(json, JsonObject.class).get("tag_name").getAsString();
 
-                    //更新数据库
-                    downloaderMapper.update(ytDlp);
+                    if (!ytDlp.getVersion().contains(tagName)){
+                        log.info("开始更新yt-dlp");
+                        UserMoreInfo moreInfo = gson.fromJson(userMapper.list().get(0).getUuid(), UserMoreInfo.class);
+                        String githubProxyUrl = moreInfo.getGithubProxyUrl();
+
+                        if (githubProxyUrl != null){
+                            log.info("使用Github加速站更新yt-dlp");
+                            File filePath = System.getProperty("os.name").contains("Linux") ? new File("/usr/sbin") : new File(System.getProperty("user.dir"));
+                            String tmpPath = dataPathProperties.getTmpPath();
+                            YtDlpUpdate ytDlpUpdate = new YtDlpUpdate(githubProxyUrl,filePath.getAbsolutePath(),tmpPath);
+                            boolean rs = ytDlpUpdate.proxy();
+                            log.info("更新yt-dlp{}",rs?"成功":"失败");
+                        }else {
+                            //执行更新
+                            int exitCode = Runtime.getRuntime().exec("yt-dlp -U").waitFor();
+                            log.info("更新yt-dlp{}",exitCode==0?"成功":"失败");
+                        }
+                        //更新数据库
+                        ytDlp.setUpdateTime(System.currentTimeMillis());
+                        ytDlp.setVersion(DownloaderUtils.cmd("yt-dlp --version"));
+                        downloaderMapper.update(ytDlp);
+                    }else {
+                        log.info("当前版本:{}是最新版",tagName);
+                    }
+                }else {
+                    log.info("未到更新时间");
                 }
             }
             log.info("已完成检查更新yt-dlp");

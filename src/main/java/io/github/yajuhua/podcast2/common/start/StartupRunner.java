@@ -168,10 +168,8 @@ public class StartupRunner implements ApplicationRunner{
                     log.info("修改为默认用户名和密码");
                 }
                 if (config1 != null && config1.isInitPath()){
-                    UserMoreInfo moreInfo = UserMoreInfo.builder()
-                            .path(null)
-                            .uuid(UUID.randomUUID().toString())
-                            .build();
+                    UserMoreInfo moreInfo = gson.fromJson(user.getUuid(), UserMoreInfo.class);
+                    moreInfo.setPath(null);
                     user.setUuid(gson.toJson(moreInfo));
                     log.info("清空path");
                 }

@@ -15,4 +15,6 @@ import lombok.NoArgsConstructor;
 public class UserMoreInfo {
     private String uuid;
     private String path;
+    private String githubProxyUrl;//github 加速站
+    private String pluginUrl;//插件仓库链接
 }

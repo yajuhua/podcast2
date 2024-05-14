@@ -380,4 +380,50 @@ public class UserController {
         UserMoreInfo moreInfo = gson.fromJson(userMoreInfoJson, UserMoreInfo.class);
         return Result.success(moreInfo.getPath());
     }
+
+    /**
+     * 获取github加速站
+     * @return
+     */
+    @ApiOperation("获取github加速站")
+    @GetMapping("/github")
+    public Result getGithubProxyUrl(){
+        UserMoreInfo moreInfo = gson.fromJson(userMapper.list().get(0).getUuid(), UserMoreInfo.class);
+        String proxyUrl = moreInfo.getGithubProxyUrl();
+        return Result.success(proxyUrl);
+    }
+
+    /**
+     * 更新github加速站
+     * @return
+     */
+    @ApiOperation("更新github加速站")
+    @PostMapping("/github")
+    public Result updateGithubProxyUrl(@RequestParam String githubProxyUrl){
+        User user = userMapper.list().get(0);
+        UserMoreInfo moreInfo = gson.fromJson(user.getUuid(), UserMoreInfo.class);
+        moreInfo.setGithubProxyUrl(githubProxyUrl);
+
+        //更新
+        user.setUuid(gson.toJson(moreInfo));
+        userMapper.update(user);
+        return Result.success();
+    }
+
+    /**
+     * 删除github加速站
+     * @return
+     */
+    @ApiOperation("删除github加速站")
+    @DeleteMapping("/github")
+    public Result deleteGithubProxyUrl(){
+        User user = userMapper.list().get(0);
+        UserMoreInfo moreInfo = gson.fromJson(user.getUuid(), UserMoreInfo.class);
+        moreInfo.setGithubProxyUrl(null);
+
+        //更新
+        user.setUuid(gson.toJson(moreInfo));
+        userMapper.update(user);
+        return Result.success();
+    }
 }
