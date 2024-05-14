@@ -100,4 +100,24 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
         registry.addResourceHandler("/resources/**").addResourceLocations("file:" + dataPathProperties.getResourcesPath());
 
     }
+
+    /**
+     * 扩展spring MVC框架的消息转换器
+     * @param converters
+     */
+    protected void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
+        log.info("扩展消息转换器...");
+        //解决中文乱码问题
+        for (HttpMessageConverter<?> converter : converters) {
+            // 解决 Controller 返回普通文本中文乱码问题
+            if (converter instanceof StringHttpMessageConverter) {
+                ((StringHttpMessageConverter) converter).setDefaultCharset(StandardCharsets.UTF_8);
+            }
+
+            // 解决 Controller 返回json对象中文乱码问题
+            if (converter instanceof MappingJackson2HttpMessageConverter) {
+                ((MappingJackson2HttpMessageConverter) converter).setDefaultCharset(StandardCharsets.UTF_8);
+            }
+        }
+    }
 }
