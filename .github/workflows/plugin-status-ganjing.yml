@@ -1,5 +1,6 @@
 name: ganjing
 on:
+  workflow_dispatch:
   schedule:
     # 每天凌晨执行，UTC 时间，这里是凌晨12点
     - cron: '0 0 * * *'
