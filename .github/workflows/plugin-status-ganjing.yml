@@ -1,4 +1,4 @@
-name: youtube
+name: ganjing
 on:
   schedule:
     # 每天凌晨执行，UTC 时间，这里是凌晨12点
@@ -23,5 +23,5 @@ jobs:
           pip3 install yt-dlp
           yt-dlp --version         
 
-      - name: youtube
-        run: java -jar test/test-plugin-0.1-jar-with-dependencies.jar https://www.youtube.com/@laogao
+      - name: ganjing
+        run: java -jar test/test-plugin-0.1-jar-with-dependencies.jar https://www.ganjingworld.com/zh-CN/channel/1fjrhcmij2n43KxCh1HPGLLjB1c10c?tab=videos
