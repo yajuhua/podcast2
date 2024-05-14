@@ -20,13 +20,13 @@ jobs:
           echo "${YTDLP_TAG}"
           mvn -B package --file pom.xml
           unzip target/app.jar
-          curl -o platform/windows/yt-dlp.exe "https://github.com/yt-dlp/yt-dlp/releases/download/${YTDLP_TAG}/yt-dlp.exe"
+          curl -o "platform/windows/yt-dlp.exe" "https://github.com/yt-dlp/yt-dlp/releases/download/${YTDLP_TAG}/yt-dlp.exe"
           cp -rf BOOT-INF/classes BOOT-INF/lib platform/windows/
           zip -r podcast2-win-x64.zip platform/windows/ 
 
       - name: Build osx
         run: |
-          curl -o platform/osx/yt-dlp "https://github.com/yt-dlp/yt-dlp/releases/download/${YTDLP_TAG}/yt-dlp_macos_legacy"
+          curl -o "platform/osx/yt-dlp" "https://github.com/yt-dlp/yt-dlp/releases/download/${YTDLP_TAG}/yt-dlp_macos_legacy"
           cp -rf BOOT-INF/classes BOOT-INF/lib platform/osx/
           zip -r podcast2-osx-x64.zip platform/osx/           
 
