@@ -1,4 +1,4 @@
-name: v2 Build Latest Windows And OSX
+name: v2 Build Test Windows And OSX
 on: workflow_dispatch
 
 jobs:
