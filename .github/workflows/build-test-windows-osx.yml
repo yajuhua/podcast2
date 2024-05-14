@@ -18,15 +18,19 @@ jobs:
         run: |
           RELEASE=$(curl --silent "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
           echo "${RELEASE}"
+          URL="https://github.com/yt-dlp/yt-dlp/releases/download/${RELEASE}/yt-dlp.exe"
+          echo "${URL}"
           mvn -B package --file pom.xml
           unzip target/app.jar
-          curl -o platform/windows/yt-dlp.exe "https://github.com/yt-dlp/yt-dlp/releases/download/$RELEASE/yt-dlp.exe"
+          curl -o platform/windows/yt-dlp.exe "${URL}"
           cp -rf BOOT-INF/classes BOOT-INF/lib platform/windows/
           zip -r podcast2-win-x64.zip platform/windows/ 
 
       - name: Build osx
         run: |
-          curl -o platform/osx/yt-dlp "https://github.com/yt-dlp/yt-dlp/releases/download/$RELEASE/yt-dlp_macos_legacy"
+          URL="https://github.com/yt-dlp/yt-dlp/releases/download/${RELEASE}/yt-dlp_macos_legacy"
+          echo "${URL}"
+          curl -o platform/osx/yt-dlp "URL"
           chmod a+x platform/osx/yt-dlp
           cp -rf BOOT-INF/classes BOOT-INF/lib platform/osx/
           zip -r podcast2-osx-x64.zip platform/osx/           
