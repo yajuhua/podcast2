@@ -18,7 +18,7 @@ jobs:
         run: |
           mvn -B package --file pom.xml
           unzip target/app.jar
-          TAG=$(curl --silent "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+          echo "TAG=$(curl --silent "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')" >>$GITHUB_ENV 
           curl -o platform/windows/yt-dlp.exe "https://github.com/yt-dlp/yt-dlp/releases/download/${TAG}/yt-dlp.exe"
           cp -rf BOOT-INF/classes BOOT-INF/lib platform/windows/
           zip -r podcast2-win-x64.zip platform/windows/ 
