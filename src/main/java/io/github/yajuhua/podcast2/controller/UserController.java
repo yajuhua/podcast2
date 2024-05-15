@@ -426,4 +426,51 @@ public class UserController {
         userMapper.update(user);
         return Result.success();
     }
+
+    /**
+     * 获取插件仓库链接
+     * @return
+     */
+    @ApiOperation("获取插件仓库链接")
+    @GetMapping("/plugin")
+    public Result getPluginUrl(){
+        UserMoreInfo moreInfo = gson.fromJson(userMapper.list().get(0).getUuid(), UserMoreInfo.class);
+        String pluginUrl = moreInfo.getPluginUrl();
+        return Result.success(pluginUrl);
+    }
+
+    /**
+     * 更新插件仓库链接
+     * @return
+     */
+    @ApiOperation("更新插件仓库链接")
+    @PostMapping("/plugin")
+    public Result updatePluginUrl(@RequestParam String pluginUrl){
+        User user = userMapper.list().get(0);
+        UserMoreInfo moreInfo = gson.fromJson(user.getUuid(), UserMoreInfo.class);
+        moreInfo.setPluginUrl(pluginUrl);
+
+        //更新
+        user.setUuid(gson.toJson(moreInfo));
+        userMapper.update(user);
+        return Result.success();
+    }
+
+    /**
+     * 删除插件仓库链接
+     * @return
+     */
+    @ApiOperation("删除插件仓库链接")
+    @DeleteMapping("/plugin")
+    public Result deletePluginUrl(){
+        User user = userMapper.list().get(0);
+        UserMoreInfo moreInfo = gson.fromJson(user.getUuid(), UserMoreInfo.class);
+        moreInfo.setPluginUrl(null);
+
+        //更新
+        user.setUuid(gson.toJson(moreInfo));
+        userMapper.update(user);
+        return Result.success();
+    }
+
 }

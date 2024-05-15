@@ -51,8 +51,6 @@ public class PluginController {
     @Autowired
     private PluginMapper pluginMapper;
     @Autowired
-    private SubService subService;
-    @Autowired
     private SubMapper subMapper;
     @Autowired
     private ExtendMapper extendMapper;
@@ -60,6 +58,8 @@ public class PluginController {
     private UserMapper userMapper;
     @Autowired
     private SettingsMapper settingsMapper;
+    @Autowired
+    private Gson gson;
 
     /**
      * 获取插件列表(安装与未安装的)
@@ -72,6 +72,20 @@ public class PluginController {
         List<Plugin> localPluginList = pluginMapper.list();
         //2.获取远程仓库插件列表
         List<PluginInfo> remotePluginInfoList = PluginLoader.remoteRepoPluginList(repoProperties.getPluginUrl());
+        //获取自定义插件仓库
+        UserMoreInfo moreInfo = gson.fromJson(userMapper.list().get(0).getUuid(), UserMoreInfo.class);
+        String pluginUrl = moreInfo.getPluginUrl();
+        if (pluginUrl != null){
+            try {
+                remotePluginInfoList = PluginLoader.remoteRepoPluginList(pluginUrl);
+                if (remotePluginInfoList == null){
+                    remotePluginInfoList = PluginLoader.remoteRepoPluginList(repoProperties.getPluginUrl());
+                }
+            } catch (Exception e) {
+                remotePluginInfoList = PluginLoader.remoteRepoPluginList(repoProperties.getPluginUrl());
+            }
+        }
+
         //取最新
         Map map = new HashMap();
         for (PluginInfo info : remotePluginInfoList) {
