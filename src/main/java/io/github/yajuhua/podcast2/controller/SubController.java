@@ -284,7 +284,8 @@ public class SubController {
                 Long cron = sub.getCron() * 1000;
                 Integer isUpdate = sub.getIsUpdate();
                 Long checkTime = sub.getCheckTime();
-                return System.currentTimeMillis() - checkTime > cron + 60 * 60 * 1000 && isUpdate == 1;
+                Integer isFirst = sub.getIsFirst();
+                return System.currentTimeMillis() - checkTime > cron + 60 * 60 * 1000 && isUpdate == 1 && isFirst != 1;
             }
         }).collect(Collectors.toList()).size();
 
