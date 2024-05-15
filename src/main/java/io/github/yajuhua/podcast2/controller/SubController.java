@@ -170,6 +170,13 @@ public class SubController {
                 itemList.add(item1);
             }
         }
+
+        //服务是否异常
+        Item item = serviceStatus(enclosureDomain, user);
+        if (item != null){
+            itemList.add(item);
+        }
+
         return Xml.build(channel,itemList);
     }
 
@@ -251,11 +258,49 @@ public class SubController {
                     itemList.add(item1);
                 }
             }
+
+            //服务是否异常
+            Item item = serviceStatus(enclosureDomain, user);
+            if (item != null){
+                itemList.add(item);
+            }
+
             return Xml.build(groupChannel,itemList);
 
         }else {
             throw new SubNotFoundException( "请求参数不全:" + requestURL);
         }
+    }
+
+    /**
+     * 获取服务状态
+     * @return
+     */
+    public Item serviceStatus(String enclosureDomain,User user){
+        int subErrorSize = subMapper.list().stream().filter(new Predicate<Sub>() {
+            @Override
+            public boolean test(Sub sub) {
+                //如果超过一个小时没有check说明轮询出现问题了
+                Long cron = sub.getCron() * 1000;
+                Integer isUpdate = sub.getIsUpdate();
+                Long checkTime = sub.getCheckTime();
+                return System.currentTimeMillis() - checkTime > cron + 60 * 60 * 1000 && isUpdate == 1;
+            }
+        }).collect(Collectors.toList()).size();
+
+        if (subErrorSize != 0){
+            Item item1 = new Item();
+            item1.setTitle("服务异常");
+            item1.setDescription("订阅超过一个小时未检查更新,详细情况请查看日志");
+            item1.setDuration(10);
+            item1.setCreateTime(System.currentTimeMillis());
+            UserMoreInfo moreInfo = gson.fromJson(user.getUuid(), UserMoreInfo.class);
+            item1.setLink(enclosureDomain + "/" + moreInfo.getPath()==null?"":"/p/" + moreInfo.getPath());
+            item1.setImage("https://yajuhua.github.io/images/975x975-logo.png");
+            item1.setEnclosure("https://yajuhua.github.io/resources/error.mp3");
+            return item1;
+        }
+        return null;
     }
 
     /**
