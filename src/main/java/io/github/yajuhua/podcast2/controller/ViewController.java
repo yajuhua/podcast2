@@ -32,7 +32,6 @@ public class ViewController {
     @ApiOperation("转发到index.html页面")
     @GetMapping("/")
     public Resource index() throws IOException {
-        log.info("index");
         String moreInfoJson = userMapper.list().get(0).getUuid();
         UserMoreInfo moreInfo = gson.fromJson(moreInfoJson, UserMoreInfo.class);
         if (moreInfo.getPath() == null ){
