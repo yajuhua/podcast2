@@ -67,14 +67,21 @@ public class Task {
      */
     @Scheduled(fixedDelay = 60000)
     public void updateSub(){
-        Update update;
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        int timeout = 1800;//30分钟
         try {
             //1.获取需要更新的订阅
             List<Sub> subList = subService.selectUpdateList();
             for (Sub sub : subList) {
-                //标记正在更新
-                update = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper, settingsMapper);
-                update.run();
+                Future<?> future = null;
+                try {
+                    future = executor.submit(new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper, settingsMapper));
+                    future.get(timeout,TimeUnit.SECONDS);
+                } catch (Exception e) {
+                    future.cancel(true);
+                    subMapper.update(sub);//保持原样
+                    log.error("更新超时:{}{}",sub.getTitle(),e.getMessage());
+                }
             }
         } catch (Exception e) {
             log.error("更新异常:{}详细:{}",e.getMessage(),e.getStackTrace());
