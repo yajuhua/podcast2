@@ -176,7 +176,7 @@ public class Update implements Runnable {
             }
 
             //构建下载
-            DownloadManager downloadManager = new DownloadManager(1,1);
+            DownloadManager downloadManager = new DownloadManager(1,1,items.size());
             Task.downloadManagerList.add(downloadManager);
             //过滤器
             List<String> titlekeyWords = Arrays.asList(sub.getTitleKeywords());
