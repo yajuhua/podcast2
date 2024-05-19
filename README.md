@@ -41,12 +41,16 @@ firewall-cmd --add-port=8088/tcp --permanent
 firewall-cmd --reload
 ````
 #### 使用Windows
-1. 下载[podcast2-win-x64.zip](https://github.com/yajuhua/podcast2/releases/latest)
+1. 下载podcast2压缩包
+- [下载](https://github.com/yajuhua/podcast2/releases/latest/download/podcast2-win-x64.zip)
+- [加速下载](https://github.moeyy.xyz/https://github.com/yajuhua/podcast2/releases/latest/download/podcast2-win-x64.zip)
 2. 双击启动
 ![windows-start](./images/windows-start.jpg)
 
 #### 使用macOS
-1. 下载[podcast2-osx-x64.zip](https://github.com/yajuhua/podcast2/releases/latest)
+1. 下载podcast2压缩包
+- [下载](https://github.com/yajuhua/podcast2/releases/latest/download/podcast2-osx-x64.zip) 
+- [加速下载](https://github.moeyy.xyz/https://github.com/yajuhua/podcast2/releases/latest/download/podcast2-osx-x64.zip)
 2. 解压得到 platform文件夹
 3. 赋执行权限
 ````shell
