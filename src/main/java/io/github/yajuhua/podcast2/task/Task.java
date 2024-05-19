@@ -68,15 +68,20 @@ public class Task {
     @Scheduled(fixedDelay = 60000)
     public void updateSub(){
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        int timeout = 1800;//30分钟
+        long timeout;
         try {
             //1.获取需要更新的订阅
             List<Sub> subList = subService.selectUpdateList();
             for (Sub sub : subList) {
+                int downloadItemNum;
+                String[] customEpisodes = sub.getCustomEpisodes().split(",");
+                downloadItemNum = sub.getIsFirst().equals(1) && sub.getEpisodes().equals(-1)?30:1;
+                downloadItemNum = sub.getIsFirst().equals(1) && !sub.getCustomEpisodes().isEmpty()?customEpisodes.length:downloadItemNum;
+                timeout = downloadItemNum * TimeUnit.MINUTES.toMillis(30);
                 Future<?> future = null;
                 try {
                     future = executor.submit(new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper, settingsMapper));
-                    future.get(timeout,TimeUnit.SECONDS);
+                    future.get(timeout,TimeUnit.MILLISECONDS);
                 } catch (Exception e) {
                     future.cancel(true);
                     subMapper.update(sub);//保持原样
