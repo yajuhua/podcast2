@@ -32,6 +32,7 @@ public class ReDownload implements Runnable{
     public void run() {
         DownloadManager downloadManager = new DownloadManager();
         downloadManager.add(request);
+        Task.downloadManagerList.add(downloadManager);
         //更新items状态码
         Items items = itemsMapper.selectByUuid(request.getUuid());
         items.setUuid(request.getUuid());
@@ -67,6 +68,14 @@ public class ReDownload implements Runnable{
 
                 Task.getDownloadProgressVOSet().remove(build);//去重
                 Task.getDownloadProgressVOSet().add(build);
+
+                //remove操作
+                if (progress.getStatus().equals(Context.REMOVE)) {
+                    itemsMapper.deleteByUuid(progress.getUuid());
+                    log.info("移除下载");
+                    return;
+                }
+
                 if (DownloaderUtils.endStatusCode().contains(progress.getStatus())){
                     items.setStatus(progress.getStatus());
                     items.setDownloadProgress(progress.getDownloadProgress());
