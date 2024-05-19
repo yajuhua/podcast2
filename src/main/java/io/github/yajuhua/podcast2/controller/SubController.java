@@ -54,6 +54,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -277,15 +278,17 @@ public class SubController {
      * @return
      */
     public Item serviceStatus(String enclosureDomain,User user){
-        int subErrorSize = subMapper.list().stream().filter(new Predicate<Sub>() {
+        List<Sub> subList = subMapper.list();
+        int subErrorSize = subList.stream().filter(new Predicate<Sub>() {
             @Override
             public boolean test(Sub sub) {
-                //如果超过一个小时没有check说明轮询出现问题了
                 Long cron = sub.getCron() * 1000;
                 Integer isUpdate = sub.getIsUpdate();
                 Long checkTime = sub.getCheckTime();
                 Integer isFirst = sub.getIsFirst();
-                return System.currentTimeMillis() - checkTime > cron + 60 * 60 * 1000 && isUpdate == 1 && isFirst != 1;
+                //这个应该随订阅数量来定,每个订阅增加10分钟
+                long numberTime = TimeUnit.MINUTES.toMillis(10) * subList.size();
+                return System.currentTimeMillis() - checkTime > numberTime + cron + TimeUnit.MINUTES.toMillis(60) && isUpdate == 1 && isFirst != 1;
             }
         }).collect(Collectors.toList()).size();
 
