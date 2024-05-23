@@ -40,7 +40,7 @@ jobs:
       - name: Get yt-dlp And ffmpeg-package
         run: |
           wget https://cdn.azul.com/zulu/bin/zulu8.78.0.19-ca-jre8.0.412-linux_x64.tar.gz
-          tar -xzf zulu8.78.0.19-ca-jre8.0.412-linux_x64
+          tar -xzf zulu8.78.0.19-ca-jre8.0.412-linux_x64.tar.gz
           mv zulu8.78.0.19-ca-jre8.0.412-linux_x64 jre8
           curl -L -o yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
           cp -rf ffmpeg-package/linux/amd64/ffmpeg .
