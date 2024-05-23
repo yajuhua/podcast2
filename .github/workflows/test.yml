@@ -37,10 +37,10 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PWD }}
 
       # 获取最新yt-dlp和ffmpeg
-      - name: Get yt-dlp And ffmpeg
+      - name: Get yt-dlp And ffmpeg-package
         run: |
           wget -o yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
-          cp -rf ffmpeg/linux/amd64/ffmpeg .
+          cp -rf ffmpeg-package/linux/amd64/ffmpeg .
           chmod a+x yt-dlp ffmpeg
           ls
 
@@ -90,10 +90,10 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PWD }}
 
       # 获取最新yt-dlp和ffmpeg
-      - name: Get yt-dlp And ffmpeg
+      - name: Get yt-dlp And ffmpeg-package
         run: |
           wget -o yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux_aarch64
-          cp -rf ffmpeg/linux/arm64/ffmpeg .
+          cp -rf ffmpeg-package/linux/arm64/ffmpeg .
           chmod a+x yt-dlp ffmpeg
           ls
 
@@ -143,10 +143,10 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PWD }}
 
       # 获取最新yt-dlp和ffmpeg
-      - name: Get yt-dlp And ffmpeg
+      - name: Get yt-dlp And ffmpeg-package
         run: |
           wget -o yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux_armv7l
-          cp -rf ffmpeg/linux/armv7/ffmpeg .
+          cp -rf ffmpeg-package/linux/armv7/ffmpeg .
           chmod a+x yt-dlp ffmpeg
           ls
 
