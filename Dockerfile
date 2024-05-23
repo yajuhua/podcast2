@@ -3,7 +3,8 @@ COPY app.jar /
 COPY yt-dlp /usr/sbin/
 COPY ffmpeg /usr/sbin/
 COPY jre8 /usr/sbin/
-RUN ln -s /usr/sbin/jre8/bin/java /usr/sbin/java
+ENV JAVA_HOME=/usr/sbin/jre8
+ENV PATH="$JAVA_HOME/bin:$PATH"
 ENV LANG=C.UTF-8
 EXPOSE 8088
 WORKDIR /
