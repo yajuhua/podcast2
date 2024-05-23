@@ -151,9 +151,9 @@ jobs:
       # 获取最新yt-dlp和ffmpeg
       - name: Get yt-dlp And ffmpeg-package
         run: |
-          wget https://cdn.azul.com/zulu-embedded/bin/zulu8.76.0.17-ca-cp2-jre8.0.402-linux_aarch32sf.tar.gz
-          tar -xzf zulu8.76.0.17-ca-cp2-jre8.0.402-linux_aarch32sf.tar.gz
-          mv zulu8.76.0.17-ca-cp2-jre8.0.402-linux_aarch32sf jre8
+          wget https://cdn.azul.com/zulu-embedded/bin/zulu8.76.0.17-ca-jre8.0.402-linux_aarch32hf.tar.gz
+          tar -xzf zulu8.76.0.17-ca-jre8.0.402-linux_aarch32hf.tar.gz
+          mv zulu8.76.0.17-ca-jre8.0.402-linux_aarch32hf jre8
           curl -L -o yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux_armv7l
           cp -rf ffmpeg-package/linux/armv7/ffmpeg .
           chmod a+x yt-dlp ffmpeg
