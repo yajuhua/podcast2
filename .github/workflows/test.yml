@@ -45,7 +45,7 @@ jobs:
       # 获取ffmpeg
       - name: Get ffmpeg
         run: |
-          wget -o ffmpeg https://github.com/yajuhua/podcast2/blob/v2/ffmpeg/linux/amd64/ffmpeg
+          wget -o ffmpeg https://raw.githubusercontent.com/yajuhua/podcast2/v2/ffmpeg/linux/amd64/ffmpeg
           chmod a+x ffmpeg
 
       # 构建 amd64 Docker镜像
@@ -102,11 +102,11 @@ jobs:
       # 获取ffmpeg
       - name: Get ffmpeg
         run: |
-          wget -o ffmpeg https://github.com/yajuhua/podcast2/blob/v2/ffmpeg/linux/arm64/ffmpeg
+          wget -o ffmpeg https://raw.githubusercontent.com/yajuhua/podcast2/v2/ffmpeg/linux/arm64/ffmpeg
           chmod a+x ffmpeg
 
       # 构建 arm32v7 Docker镜像
-      - name: Build the arm32v7 Docker image
+      - name: Build the arm64 Docker image
         run: |
           docker build . --file Dockerfile --tag yajuhua/podcast2:arm64-$(date +test-%Y-%m-%d) --platform linux/arm64
           docker push yajuhua/podcast2:arm64-$(date +test-%Y-%m-%d)
@@ -159,7 +159,7 @@ jobs:
       # 获取ffmpeg
       - name: Get ffmpeg
         run: |
-          wget -o ffmpeg https://github.com/yajuhua/podcast2/blob/v2/ffmpeg/linux/armv7/ffmpeg
+          wget -o ffmpeg https://raw.githubusercontent.com/yajuhua/podcast2/v2/ffmpeg/linux/armv7/ffmpeg
           chmod a+x ffmpeg
 
 
