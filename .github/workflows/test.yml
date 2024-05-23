@@ -36,10 +36,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PWD }}
 
-      # 获取最新yt-dlp和ffmpeg
+      # 获取最新yt-dlp、ffmpeg和jre8
       - name: Get yt-dlp And ffmpeg-package
         run: |
-          wget -o yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
+          wget https://cdn.azul.com/zulu/bin/zulu8.78.0.19-ca-jre8.0.412-linux_x64.tar.gz
+          tar -xzf zulu8.78.0.19-ca-jre8.0.412-linux_x64
+          mv zulu8.78.0.19-ca-jre8.0.412-linux_x64 jre8
+          curl -L -o yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
           cp -rf ffmpeg-package/linux/amd64/ffmpeg .
           chmod a+x yt-dlp ffmpeg
           ls
@@ -92,7 +95,10 @@ jobs:
       # 获取最新yt-dlp和ffmpeg
       - name: Get yt-dlp And ffmpeg-package
         run: |
-          wget -o yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux_aarch64
+          wget https://cdn.azul.com/zulu/bin/zulu8.78.0.19-ca-jre8.0.412-linux_aarch64.tar.gz
+          tar -xzf zulu8.78.0.19-ca-jre8.0.412-linux_aarch64.tar.gz
+          mv zulu8.78.0.19-ca-jre8.0.412-linux_aarch64 jre8
+          curl -L -o yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux_aarch64
           cp -rf ffmpeg-package/linux/arm64/ffmpeg .
           chmod a+x yt-dlp ffmpeg
           ls
@@ -145,7 +151,10 @@ jobs:
       # 获取最新yt-dlp和ffmpeg
       - name: Get yt-dlp And ffmpeg-package
         run: |
-          wget -o yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux_armv7l
+          wget https://cdn.azul.com/zulu-embedded/bin/zulu8.76.0.17-ca-cp2-jre8.0.402-linux_aarch32sf.tar.gz
+          tar -xzf zulu8.76.0.17-ca-cp2-jre8.0.402-linux_aarch32sf.tar.gz
+          mv zulu8.76.0.17-ca-cp2-jre8.0.402-linux_aarch32sf jre8
+          curl -L -o yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux_armv7l
           cp -rf ffmpeg-package/linux/armv7/ffmpeg .
           chmod a+x yt-dlp ffmpeg
           ls
