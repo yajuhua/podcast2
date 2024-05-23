@@ -36,17 +36,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PWD }}
 
-      # 获取最新yt-dlp
-      - name: Get yt-dlp
+      # 获取最新yt-dlp和ffmpeg
+      - name: Get yt-dlp And ffmpeg
         run: |
           wget -o yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
-          chmod a+x yt-dlp
-
-      # 获取ffmpeg
-      - name: Get ffmpeg
-        run: |
-          wget -o ffmpeg https://raw.githubusercontent.com/yajuhua/podcast2/v2/ffmpeg/linux/amd64/ffmpeg
-          chmod a+x ffmpeg
+          cp -rf ffmpeg/linux/amd64/ffmpeg .
+          chmod a+x yt-dlp ffmpeg
+          ls
 
       # 构建 amd64 Docker镜像
       - name: Build the amd64 Docker image
@@ -93,19 +89,15 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PWD }}
 
-      # 获取最新yt-dlp
-      - name: Get yt-dlp
+      # 获取最新yt-dlp和ffmpeg
+      - name: Get yt-dlp And ffmpeg
         run: |
           wget -o yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux_aarch64
-          chmod a+x yt-dlp
+          cp -rf ffmpeg/linux/arm64/ffmpeg .
+          chmod a+x yt-dlp ffmpeg
+          ls
 
-      # 获取ffmpeg
-      - name: Get ffmpeg
-        run: |
-          wget -o ffmpeg https://raw.githubusercontent.com/yajuhua/podcast2/v2/ffmpeg/linux/arm64/ffmpeg
-          chmod a+x ffmpeg
-
-      # 构建 arm32v7 Docker镜像
+      # 构建 arm64 Docker镜像
       - name: Build the arm64 Docker image
         run: |
           docker build . --file Dockerfile --tag yajuhua/podcast2:arm64-$(date +test-%Y-%m-%d) --platform linux/arm64
@@ -150,18 +142,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PWD }}
 
-      # 获取最新yt-dlp
-      - name: Get yt-dlp
+      # 获取最新yt-dlp和ffmpeg
+      - name: Get yt-dlp And ffmpeg
         run: |
           wget -o yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux_armv7l
-          chmod a+x yt-dlp
-
-      # 获取ffmpeg
-      - name: Get ffmpeg
-        run: |
-          wget -o ffmpeg https://raw.githubusercontent.com/yajuhua/podcast2/v2/ffmpeg/linux/armv7/ffmpeg
-          chmod a+x ffmpeg
-
+          cp -rf ffmpeg/linux/armv7/ffmpeg .
+          chmod a+x yt-dlp ffmpeg
+          ls
 
       # 构建 arm32v7 Docker镜像
       - name: Build the arm32v7 Docker image
