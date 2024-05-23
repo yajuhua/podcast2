@@ -45,7 +45,7 @@ jobs:
       # 获取ffmpeg
       - name: Get ffmpeg
         run: |
-          cp -rf ffmpeg/linux/amd64/ffmpeg .
+          wget -o ffmpeg https://github.com/yajuhua/podcast2/blob/v2/ffmpeg/linux/amd64/ffmpeg
           chmod a+x ffmpeg
 
       # 构建 amd64 Docker镜像
@@ -102,7 +102,7 @@ jobs:
       # 获取ffmpeg
       - name: Get ffmpeg
         run: |
-          cp -rf ffmpeg/linux/arm64/ffmpeg .
+          wget -o ffmpeg https://github.com/yajuhua/podcast2/blob/v2/ffmpeg/linux/arm64/ffmpeg
           chmod a+x ffmpeg
 
       # 构建 arm32v7 Docker镜像
@@ -159,7 +159,7 @@ jobs:
       # 获取ffmpeg
       - name: Get ffmpeg
         run: |
-          cp -rf ffmpeg/linux/armv7/ffmpeg .
+          wget -o ffmpeg https://github.com/yajuhua/podcast2/blob/v2/ffmpeg/linux/armv7/ffmpeg
           chmod a+x ffmpeg
 
 
