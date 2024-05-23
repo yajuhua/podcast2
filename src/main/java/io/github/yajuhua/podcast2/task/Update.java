@@ -242,26 +242,17 @@ public class Update implements Runnable {
                 }
 
                 Request request = item.getRequest();
+                //参数设置
+                Map args = request.getArgs();
+                if (args == null || !request.getDownloader().equals(DownloadManager.Downloader.YtDlp)){
+                    args = new HashMap();
+                }
+                args.put("-N","10");//多线程用于m3u8下载
+                request.setArgs(args);
                 request.setUuid(UUID.randomUUID().toString());
                 request.setChannelUuid(sub.getUuid());
                 request.setDir(new File(dataPathProperties.getResourcesPath()));
-
-                //arm32v7没有N_m3u8DL-RE,将下载请求提交的yt-dlp
-                boolean isNm3u8DlRe = request.getDownloader().equals(DownloadManager.Downloader.Nm3u8DlRe);
-                String osArch = System.getProperty("os.arch");
-
-                if (isNm3u8DlRe && "arm".equals(osArch)){
-                    request.setDownloader(DownloadManager.Downloader.YtDlp);
-                }
-                if (isNm3u8DlRe && !"arm".equals(osArch)){
-                    Map args = request.getArgs();
-                    if (args == null){
-                        args = new HashMap();
-                    }
-                    //以在非ansi环境显示进度信息 & 用于移除ANSI颜色 https://github.com/RikaCelery/N_m3u8DL-RE
-                    args.put("--force-ansi-console","");
-                    request.setArgs(args);
-                }
+                request.setDownloader(DownloadManager.Downloader.YtDlp);
 
                 item.setRequest(request);
                 filterItems.add(item);

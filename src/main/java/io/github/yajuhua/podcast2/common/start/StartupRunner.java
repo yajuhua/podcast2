@@ -86,39 +86,22 @@ public class StartupRunner implements ApplicationRunner{
             subMapper.update(sub);
         }
 
-        //如果下载少于3个则写入,检查更新下载器信息
-        if (downloaderMapper.list().isEmpty() || downloaderMapper.list().size() < DownloaderUtils.Downloader.values().length){
+        //2.2.0仅使用yt-dlp
+        List<Downloader> downloaderList = downloaderMapper.list();
+        if (downloaderList.isEmpty() || downloaderList.size() != 1){
             String osArch = System.getProperty("os.arch");
             log.info("系统架构:{}",osArch);
             log.info("更新下载器信息");
             downloaderMapper.deleteAll();
-            if (osArch.equals("arm")){
-                for (DownloaderUtils.Downloader downloader : DownloaderUtils.Downloader.values()) {
-                    if (!downloader.name().equals("Nm3u8DlRe")){
-                        Downloader build = Downloader.builder()
-                                .name(downloader.toString())
-                                .version(DownloaderUtils.getDownloaderVersion(downloader))
-                                //只更新yt-dlp
-                                .isUpdate(downloader.equals(DownloaderUtils.Downloader.YtDlp) ? 1 : 0)
-                                .refreshDuration(24)
-                                .updateTime(System.currentTimeMillis())
-                                .build();
-                        downloaderMapper.insert(build);
-                    }
-                }
-            }else {
-                for (DownloaderUtils.Downloader downloader : DownloaderUtils.Downloader.values()) {
-                    Downloader build = Downloader.builder()
-                            .name(downloader.toString())
-                            .version(DownloaderUtils.getDownloaderVersion(downloader))
-                            //只更新yt-dlp
-                            .isUpdate(downloader.equals(DownloaderUtils.Downloader.YtDlp) ? 1 : 0)
-                            .refreshDuration(24)
-                            .updateTime(System.currentTimeMillis())
-                            .build();
-                    downloaderMapper.insert(build);
-                }
-            }
+            Downloader build = Downloader.builder()
+                    .name(DownloaderUtils.Downloader.YtDlp.name())
+                    .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.YtDlp))
+                    //只更新yt-dlp
+                    .isUpdate(1)
+                    .refreshDuration(24)
+                    .updateTime(System.currentTimeMillis())
+                    .build();
+            downloaderMapper.insert(build);
             log.info("下载器信息更新完成");
         }
 
