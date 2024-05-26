@@ -129,7 +129,7 @@
                         </div>
                         <div class="logs">
                             <div v-for="log in system.logs" :key="log.id">
-                                <p>{{ log }}</p>
+                                <p>{{ formatLog(log) }}</p>
                             </div>
                         </div>
                     </el-card>
@@ -1863,7 +1863,17 @@ export default {
                     console.log(err);
                     this.$message.error('获取自定义插件仓库链接失败！')
                 })           
-        }         
+        },
+      //格式化日志，避免过长
+      formatLog(log) {
+        // 将日志按照每120个字符进行分割
+        const maxLength = 120;
+        let formattedLog = '';
+        for (let i = 0; i < log.length; i += maxLength) {
+          formattedLog += log.substring(i, i + maxLength) + '\n';
+        }
+        return formattedLog;
+      }
     }
 }
 </script>
