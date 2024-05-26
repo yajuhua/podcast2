@@ -52,7 +52,8 @@ jobs:
       - name: Get Maven Project Version
         id: get_version
         run: |
-          echo "RELEASE_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV         
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV       
 
       - name: Upload jar artifact
         uses: actions/upload-artifact@v3
