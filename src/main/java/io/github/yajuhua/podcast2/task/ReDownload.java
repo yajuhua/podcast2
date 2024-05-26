@@ -2,6 +2,7 @@ package io.github.yajuhua.podcast2.task;
 
 import io.github.yajuhua.download.commons.Context;
 import io.github.yajuhua.download.commons.progress.DownloadProgress;
+import io.github.yajuhua.download.downloader.ytdlp.YtDlp;
 import io.github.yajuhua.download.manager.DownloadManager;
 import io.github.yajuhua.download.manager.Request;
 import io.github.yajuhua.podcast2.common.constant.Unit;
@@ -13,6 +14,8 @@ import io.github.yajuhua.podcast2.pojo.entity.Sub;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -30,6 +33,7 @@ public class ReDownload implements Runnable{
 
     @Override
     public void run() {
+
         DownloadManager downloadManager = new DownloadManager();
         downloadManager.add(request);
         Task.downloadManagerList.add(downloadManager);
@@ -37,6 +41,15 @@ public class ReDownload implements Runnable{
         Items items = itemsMapper.selectByUuid(request.getUuid());
         items.setUuid(request.getUuid());
         items.setStatus(Context.DOWNLOADING);
+
+        //v2.2.0开始移除了aria2c和N_m3u8DL-RE,要将所有请求改成yt-dlp
+        if (!request.getDownloader().equals(DownloadManager.Downloader.YtDlp)){
+            Map args = new HashMap();
+            request.setDownloader(DownloadManager.Downloader.YtDlp);
+            request.setArgs(args);
+            items.setDownloader(request.getDownloader().toString());
+        }
+
         itemsMapper.update(items);
 
         //开始下载
