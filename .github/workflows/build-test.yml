@@ -1,0 +1,292 @@
+name: Build test
+on: workflow_dispatch
+
+jobs:
+  build-UI:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+      - name: build UI
+        run: |
+          cd ui
+          npm install @vue/cli-service @vue/cli-plugin-babel @vue/cli-plugin-eslint @vue/cli-plugin-router
+          npm run build
+          ls 
+
+      - name: Upload UI artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: UI
+          path: ui/dist/  # 上传 dist 目录
+
+  build-jar:
+    runs-on: ubuntu-latest
+    needs: build-UI
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: UI
+          path: src/main/resources/static/
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: |
+          mvn -B package --file pom.xml
+
+      - name: Upload jar artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: jar
+          path: target/  # 上传 target 目录
+
+
+  build-amd64:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    needs: build-jar
+    steps:
+      - uses: actions/checkout@v3
+      - name: Download jar artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: jar
+          path: .
+
+      # 设置 QEMU, 后面 docker buildx 依赖此.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      # 设置 Docker buildx, 方便构建 Multi platform 镜像
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      # 登录 docker hub
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          # GitHub Repo => Settings => Secrets 增加 docker hub 登录密钥信息
+          # DOCKERHUB_USERNAME 是 docker hub 账号名.
+          # DOCKERHUB_TOKEN: docker hub => Account Setting => Security 创建.
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PWD }}
+
+      # 获取最新yt-dlp、ffmpeg和jre8
+      - name: Get yt-dlp And ffmpeg-package
+        run: |
+          wget https://cdn.azul.com/zulu/bin/zulu8.78.0.19-ca-jre8.0.412-linux_x64.tar.gz
+          tar -xzf zulu8.78.0.19-ca-jre8.0.412-linux_x64.tar.gz
+          mv zulu8.78.0.19-ca-jre8.0.412-linux_x64 jre8
+          curl -L -o yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
+          cp -rf ffmpeg-package/linux/amd64/ffmpeg .
+          chmod a+x yt-dlp ffmpeg
+          ls
+
+      # 构建 amd64 Docker镜像
+      - name: Build the amd64 Docker image
+        run: |
+          docker build . --file Dockerfile --tag yajuhua/podcast2:amd64-$(date +test-%Y-%m-%d) --platform linux/amd64
+          docker push yajuhua/podcast2:amd64-$(date +test-%Y-%m-%d)
+
+  build-arm64:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    needs: build-jar
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          arch: aarch64
+
+      - name: Download jar artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: jar
+          path: .
+
+      # 设置 QEMU, 后面 docker buildx 依赖此.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      # 设置 Docker buildx, 方便构建 Multi platform 镜像
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      # 通过 git 命令获取当前 tag 信息, 存入环境变量 APP_VERSION
+      - name: Generate App Version
+        run: echo "APP_VERSION=$(curl --silent "https://api.github.com/repos/yajuhua/podcast2/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')" >> $GITHUB_ENV
+
+      # 登录 docker hub
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          # GitHub Repo => Settings => Secrets 增加 docker hub 登录密钥信息
+          # DOCKERHUB_USERNAME 是 docker hub 账号名.
+          # DOCKERHUB_TOKEN: docker hub => Account Setting => Security 创建.
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PWD }}
+
+      # 获取最新yt-dlp和ffmpeg
+      - name: Get yt-dlp And ffmpeg-package
+        run: |
+          wget https://cdn.azul.com/zulu/bin/zulu8.78.0.19-ca-jre8.0.412-linux_aarch64.tar.gz
+          tar -xzf zulu8.78.0.19-ca-jre8.0.412-linux_aarch64.tar.gz
+          mv zulu8.78.0.19-ca-jre8.0.412-linux_aarch64 jre8
+          curl -L -o yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux_aarch64
+          cp -rf ffmpeg-package/linux/arm64/ffmpeg .
+          chmod a+x yt-dlp ffmpeg
+          ls
+
+      # 构建 arm64 Docker镜像
+      - name: Build the arm64 Docker image
+        run: |
+          docker build . --file Dockerfile --tag yajuhua/podcast2:arm64-$(date +test-%Y-%m-%d) --platform linux/arm64
+          docker push yajuhua/podcast2:arm64-$(date +test-%Y-%m-%d)
+
+  build-arm32v7:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    needs: build-jar
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          arch: armv7
+
+      - name: Download jar artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: jar
+          path: .
+
+      # 设置 QEMU, 后面 docker buildx 依赖此.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      # 设置 Docker buildx, 方便构建 Multi platform 镜像
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      # 通过 git 命令获取当前 tag 信息, 存入环境变量 APP_VERSION
+      - name: Generate App Version
+        run: echo "APP_VERSION=$(curl --silent "https://api.github.com/repos/yajuhua/podcast2/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')" >> $GITHUB_ENV
+
+      # 登录 docker hub
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          # GitHub Repo => Settings => Secrets 增加 docker hub 登录密钥信息
+          # DOCKERHUB_USERNAME 是 docker hub 账号名.
+          # DOCKERHUB_TOKEN: docker hub => Account Setting => Security 创建.
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PWD }}
+
+      # 获取最新yt-dlp和ffmpeg
+      - name: Get yt-dlp And ffmpeg-package
+        run: |
+          wget https://cdn.azul.com/zulu-embedded/bin/zulu8.76.0.17-ca-jre8.0.402-linux_aarch32hf.tar.gz
+          tar -xzf zulu8.76.0.17-ca-jre8.0.402-linux_aarch32hf.tar.gz
+          mv zulu8.76.0.17-ca-jre8.0.402-linux_aarch32hf jre8
+          curl -L -o yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux_armv7l
+          cp -rf ffmpeg-package/linux/armv7/ffmpeg .
+          chmod a+x yt-dlp ffmpeg
+          ls
+
+      # 构建 arm32v7 Docker镜像
+      - name: Build the arm32v7 Docker image
+        run: |
+          docker build . --file Dockerfile --tag yajuhua/podcast2:arm32v7-$(date +test-%Y-%m-%d) --platform linux/arm/v7
+          docker push yajuhua/podcast2:arm32v7-$(date +test-%Y-%m-%d)          
+
+  push-docker-hub:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    needs: [ build-arm64,build-amd64,build-arm32v7]
+    steps:
+      # 设置 QEMU, 后面 docker buildx 依赖此.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      # 设置 Docker buildx, 方便构建 Multi platform 镜像
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: pull amd4 and arm64 docker images
+        run: |
+          docker pull yajuhua/podcast2:arm64-$(date +test-%Y-%m-%d)
+          docker pull yajuhua/podcast2:amd64-$(date +test-%Y-%m-%d)
+          docker pull yajuhua/podcast2:arm32v7-$(date +test-%Y-%m-%d)
+
+      # 登录 docker hub
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          # GitHub Repo => Settings => Secrets 增加 docker hub 登录密钥信息
+          # DOCKERHUB_USERNAME 是 docker hub 账号名.
+          # DOCKERHUB_TOKEN: docker hub => Account Setting => Security 创建.
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PWD }}
+
+      - name: create manifest
+        run: |
+          docker manifest create yajuhua/podcast2:beta-$(date +%Y-%m-%d) yajuhua/podcast2:arm64-$(date +test-%Y-%m-%d) yajuhua/podcast2:amd64-$(date +test-%Y-%m-%d) yajuhua/podcast2:arm32v7-$(date +test-%Y-%m-%d)
+      - name: push manifest
+        run: |
+          docker manifest push yajuhua/podcast2:beta-$(date +%Y-%m-%d)
+
+  build-installation-package:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    needs: build-jar
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Create tmp directory
+        run: |
+          mkdir tmp
+      - name: Download jar artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: jar
+          path: tmp/
+
+      - name: Build windows
+        run: |
+          ls
+          cp tmp/app.jar .
+          unzip tmp/app.jar
+          curl -L -o platform/windows/yt-dlp.exe https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
+          cp -rf BOOT-INF/classes BOOT-INF/lib platform/windows/
+          zip -r podcast2-win-x64.zip platform/windows/ 
+
+      - name: Build osx
+        run: |
+          curl -L -o platform/osx/yt-dlp "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos_legacy"
+          chmod a+x platform/osx/yt-dlp
+          cp -rf BOOT-INF/classes BOOT-INF/lib platform/osx/
+          zip -r podcast2-osx-x64.zip platform/osx/           
+
+      - name: Set Release Date
+        id: release_date
+        run: echo "::set-output name=date::$(date +beta-%Y-%m-%d)"
+
+      # 上传文件并发布 Release
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "${{ steps.release_date.outputs.date }}"
+          prerelease: true
+          title: "${{ steps.release_date.outputs.date }}"
+          files: |
+            podcast2-win-x64.zip
+            podcast2-osx-x64.zip
+            app.jar
