@@ -1,6 +1,7 @@
 name: v2 Build Latest Images
 on: workflow_dispatch
-
+env:
+  RELEASE_VERSION: ''  # 初始化 RELEASE_VERSION 环境变量为空字符串
 jobs:
   build-UI:
     runs-on: ubuntu-latest
