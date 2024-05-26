@@ -248,7 +248,7 @@ jobs:
           docker manifest create yajuhua/podcast2:${{ env.RELEASE_VERSION }} yajuhua/podcast2:${{ env.RELEASE_VERSION }}-arm64 yajuhua/podcast2:${{ env.RELEASE_VERSION }}-amd64 yajuhua/podcast2:${{ env.RELEASE_VERSION }}-arm32v7
       - name: push manifest
         run: |
-          docker manifest push yajuhua/podcast2:latest
+#          docker manifest push yajuhua/podcast2:latest
           docker manifest push yajuhua/podcast2:${{ env.RELEASE_VERSION }}
 
   build-installation-package:
