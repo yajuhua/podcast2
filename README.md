@@ -2,12 +2,12 @@
 
 <br>
 <p align="center">
-<img src="https://img.shields.io/github/v/release/yajuhua/podcast2?include_prereleases" alt="Release" />
+<img src="https://img.shields.io/github/v/release/yajuhua/podcast2" alt="Release" />
 <img src="https://shields.io/docker/pulls/yajuhua/podcast2" alt="docker-pull" />
 <img src="https://img.shields.io/badge/jdk-8-blue.svg" alt="JDK" />
 <img src="https://img.shields.io/badge/license-Apache2.0-green.svg" alt="apache-licenses" />
-<img src="https://github.com/yajuhua/podcast2/actions/workflows/test.yml/badge.svg" alt="test" />
-<img src="https://github.com/yajuhua/podcast2/actions/workflows/build-latest.yml/badge.svg" alt="test" />
+<img src="https://github.com/yajuhua/podcast2/actions/workflows/build-test.yml/badge.svg" alt="test" />
+<img src="https://github.com/yajuhua/podcast2/actions/workflows/build-latest.yml/badge.svg" alt="latest" />
 </p>
 <h2 align=center><p>Podcast2</p></h2>
 <hr>
@@ -15,8 +15,6 @@
 ## 项目说明
 - 基于spring boot开发
 - 将视频网站转换成播客订阅
-
-## 旧版请移步到[1.3.3](https://github.com/yajuhua/podcast2/tree/v1)
 
 ## 快速开始
 
