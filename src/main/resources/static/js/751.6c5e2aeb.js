@@ -1,2 +1,0 @@
-"use strict";(self["webpackChunkPodcast2"]=self["webpackChunkPodcast2"]||[]).push([[751],{1751:function(t,e,n){n.r(e),n.d(e,{default:function(){return d}});var r=function(){var t=this,e=t._self._c;return e("div",[e("vue-qr",{attrs:{text:t.imgUrl,size:250,logoSrc:t.logo,logoScale:.2}})],1)},u=[],l=n(9323),o=n.n(l),s={components:{VueQr:o()},data(){return{imgUrl:"https://baidu.com"}}},c=s,a=n(1656),i=(0,a.A)(c,r,u,!1,null,null,null),d=i.exports}}]);
-//# sourceMappingURL=751.6c5e2aeb.js.map
