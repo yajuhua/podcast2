@@ -57,12 +57,18 @@ public class YtDlpUpdate {
             String fileName = System.getProperty("os.name").startsWith("Win") ? "yt-dlp.exe.tmp" : "yt-dlp.tmp";
             String finalPathTmp = filePath + File.separator + fileName;
             FileUtils.copyFile(new File(tmpFile),new File(finalPathTmp));
+            File originFile = new File(finalPathTmp.substring(0,finalPathTmp.lastIndexOf(".")));
             //删除临时文件
             FileUtils.forceDelete(new File(tmpFile));
+            //删除之前的
+            FileUtils.forceDelete(originFile);
             //重命名
-            FileUtils.moveFile(new File(finalPathTmp),new File(finalPathTmp.substring(0,finalPathTmp.lastIndexOf("."))));
+            FileUtils.moveFile(new File(finalPathTmp),originFile);
+            //赋可执行权限
+            originFile.setExecutable(true);
             return true;
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
