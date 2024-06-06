@@ -35,7 +35,6 @@ public class ReDownload implements Runnable{
     public void run() {
 
         DownloadManager downloadManager = new DownloadManager();
-        downloadManager.add(request);
         Task.downloadManagerList.add(downloadManager);
         //更新items状态码
         Items items = itemsMapper.selectByUuid(request.getUuid());
@@ -51,7 +50,7 @@ public class ReDownload implements Runnable{
         }
 
         itemsMapper.update(items);
-
+        downloadManager.add(request);
         //开始下载
         try {
             downloadManager.startDownload();
