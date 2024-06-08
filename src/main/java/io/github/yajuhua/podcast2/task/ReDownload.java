@@ -61,6 +61,7 @@ public class ReDownload implements Runnable{
         //获取进度
         this.downloadProgresses = downloadManager.allDownloadProgress();
         Sub sub = subMapper.selectByUuid(request.getChannelUuid());
+        Items items1 = itemsMapper.selectByUuid(request.getUuid());
         while (true){
             for (DownloadProgress progress : downloadProgresses) {
                 DownloadProgressVO build = DownloadProgressVO.builder()
@@ -76,6 +77,7 @@ public class ReDownload implements Runnable{
                         .finalFormat(progress.getFinalFormat())
                         .downloader(items.getDownloader())
                         .channelName(sub.getTitle())
+                        .itemName(items1.getTitle())
                         .build();
 
                 Task.getDownloadProgressVOSet().remove(build);//去重
@@ -89,6 +91,9 @@ public class ReDownload implements Runnable{
                 }
 
                 if (DownloaderUtils.endStatusCode().contains(progress.getStatus())){
+                    items.setFileName(progress.getUuid() + "." + progress.getFinalFormat());
+                    items.setFormat(progress.getFinalFormat());
+                    items.setTotalSize(progress.getTotalSize());
                     items.setStatus(progress.getStatus());
                     items.setDownloadProgress(progress.getDownloadProgress());
                     items.setDownloadTimeLeft((double) progress.getDownloadTimeLeft());
