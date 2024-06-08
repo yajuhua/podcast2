@@ -10,6 +10,7 @@ import io.github.yajuhua.podcast2.common.exception.BaseException;
 import io.github.yajuhua.podcast2.common.exception.SubNotFoundException;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.result.Result;
+import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.common.utils.ExtendListUtil;
 import io.github.yajuhua.podcast2.common.utils.Http;
 import io.github.yajuhua.podcast2.common.utils.PluginLoader;
@@ -56,6 +57,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -293,10 +295,36 @@ public class SubController {
             }
         }).collect(Collectors.toList()).size();
 
+        List<Items> itemsError = itemsMapper.list().stream().filter(new Predicate<Items>() {
+            @Override
+            public boolean test(Items items) {
+                Integer status = items.getStatus();
+                return DownloaderUtils.errorStatusCode().contains(status);
+            }
+        }).collect(Collectors.toList());
+
         if (subErrorSize != 0){
             Item item1 = new Item();
             item1.setTitle("服务异常");
             item1.setDescription("订阅超过一个小时未检查更新,详细情况请查看日志");
+            item1.setDuration(10);
+            item1.setCreateTime(System.currentTimeMillis());
+            UserMoreInfo moreInfo = gson.fromJson(user.getUuid(), UserMoreInfo.class);
+            item1.setLink(enclosureDomain + "/" + moreInfo.getPath()==null?"":"/p/" + moreInfo.getPath());
+            item1.setImage("https://yajuhua.github.io/images/975x975-logo.png");
+            item1.setEnclosure("https://yajuhua.github.io/resources/error.mp3");
+            return item1;
+        }else if (!itemsError.isEmpty()){
+
+            //将节目标题拼接到描述区
+            StringBuilder desc = new StringBuilder("节目标题：");
+            for (Items items : itemsError) {
+                desc.append(items.getTitle() + "\n");
+            }
+
+            Item item1 = new Item();
+            item1.setTitle("节目下载错误，详细情况请查看服务。");
+            item1.setDescription(desc.toString());
             item1.setDuration(10);
             item1.setCreateTime(System.currentTimeMillis());
             UserMoreInfo moreInfo = gson.fromJson(user.getUuid(), UserMoreInfo.class);

@@ -191,4 +191,15 @@ public class DownloaderUtils {
         return formattedTime;
     }
 
+    /**
+     * 错误下载的状态码
+     * @return
+     */
+    public static List<Integer> errorStatusCode(){
+        List<Integer> errorStatusCode = new ArrayList<>();
+        Collections.addAll(errorStatusCode, Context.UNKNOWN,Context.DOWNLOAD_ERR,Context.MERGE_ERR,
+                Context.TO_M4A_ERR,Context.TO_MP4_ERR,Context.DOWNLOAD_PATH1_ERR,Context.DOWNLOAD_PATH2_ERR);
+        return errorStatusCode;
+    }
+
 }
