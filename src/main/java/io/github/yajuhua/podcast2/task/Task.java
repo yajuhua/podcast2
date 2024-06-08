@@ -2,7 +2,12 @@ package io.github.yajuhua.podcast2.task;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
+import io.github.yajuhua.download.commons.Context;
+import io.github.yajuhua.download.commons.Operation;
+import io.github.yajuhua.download.commons.Type;
 import io.github.yajuhua.download.manager.DownloadManager;
+import io.github.yajuhua.download.manager.Request;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.common.utils.Http;
@@ -261,6 +266,84 @@ public class Task {
             }
         } catch (Exception e) {
             log.error("检查更新插件错误:{}",e.getMessage());
+        }
+    }
+
+    /**
+     * 检查未下载完成的节目，可能是服务突然停止导致的
+     * 每个两分钟检查一次
+     */
+    @Scheduled(fixedDelay = 120000)
+    public void checkForUndownload() throws Exception{
+        List<Items> itemsList = itemsMapper.list();
+        List<Items> unsuccessfulDownloads = itemsList.stream().filter(new Predicate<Items>() {
+            @Override
+            public boolean test(Items items) {
+                //正在下载中且没有文件名为null的
+                return Context.DOWNLOADING.equals(items.getStatus()) && items.getFileName() == null || items.getFileName().equals("");
+            }
+        }).collect(Collectors.toList());
+
+        if (!unsuccessfulDownloads.isEmpty()) {
+            //重新下载
+            log.info("重新下载");
+            ThreadPoolExecutor pool = new ThreadPoolExecutor(
+                    1,    //核心线程数有1个
+                    1,  //最大线程数
+                    8,    //临时线程存活的时间8秒。 意思是临时线程8秒没有任务执行，就会被销毁掉。
+                    TimeUnit.SECONDS,//时间单位（秒）
+                    new ArrayBlockingQueue<>(unsuccessfulDownloads.size()), //任务阻塞队列，没有来得及执行的任务在，任务队列中等待
+                    Executors.defaultThreadFactory(), //用于创建线程的工厂对象
+                    new ThreadPoolExecutor.CallerRunsPolicy() //拒绝策略
+            );
+            for (Items items : unsuccessfulDownloads) {
+                //如果是首次更新就不用
+                Sub sub = subMapper.selectByUuid(items.getChannelUuid());
+                if (sub != null) {
+                    Integer isFirst = sub.getIsFirst();
+                    log.info("订阅:{}-节目:{}",sub.getTitle(),items.getTitle());
+                    //之前版本中type和operation是null，要排除这种情况
+                    if (isFirst !=null && isFirst == 0 && items.getType() != null && items.getOperation() != null) {
+                        Map args = gson.fromJson(items.getArgs(), Map.class);
+                        List<String> links = gson.fromJson(items.getLinks(),new TypeToken<List<String>>() {}.getType());
+                        Request request = Request.builder()
+                                .args(args)
+                                .uuid(items.getUuid())
+                                .channelUuid(items.getChannelUuid())
+                                .type(Type.valueOf(items.getType()))
+                                .operation(Operation.valueOf(items.getOperation()))
+                                .downloader(DownloadManager.Downloader.YtDlp)
+                                .dir(new File(dataPathProperties.getResourcesPath()))
+                                .links(links)
+                                .build();
+                        ReDownload reDownload = new ReDownload(request, itemsMapper, subMapper);
+                        pool.execute(reDownload);
+                        Thread.sleep(2000);
+                    }else {
+                        log.info("数据不全:{}-删除该记录",items.getTitle());
+                        itemsMapper.deleteByUuid(items.getUuid());
+                    }
+                }else {
+                    //清理掉
+                    log.info("未找到所属频道:{}-删除该节目记录",items.getTitle());
+                    itemsMapper.deleteByUuid(items.getUuid());
+                }
+            }
+            pool.shutdown();
+            Date start = new Date();
+            while (true){
+                Date end = new Date();
+                long minutes = (end.getTime() - start.getTime())/1000/60;
+                //每个下载最多是30分钟
+                if (minutes > unsuccessfulDownloads.size()*30){
+                    log.error("重新下载超时");
+                    return;
+                } else if (pool.isTerminated()) {
+                    log.info("重新下载结束");
+                    return;
+                }
+            }
+
         }
     }
 }
