@@ -46,6 +46,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
@@ -319,7 +320,9 @@ public class SubController {
         for (String uuid : uuids) {
             //结束下载如果有的话
             for (DownloadManager dm : Task.downloadManagerList) {
-                dm.killByChannelUuid(uuid);
+                //dm.killByChannelUuid(uuid);
+                //更新是单线程,在同一时间只有一个订阅在更新下载
+                dm.killAll();
                 Task.getDownloadProgressVOSet().clear();
             }
 
@@ -332,7 +335,11 @@ public class SubController {
                 for (File file : files) {
                     if (file.getName().contains(items.getUuid())){
                         log.info("删除文件:{}",file.getName());
-                        FileUtils.forceDelete(file);
+                        try {
+                            FileUtils.forceDelete(file);
+                        } catch (IOException e) {
+                            log.error("删除文件失败:{}",e.getMessage());
+                        }
                     }
                 }
             }
