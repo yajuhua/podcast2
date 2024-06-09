@@ -73,13 +73,13 @@ chmod -R a+x platform
 #### 支持网站
 | 网站 <img width=200/>                          | 状态                                                                                             |
 |:---------------------------------------------|------------------------------------------------------------------------------------------------|
-| [干净世界](https://ganjing.com/)                 | <img src="https://github.com/yajuhua/podcast2/actions/workflows/plugin-status-ganjing.yml/badge.svg"   />  |
-| [vimeo](https://vimeo.com/)                  |  <img src="https://github.com/yajuhua/podcast2/actions/workflows/plugin-status-vimeo.yml/badge.svg"   />     |
+| [干净世界](https://ganjing.com/)                 | <img src="https://github.com/yajuhua/podcast2/actions/workflows/plugin-status-ganjingworld.com.yml/badge.svg"   />  |
+| [vimeo](https://vimeo.com/)                  |  <img src="https://github.com/yajuhua/podcast2/actions/workflows/plugin-status-vimeo.com.yml/badge.svg"   />     |
 | [ntdm](https://www.ntdm.tv)                  |  <img src="https://github.com/yajuhua/podcast2/actions/workflows/plugin-status-ntdm.yml/badge.svg"     />    |
-| [girigirilove](https://www.girigirilove.com) |  <img src="https://github.com/yajuhua/podcast2/actions/workflows/plugin-status-girigirilove.yml/badge.svg" />| 
+| [girigirilove](https://www.girigirilove.com) |  <img src="https://github.com/yajuhua/podcast2/actions/workflows/plugin-status-girigirilove.com.yml/badge.svg" />| 
 | [youtube](https://www.youtube.com)           |  <img src="https://github.com/yajuhua/podcast2/actions/workflows/plugin-status-youtube.yml/badge.svg"   />   | 
-| [bilibili](https://www.bilibili.com)         |  <img src="https://github.com/yajuhua/podcast2/actions/workflows/plugin-status-bilibili.yml/badge.svg"  />   | 
-| [抖音](https://www.douyin.com/)                |  <img src="https://github.com/yajuhua/podcast2/actions/workflows/plugin-status-douyin.yml/badge.svg"    />   | 
+| [bilibili](https://www.bilibili.com)         |  <img src="https://github.com/yajuhua/podcast2/actions/workflows/plugin-status-bilibil.com.yml/badge.svg"  />   | 
+| [抖音](https://www.douyin.com/)                |  <img src="https://github.com/yajuhua/podcast2/actions/workflows/plugin-status-douyin.com.yml/badge.svg"    />   | 
 
 1. 安装插件
 ![安装插件](./images/installPlugin.png)
