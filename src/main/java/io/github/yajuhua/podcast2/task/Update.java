@@ -7,7 +7,6 @@ import io.github.yajuhua.download.commons.progress.DownloadProgress;
 import io.github.yajuhua.download.manager.DownloadManager;
 import io.github.yajuhua.download.manager.Request;
 import io.github.yajuhua.podcast2.common.constant.*;
-import io.github.yajuhua.podcast2.common.exception.PluginNotFoundException;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.common.utils.PluginLoader;
@@ -30,15 +29,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -192,9 +186,10 @@ public class Update implements Runnable {
             for (Item item : items) {
                 if (item.getEqual().equals(sub.getEqual())) {
                     log.info("{}:暂无更新",sub.getTitle());
-                    //更新sub表
-                    sub.setCheckTime(System.currentTimeMillis());
+                    //加入当前时间浮动，让每次检查时间不一样 往后
+                    sub.setCheckTime(nowTimeFloat(1,1,10,Units.Minutes));
                     sub.setStatus(StatusCode.NO_ACTION);
+                    //更新sub表
                     subMapper.update(sub);
                     return;
                 }
@@ -357,11 +352,58 @@ public class Update implements Runnable {
             //更新sub表
             sub.setStatus(StatusCode.NO_ACTION);
             sub.setIsFirst(StatusCode.NO);
-            sub.setCheckTime(System.currentTimeMillis());
+            //加入当前时间浮动，让每次检查时间不一样 往后
+            sub.setCheckTime(nowTimeFloat(1,1,10,Units.Minutes));
             subMapper.update(sub);
             PluginLoader.closeAll();
             System.gc();
             log.info("{}:更新完成",sub.getTitle());
+        }
+    }
+
+    /**
+     * 时间单位
+     */
+    public enum Units{
+        Second,
+        Minutes,
+        Hour
+    }
+
+    /**
+     * 当前时间浮动
+     * @param direction -1 是往前；0是不变；>0是往后
+     * @param start
+     * @param end
+     * @Units unit 单位
+     * @return 时间毫秒值
+     */
+    public static Long nowTimeFloat(int direction, int start, int end, Units unit){
+        long currentTimeMillis = System.currentTimeMillis();
+        Random random = new Random();
+        int rn = random.nextInt(end - start + 1) + start;
+        Long rs = 0L;
+        switch (unit) {
+            case Second:
+                rs = rn*1000L;
+                break;
+            case Minutes:
+                rs = rn*60*1000L;
+                break;
+            case Hour:
+                rs = rn*60*60*1000L;
+                break;
+        }
+        if (direction == -1){
+            //往前
+           return currentTimeMillis - rs;
+
+        } else if (direction > 0) {
+            //往后
+            return  currentTimeMillis + rs;
+        }else {
+            //默认是当前时间
+            return currentTimeMillis;
         }
     }
 }
