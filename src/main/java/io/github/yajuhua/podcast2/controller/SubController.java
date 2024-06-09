@@ -17,6 +17,7 @@ import io.github.yajuhua.podcast2.common.utils.PluginLoader;
 import io.github.yajuhua.podcast2.mapper.*;
 import io.github.yajuhua.podcast2.pojo.dto.AddSubDTO;
 import io.github.yajuhua.podcast2.pojo.dto.GetExtendListDTO;
+import io.github.yajuhua.podcast2.pojo.dto.GithubActionWorkflowsDTO;
 import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.EditSubVO;
 import io.github.yajuhua.podcast2.pojo.vo.ExtendListVO;
@@ -51,13 +52,13 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -87,6 +88,8 @@ public class SubController {
     private SettingsMapper settingsMapper;
     @Autowired
     private ExtendService extendService;
+    @Autowired
+    private PluginMapper pluginMapper;
 
 
     /**
@@ -176,9 +179,11 @@ public class SubController {
         }
 
         //服务是否异常
-        Item item = serviceStatus(enclosureDomain, user);
-        if (item != null){
-            itemList.add(item);
+        List<String> uuids = new ArrayList<>();
+        uuids.add(uuid);
+        List<Item> items1 = serviceStatus(enclosureDomain, user,uuids);
+        if (items1 != null && !items1.isEmpty()){
+            itemList.addAll(items1);
         }
 
         return Xml.build(channel,itemList);
@@ -264,9 +269,9 @@ public class SubController {
             }
 
             //服务是否异常
-            Item item = serviceStatus(enclosureDomain, user);
-            if (item != null){
-                itemList.add(item);
+            List<Item> items = serviceStatus(enclosureDomain, user,uuids);
+            if (items != null && !items.isEmpty()){
+                itemList.addAll(items);
             }
 
             return Xml.build(groupChannel,itemList);
@@ -280,7 +285,7 @@ public class SubController {
      * 获取服务状态
      * @return
      */
-    public Item serviceStatus(String enclosureDomain,User user){
+    public List<Item> serviceStatus(String enclosureDomain,User user,List<String> subUuids){
         List<Sub> subList = subMapper.list();
         int subErrorSize = subList.stream().filter(new Predicate<Sub>() {
             @Override
@@ -299,42 +304,104 @@ public class SubController {
             @Override
             public boolean test(Items items) {
                 Integer status = items.getStatus();
-                return DownloaderUtils.errorStatusCode().contains(status);
+                return DownloaderUtils.errorStatusCode().contains(status) && subUuids.contains(items.getChannelUuid());
             }
         }).collect(Collectors.toList());
 
-        if (subErrorSize != 0){
-            Item item1 = new Item();
-            item1.setTitle("服务异常");
-            item1.setDescription("订阅超过一个小时未检查更新,详细情况请查看日志");
-            item1.setDuration(10);
-            item1.setCreateTime(System.currentTimeMillis());
-            UserMoreInfo moreInfo = gson.fromJson(user.getUuid(), UserMoreInfo.class);
-            item1.setLink(enclosureDomain + "/" + moreInfo.getPath()==null?"":"/p/" + moreInfo.getPath());
-            item1.setImage("https://yajuhua.github.io/images/975x975-logo.png");
-            item1.setEnclosure("https://yajuhua.github.io/resources/error.mp3");
-            return item1;
-        }else if (!itemsError.isEmpty()){
+        List<Item> serveStatusItems = new ArrayList<>();
+        Item item;
 
+        if (subErrorSize != 0){
+            item = new Item();
+            item.setTitle("服务异常");
+            item.setDescription("订阅超过一个小时未检查更新,详细情况请查看日志");
+            item.setDuration(10);
+            item.setCreateTime(System.currentTimeMillis());
+            item.setLink("https://github.com/yajuhua/podcast2");
+            item.setImage("https://yajuhua.github.io/images/975x975-logo.png");
+            item.setEnclosure("https://yajuhua.github.io/resources/error.mp3");
+            serveStatusItems.add(item);
+        }
+        if (!itemsError.isEmpty()){
             //将节目标题拼接到描述区
             StringBuilder desc = new StringBuilder("节目标题：");
             for (Items items : itemsError) {
                 desc.append(items.getTitle() + "\n");
             }
-
-            Item item1 = new Item();
-            item1.setTitle("节目下载错误，详细情况请查看服务。");
-            item1.setDescription(desc.toString());
-            item1.setDuration(10);
-            item1.setCreateTime(System.currentTimeMillis());
-            UserMoreInfo moreInfo = gson.fromJson(user.getUuid(), UserMoreInfo.class);
-            item1.setLink(enclosureDomain + "/" + moreInfo.getPath()==null?"":"/p/" + moreInfo.getPath());
-            item1.setImage("https://yajuhua.github.io/images/975x975-logo.png");
-            item1.setEnclosure("https://yajuhua.github.io/resources/error.mp3");
-            return item1;
+            item = new Item();
+            item.setTitle("节目下载错误，详细情况请查看服务。");
+            item.setDescription(desc.toString());
+            item.setDuration(10);
+            item.setCreateTime(System.currentTimeMillis());
+            item.setLink("https://github.com/yajuhua/podcast2");
+            item.setImage("https://yajuhua.github.io/images/975x975-logo.png");
+            item.setEnclosure("https://yajuhua.github.io/resources/error.mp3");
+            serveStatusItems.add(item);
         }
-        return null;
+
+        List<String> pluginDomainList = subMapper.list().stream().filter(new Predicate<Sub>() {
+            @Override
+            public boolean test(Sub sub) {
+                return subUuids.contains(sub.getUuid());
+            }
+        }).map(Sub::getPlugin).collect(Collectors.toList());
+
+        //获取Github Action 链接
+        List<Plugin> pluginList = pluginMapper.list();
+        List<String> githubActionLinkList = new ArrayList<>();
+        String actionApi = "https://api.github.com/repos/yajuhua/podcast2/actions/workflows/";
+        for (String s : pluginDomainList) {
+            for (Plugin plugin : pluginList) {
+                if (s.contains(plugin.getName())){
+                    String link = actionApi + "plugin-status-" + plugin.getName() + ".yml/runs";
+                    githubActionLinkList.add(link);
+                    break;
+                }
+            }
+        }
+
+        if (githubActionLinkList != null && !githubActionLinkList.isEmpty()){
+            //格式化时间
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
+            LocalDateTime localDateTime = null;
+           //简单描述
+            StringBuilder desc = new StringBuilder("插件状态由Github Action检查，报错不一定是插件问题，可能是该网站屏蔽了Github Action(美国IP地址)。\n");
+            int descLength = desc.length();
+
+            for (String link : githubActionLinkList) {
+                String json = Http.get(link);
+                GithubActionWorkflowsDTO actionWorkflowsDTO = gson.fromJson(json, GithubActionWorkflowsDTO.class);
+                Integer totalCount = actionWorkflowsDTO.getTotalCount();
+                if (totalCount != null && totalCount != 0){
+                    GithubActionWorkflowsDTO.WorkflowRunsDTO workflowRunsDTO = actionWorkflowsDTO.getWorkflowRuns().get(0);
+                    String status = workflowRunsDTO.getStatus();
+                    String conclusion = workflowRunsDTO.getConclusion();
+                    if ("completed".equals(status) && "failure".equals(conclusion)){
+                        localDateTime = LocalDateTime.parse(workflowRunsDTO.getCreatedAt(), formatter).atZone(Clock.systemUTC().getZone()).
+                                withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+                        desc.append("插件名称：" + workflowRunsDTO.getName() + "\n");
+                        desc.append("检查时间：" + localDateTime + "\n");
+                        desc.append("详细内容：" + workflowRunsDTO.getUrl() + "\n\n\n");
+                    }
+                }
+            }
+
+            //如果描述长度不变，可能是没有获取到状态
+            if (desc.length() > descLength) {
+                item = new Item();
+                item.setTitle("插件状态异常");
+                item.setDescription(desc.toString());
+                item.setDuration(10);
+                item.setCreateTime(System.currentTimeMillis());
+                item.setLink("https://github.com/yajuhua/podcast2");
+                item.setImage("https://yajuhua.github.io/images/975x975-logo.png");
+                item.setEnclosure("https://yajuhua.github.io/resources/error.mp3");
+                serveStatusItems.add(item);
+            }
+        }
+        return serveStatusItems;
     }
+
 
     /**
      * 删除订阅
