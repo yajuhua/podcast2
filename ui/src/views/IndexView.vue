@@ -216,12 +216,17 @@
           </el-select>
         </el-form-item>
         <el-form-item label="更新频率">
-          <el-select v-model="addSub.cron" placeholder="请选择存活时间">
+          <el-select v-model="addSub.cron" placeholder="请选择更新频率">
             <el-option label="20分钟" value="1200"></el-option>
             <el-option label="30分钟" value="1800"></el-option>
             <el-option label="60分钟" value="3600"></el-option>
             <el-option label="2个小时" value="7200"></el-option>
             <el-option label="6个小时" value="21600"></el-option>
+            <el-option label="12个小时" value="43200"></el-option>
+            <el-option label="1天" value="86400"></el-option>
+            <el-option label="2天" value="172800"></el-option>
+            <el-option label="4天" value="345600"></el-option>
+            <el-option label="7天" value="604800"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="过滤器">
@@ -327,12 +332,17 @@
           </el-select>
         </el-form-item>
         <el-form-item label="更新频率">
-          <el-select v-model="editSubData.cron" placeholder="请选择存活时间">
+          <el-select v-model="editSubData.cron" placeholder="请选择更新频率">
             <el-option label="20分钟" value="1200"></el-option>
             <el-option label="30分钟" value="1800"></el-option>
             <el-option label="60分钟" value="3600"></el-option>
             <el-option label="2个小时" value="7200"></el-option>
             <el-option label="6个小时" value="21600"></el-option>
+            <el-option label="12个小时" value="43200"></el-option>
+            <el-option label="1天" value="86400"></el-option>
+            <el-option label="2天" value="172800"></el-option>
+            <el-option label="4天" value="345600"></el-option>
+            <el-option label="7天" value="604800"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="继续更新">
