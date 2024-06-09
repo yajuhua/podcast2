@@ -285,7 +285,7 @@ public class SubController {
      * 获取服务状态
      * @return
      */
-    public List<Item> serviceStatus(String enclosureDomain,User user,List<String> subUuids){
+    public List<Item> serviceStatus(String enclosureDomain,User user,List<String> subUuids) {
         List<Sub> subList = subMapper.list();
         int subErrorSize = subList.stream().filter(new Predicate<Sub>() {
             @Override
@@ -311,7 +311,7 @@ public class SubController {
         List<Item> serveStatusItems = new ArrayList<>();
         Item item;
 
-        if (subErrorSize != 0){
+        if (subErrorSize != 0) {
             item = new Item();
             item.setTitle("服务异常");
             item.setDescription("订阅超过一个小时未检查更新,详细情况请查看日志");
@@ -322,7 +322,7 @@ public class SubController {
             item.setEnclosure("https://yajuhua.github.io/resources/error.mp3");
             serveStatusItems.add(item);
         }
-        if (!itemsError.isEmpty()){
+        if (!itemsError.isEmpty()) {
             //将节目标题拼接到描述区
             StringBuilder desc = new StringBuilder("节目标题：");
             for (Items items : itemsError) {
@@ -339,50 +339,46 @@ public class SubController {
             serveStatusItems.add(item);
         }
 
-        List<String> pluginDomainList = subMapper.list().stream().filter(new Predicate<Sub>() {
+        List<GithubActionWorkflowsDTO> actionWorkflowsDTOList = Task.actionWorkflowsDTOList;
+        //获取订阅插件域名
+        List<String> pluginDomains = subMapper.list().stream().filter(new Predicate<Sub>() {
             @Override
             public boolean test(Sub sub) {
                 return subUuids.contains(sub.getUuid());
             }
         }).map(Sub::getPlugin).collect(Collectors.toList());
 
-        //获取Github Action 链接
-        List<Plugin> pluginList = pluginMapper.list();
-        List<String> githubActionLinkList = new ArrayList<>();
-        String actionApi = "https://api.github.com/repos/yajuhua/podcast2/actions/workflows/";
-        for (String s : pluginDomainList) {
-            for (Plugin plugin : pluginList) {
-                if (s.contains(plugin.getName())){
-                    String link = actionApi + "plugin-status-" + plugin.getName() + ".yml/runs";
-                    githubActionLinkList.add(link);
-                    break;
+        if (!actionWorkflowsDTOList.isEmpty()){
+            List<GithubActionWorkflowsDTO> collect = actionWorkflowsDTOList.stream().filter(new Predicate<GithubActionWorkflowsDTO>() {
+                @Override
+                public boolean test(GithubActionWorkflowsDTO githubActionWorkflowsDTO) {
+                    GithubActionWorkflowsDTO.WorkflowRunsDTO workflowRunsDTO = githubActionWorkflowsDTO.getWorkflowRuns().get(0);
+                    for (String domain : pluginDomains) {
+                        if (domain.contains(workflowRunsDTO.getName())) {
+                            return true;
+                        }
+                    }
+                    return false;
                 }
-            }
-        }
+            }).collect(Collectors.toList());
 
-        if (githubActionLinkList != null && !githubActionLinkList.isEmpty()){
             //格式化时间
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
             LocalDateTime localDateTime = null;
-           //简单描述
+            //简单描述
             StringBuilder desc = new StringBuilder("插件状态由Github Action检查，报错不一定是插件问题，可能是该网站屏蔽了Github Action(美国IP地址)。\n");
-            int descLength = desc.length();
 
-            for (String link : githubActionLinkList) {
-                String json = Http.get(link);
-                GithubActionWorkflowsDTO actionWorkflowsDTO = gson.fromJson(json, GithubActionWorkflowsDTO.class);
-                Integer totalCount = actionWorkflowsDTO.getTotalCount();
-                if (totalCount != null && totalCount != 0){
-                    GithubActionWorkflowsDTO.WorkflowRunsDTO workflowRunsDTO = actionWorkflowsDTO.getWorkflowRuns().get(0);
-                    String status = workflowRunsDTO.getStatus();
-                    String conclusion = workflowRunsDTO.getConclusion();
-                    if ("completed".equals(status) && "failure".equals(conclusion)){
-                        localDateTime = LocalDateTime.parse(workflowRunsDTO.getCreatedAt(), formatter).atZone(Clock.systemUTC().getZone()).
-                                withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
-                        desc.append("插件名称：" + workflowRunsDTO.getName() + "\n");
-                        desc.append("检查时间：" + localDateTime + "\n");
-                        desc.append("详细内容：" + workflowRunsDTO.getUrl() + "\n\n\n");
-                    }
+            int descLength = desc.length();
+            for (GithubActionWorkflowsDTO workflowsDTO : collect) {
+                GithubActionWorkflowsDTO.WorkflowRunsDTO workflowRunsDTO = workflowsDTO.getWorkflowRuns().get(0);
+                String status = workflowRunsDTO.getStatus();
+                String conclusion = workflowRunsDTO.getConclusion();
+                if ("completed".equals(status) && "failure".equals(conclusion)){
+                    localDateTime = LocalDateTime.parse(workflowRunsDTO.getCreatedAt(), formatter).atZone(Clock.systemUTC().getZone()).
+                            withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+                    desc.append("插件名称：" + workflowRunsDTO.getName() + "\n");
+                    desc.append("检查时间：" + localDateTime + "\n");
+                    desc.append("详细内容：" + workflowRunsDTO.getUrl() + "\n\n\n");
                 }
             }
 

@@ -14,6 +14,7 @@ import io.github.yajuhua.podcast2.common.utils.Http;
 import io.github.yajuhua.podcast2.controller.PluginController;
 import io.github.yajuhua.podcast2.downloader.ytdlp.YtDlpUpdate;
 import io.github.yajuhua.podcast2.mapper.*;
+import io.github.yajuhua.podcast2.pojo.dto.GithubActionWorkflowsDTO;
 import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
 import io.github.yajuhua.podcast2.pojo.vo.PluginVO;
@@ -58,6 +59,8 @@ public class Task {
     private PluginController pluginController;
     @Autowired
     private Gson gson;
+    @Autowired
+    private PluginMapper pluginMapper;
 
     /**
      * 获取进度
@@ -66,7 +69,7 @@ public class Task {
     public static Set<DownloadProgressVO> getDownloadProgressVOSet(){
         return downloadProgressVOSet;
     }
-
+    public static List<GithubActionWorkflowsDTO> actionWorkflowsDTOList = new ArrayList<>();
     /**
      * 每隔分钟检查一次频道是否需要更新
      */
@@ -345,5 +348,50 @@ public class Task {
             }
 
         }
+    }
+
+
+    /**
+     * 获取GithubActionWorkflows状态
+     */
+    @Scheduled(fixedDelay = 24,timeUnit = TimeUnit.HOURS)
+    public void getGithubActionWorkflowsStatus(){
+        log.info("Github Action Status 开始更新...");
+        List<GithubActionWorkflowsDTO> tmp = new ArrayList<>();
+
+        //获取Github Action 链接
+        List<Plugin> pluginList = pluginMapper.list();
+        List<String> githubActionLinkList = new ArrayList<>();
+        String actionApi = "https://api.github.com/repos/yajuhua/podcast2/actions/workflows/";
+        for (Plugin plugin : pluginList) {
+            String link = actionApi + "plugin-status-" + plugin.getName() + ".yml/runs";
+            githubActionLinkList.add(link);
+        }
+
+        //获取数据并转对象
+        for (String link : githubActionLinkList) {
+            if (link != null){
+                String json = Http.get(link);
+                GithubActionWorkflowsDTO actionWorkflowsDTO = gson.fromJson(json, GithubActionWorkflowsDTO.class);
+                if (actionWorkflowsDTO.getTotalCount() != null && actionWorkflowsDTO.getTotalCount() != 0){
+                    tmp.add(actionWorkflowsDTO);
+                }
+                //等待500毫秒
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    log.error("等待异常：{}",e.getMessage());
+                }
+
+            }
+        }
+
+        //清空之前的并添加新的
+        if (!tmp.isEmpty()){
+            actionWorkflowsDTOList.clear();
+            actionWorkflowsDTOList.addAll(tmp);
+            log.info("Github Action Status 更新完成");
+        }
+
     }
 }
