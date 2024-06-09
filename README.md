@@ -78,7 +78,7 @@ chmod -R a+x platform
 | [ntdm](https://www.ntdm.tv)                  |  <img src="https://github.com/yajuhua/podcast2/actions/workflows/plugin-status-ntdm.yml/badge.svg"     />    |
 | [girigirilove](https://www.girigirilove.com) |  <img src="https://github.com/yajuhua/podcast2/actions/workflows/plugin-status-girigirilove.com.yml/badge.svg" />| 
 | [youtube](https://www.youtube.com)           |  <img src="https://github.com/yajuhua/podcast2/actions/workflows/plugin-status-youtube.yml/badge.svg"   />   | 
-| [bilibili](https://www.bilibili.com)         |  <img src="https://github.com/yajuhua/podcast2/actions/workflows/plugin-status-bilibil.com.yml/badge.svg"  />   | 
+| [bilibili](https://www.bilibili.com)         |  <img src="https://github.com/yajuhua/podcast2/actions/workflows/plugin-status-bilibili.com.yml/badge.svg"  />   | 
 | [抖音](https://www.douyin.com/)                |  <img src="https://github.com/yajuhua/podcast2/actions/workflows/plugin-status-douyin.com.yml/badge.svg"    />   | 
 
 1. 安装插件
