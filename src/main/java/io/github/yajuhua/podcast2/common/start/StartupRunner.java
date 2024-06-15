@@ -13,6 +13,7 @@ import io.github.yajuhua.podcast2.mapper.SubMapper;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
 import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
+import io.github.yajuhua.podcast2.service.UserService;
 import io.github.yajuhua.podcast2.task.Task;
 import io.github.yajuhua.podcast2.websocket.DownloadWebSocketServer;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +43,7 @@ public class StartupRunner implements ApplicationRunner{
     private DownloaderMapper downloaderMapper;
     private DataPathProperties dataPathProperties;
     private DownloadWebSocketServer downloadWebSocketServer;
+    private UserService userService;
 
     public StartupRunner() {
     }
@@ -49,7 +51,7 @@ public class StartupRunner implements ApplicationRunner{
     @Autowired
     public StartupRunner(Gson gson, SubMapper subMapper, InfoProperties infoProperties, UserMapper userMapper,
                          DownloaderMapper downloaderMapper, DataPathProperties dataPathProperties,
-                         DownloadWebSocketServer downloadWebSocketServer) {
+                         DownloadWebSocketServer downloadWebSocketServer, UserService userService) {
         this.gson = gson;
         this.subMapper = subMapper;
         this.infoProperties = infoProperties;
@@ -57,9 +59,8 @@ public class StartupRunner implements ApplicationRunner{
         this.downloaderMapper = downloaderMapper;
         this.dataPathProperties = dataPathProperties;
         this.downloadWebSocketServer = downloadWebSocketServer;
+        this.userService = userService;
     }
-
-    @Autowired
 
 
     @Override
@@ -151,9 +152,7 @@ public class StartupRunner implements ApplicationRunner{
                     log.info("修改为默认用户名和密码");
                 }
                 if (config1 != null && config1.isInitPath()){
-                    UserMoreInfo moreInfo = gson.fromJson(user.getUuid(), UserMoreInfo.class);
-                    moreInfo.setPath(null);
-                    user.setUuid(gson.toJson(moreInfo));
+                    userService.updateExtendInfo(ExtendInfo.builder().path(null).build());
                     log.info("清空path");
                 }
 
@@ -170,20 +169,14 @@ public class StartupRunner implements ApplicationRunner{
      * 首次配置user表信息
      */
     public void firstConfig(){
-        UserMoreInfo moreInfo = UserMoreInfo.builder()
-                .path(null)
-                .uuid(UUID.randomUUID().toString())
-                .build();
-        String userMoreInfoJson = gson.toJson(moreInfo);
-
         List<User> list = userMapper.list();
+        ExtendInfo extendInfo = ExtendInfo.builder().uuid(UUID.randomUUID().toString()).build();
         if (list.isEmpty()){
-            userMapper.clear();
             User user = User.builder()
                     .username(Default.USERNAME)
                     .password(Default.PASSWORD)
                     .createTime( System.currentTimeMillis())
-                    .uuid(userMoreInfoJson)
+                    .uuid(gson.toJson(extendInfo))
                     .firstVersion(infoProperties.getVersion())
                     .hostname(null)
                     .autoUpdatePlugin(true)
@@ -193,15 +186,11 @@ public class StartupRunner implements ApplicationRunner{
             userMapper.insert(user);
         }else {
             try {
-                gson.fromJson(list.get(0).getUuid(), UserMoreInfo.class);
+                gson.fromJson(list.get(0).getUuid(), ExtendInfo.class);
             } catch (Exception e) {
-                log.info("init userMoreInfo...");
-                String uuid = userMapper.list().get(0).getUuid();
-                moreInfo.setUuid(uuid);
-                User user = User.builder()
-                        .uuid(gson.toJson(moreInfo))
-                        .build();
-                userMapper.update(user);
+                log.info("init extendInfo...");
+                extendInfo = ExtendInfo.builder().uuid(list.get(0).getUuid()).build();
+                userService.updateExtendInfo(extendInfo);
             }
         }
 

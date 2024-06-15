@@ -76,11 +76,8 @@ public class UserController {
 
         //生成JWT令牌
         Map<String, Object> claims = new HashMap<>();
-        //暂时无法扩展表,user.uuid字段当前是存入json字符串
-        String userMoreInfoJson = user.getUuid();
-        UserMoreInfo moreInfo = gson.fromJson(userMoreInfoJson, UserMoreInfo.class);
 
-        claims.put(JwtClaimsConstant.UUID,moreInfo.getUuid());
+        claims.put(JwtClaimsConstant.UUID,userService.getExtendInfo().getUuid());
         String token = JwtUtil.createJWT(jwtProperties.getUserSecretKey(), jwtProperties.getUserTtl(), claims);
         UserLoginVO userLoginVO = UserLoginVO.builder()
                 .username(user.getUsername())
@@ -342,17 +339,11 @@ public class UserController {
     @ApiOperation("更新登录页面访问路径")
     @PostMapping("/path")
     public Result updatePath(@RequestParam String path){
-        //获取user信息
-        User user = userMapper.list().get(0);
-        String userMoreInfoJson = user.getUuid();
-        UserMoreInfo moreInfo = gson.fromJson(userMoreInfoJson, UserMoreInfo.class);
-        moreInfo.setPath(path);
-
-        //更新user信息
-        userMoreInfoJson = gson.toJson(moreInfo);
-        user.setUuid(userMoreInfoJson);
-        userMapper.update(user);
-
+        if (path == null){
+            userService.deleteExtendInfo(ExtendInfo.builder().path("").build());
+        }else {
+            userService.updateExtendInfo(ExtendInfo.builder().path(path).build());
+        }
         return Result.success();
     }
 
@@ -375,10 +366,7 @@ public class UserController {
     @ApiOperation("获取面板访问路径")
     @GetMapping("/path")
     public Result getPath(){
-        User user = userMapper.list().get(0);
-        String userMoreInfoJson = user.getUuid();
-        UserMoreInfo moreInfo = gson.fromJson(userMoreInfoJson, UserMoreInfo.class);
-        return Result.success(moreInfo.getPath());
+        return Result.success(userService.getExtendInfo().getPath());
     }
 
     /**
@@ -388,9 +376,7 @@ public class UserController {
     @ApiOperation("获取github加速站")
     @GetMapping("/github")
     public Result getGithubProxyUrl(){
-        UserMoreInfo moreInfo = gson.fromJson(userMapper.list().get(0).getUuid(), UserMoreInfo.class);
-        String proxyUrl = moreInfo.getGithubProxyUrl();
-        return Result.success(proxyUrl);
+        return Result.success(userService.getExtendInfo().getGithubProxyUrl());
     }
 
     /**
@@ -400,13 +386,7 @@ public class UserController {
     @ApiOperation("更新github加速站")
     @PostMapping("/github")
     public Result updateGithubProxyUrl(@RequestParam String githubProxyUrl){
-        User user = userMapper.list().get(0);
-        UserMoreInfo moreInfo = gson.fromJson(user.getUuid(), UserMoreInfo.class);
-        moreInfo.setGithubProxyUrl(githubProxyUrl);
-
-        //更新
-        user.setUuid(gson.toJson(moreInfo));
-        userMapper.update(user);
+        userService.updateExtendInfo(ExtendInfo.builder().githubProxyUrl(githubProxyUrl).build());
         return Result.success();
     }
 
@@ -417,13 +397,7 @@ public class UserController {
     @ApiOperation("删除github加速站")
     @DeleteMapping("/github")
     public Result deleteGithubProxyUrl(){
-        User user = userMapper.list().get(0);
-        UserMoreInfo moreInfo = gson.fromJson(user.getUuid(), UserMoreInfo.class);
-        moreInfo.setGithubProxyUrl(null);
-
-        //更新
-        user.setUuid(gson.toJson(moreInfo));
-        userMapper.update(user);
+        userService.deleteExtendInfo(ExtendInfo.builder().githubProxyUrl("").build());
         return Result.success();
     }
 
@@ -434,9 +408,7 @@ public class UserController {
     @ApiOperation("获取插件仓库链接")
     @GetMapping("/plugin")
     public Result getPluginUrl(){
-        UserMoreInfo moreInfo = gson.fromJson(userMapper.list().get(0).getUuid(), UserMoreInfo.class);
-        String pluginUrl = moreInfo.getPluginUrl();
-        return Result.success(pluginUrl);
+        return Result.success(userService.getExtendInfo().getPluginUrl());
     }
 
     /**
@@ -446,13 +418,7 @@ public class UserController {
     @ApiOperation("更新插件仓库链接")
     @PostMapping("/plugin")
     public Result updatePluginUrl(@RequestParam String pluginUrl){
-        User user = userMapper.list().get(0);
-        UserMoreInfo moreInfo = gson.fromJson(user.getUuid(), UserMoreInfo.class);
-        moreInfo.setPluginUrl(pluginUrl);
-
-        //更新
-        user.setUuid(gson.toJson(moreInfo));
-        userMapper.update(user);
+        userService.updateExtendInfo(ExtendInfo.builder().pluginUrl(pluginUrl).build());
         return Result.success();
     }
 
@@ -463,13 +429,7 @@ public class UserController {
     @ApiOperation("删除插件仓库链接")
     @DeleteMapping("/plugin")
     public Result deletePluginUrl(){
-        User user = userMapper.list().get(0);
-        UserMoreInfo moreInfo = gson.fromJson(user.getUuid(), UserMoreInfo.class);
-        moreInfo.setPluginUrl(null);
-
-        //更新
-        user.setUuid(gson.toJson(moreInfo));
-        userMapper.update(user);
+        userService.deleteExtendInfo(ExtendInfo.builder().pluginUrl("").build());
         return Result.success();
     }
 

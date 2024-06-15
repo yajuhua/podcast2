@@ -17,6 +17,7 @@ import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.PluginDetailVO;
 import io.github.yajuhua.podcast2.pojo.vo.PluginVO;
 import io.github.yajuhua.podcast2.service.SubService;
+import io.github.yajuhua.podcast2.service.UserService;
 import io.github.yajuhua.podcast2.task.Task;
 import io.github.yajuhua.podcast2API.Params;
 import io.github.yajuhua.podcast2API.setting.Setting;
@@ -60,6 +61,8 @@ public class PluginController {
     private SettingsMapper settingsMapper;
     @Autowired
     private Gson gson;
+    @Autowired
+    private UserService userService;
 
     /**
      * 获取插件列表(安装与未安装的)
@@ -73,8 +76,7 @@ public class PluginController {
         //2.获取远程仓库插件列表
         List<PluginInfo> remotePluginInfoList = PluginLoader.remoteRepoPluginList(repoProperties.getPluginUrl());
         //获取自定义插件仓库
-        UserMoreInfo moreInfo = gson.fromJson(userMapper.list().get(0).getUuid(), UserMoreInfo.class);
-        String pluginUrl = moreInfo.getPluginUrl();
+        String pluginUrl = userService.getExtendInfo().getPluginUrl();
         if (pluginUrl != null){
             try {
                 remotePluginInfoList = PluginLoader.remoteRepoPluginList(pluginUrl);

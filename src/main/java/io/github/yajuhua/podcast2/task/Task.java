@@ -19,6 +19,7 @@ import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
 import io.github.yajuhua.podcast2.pojo.vo.PluginVO;
 import io.github.yajuhua.podcast2.service.SubService;
+import io.github.yajuhua.podcast2.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +62,8 @@ public class Task {
     private Gson gson;
     @Autowired
     private PluginMapper pluginMapper;
+    @Autowired
+    private UserService userService;
 
     /**
      * 获取进度
@@ -201,8 +204,7 @@ public class Task {
 
                     if (!ytDlp.getVersion().contains(tagName)){
                         log.info("开始更新yt-dlp");
-                        UserMoreInfo moreInfo = gson.fromJson(userMapper.list().get(0).getUuid(), UserMoreInfo.class);
-                        String githubProxyUrl = moreInfo.getGithubProxyUrl();
+                        String githubProxyUrl = userService.getExtendInfo().getGithubProxyUrl();
 
                         if (githubProxyUrl != null){
                             log.info("使用Github加速站更新yt-dlp");
