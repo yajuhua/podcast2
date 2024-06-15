@@ -21,14 +21,14 @@
         </el-submenu>
 
         <el-submenu index="download">
-          <template slot="title">下载</template>
+          <template slot="title">下载&上传</template>
           <el-menu-item index="Downloading">正在下载&nbsp;<span v-if="download.progress.length > 0">{{
               download.progress.length
             }}</span></el-menu-item>
-          <el-menu-item index="Done">已完成&nbsp;<span v-if="download.done.length > 0">{{
+          <el-menu-item index="Done">下载&上传已完成&nbsp;<span v-if="download.done.length > 0">{{
               download.done.length
             }}</span></el-menu-item>
-          <el-menu-item index="error">下载错误&nbsp;<span v-if="download.error.length > 0">{{
+          <el-menu-item index="error">下载&上传错误&nbsp;<span v-if="download.error.length > 0">{{
               download.error.length
             }}</span></el-menu-item>
           <el-menu-item index="DownloaderInfo">下载器信息</el-menu-item>
@@ -360,8 +360,8 @@
             </el-table-column>
             <el-table-column label="状态" width="180">
               <i slot-scope="scope"
-                 :class="{ 'el-icon-success': scope.row.status == '5', 'el-icon-error': scope.row.status !== '5' }"
-                 :style="{ fontSize: '45px', color: scope.row.status == '5' ? '#54AC1C' : '#F95C61' }">
+                 :class="{ 'el-icon-success': scope.row.status === 5 || scope.row.status === 24 , 'el-icon-error': scope.row.status !== 5 && scope.row.status !== 24 }"
+                 :style="{ fontSize: '45px', color: scope.row.status === 5 || scope.row.status === 24 ? '#54AC1C' : '#F95C61'  }">
               </i>
             </el-table-column>
             <el-table-column prop="channelName" label="频道名称" width="180">
@@ -369,7 +369,7 @@
             <el-table-column prop="itemName" label="节目标题">
             </el-table-column>
             <el-table-column label="进度">
-              <el-progress :status="scope.row.status != '5' ? 'exception' : 'success'" :text-inside="true"
+              <el-progress :status="scope.row.status != '5' && scope.row.status != '24' ? 'exception' : 'success'" :text-inside="true"
                            :stroke-width="26" slot-scope="scope" :percentage="scope.row.downloadProgress">
               </el-progress>
             </el-table-column>
@@ -385,14 +385,14 @@
         </div>
       </div>
 
-      <!--查看下载错误-->
+      <!--查看上传&下载错误-->
       <div v-show="activeMenu === 'error'">
         <div style="height: 90vh; overflow-y: scroll">
           <el-table :data="download.error" stripe style="width: 100%">
             <el-table-column label="状态" width="180">
               <i slot-scope="scope"
-                 :class="{ 'el-icon-success': scope.row.status == '5', 'el-icon-error': scope.row.status !== '5' }"
-                 :style="{ fontSize: '45px', color: scope.row.status == '5' ? '#54AC1C' : '#F95C61' }">
+                 :class="{ 'el-icon-success': scope.row.status === 5 || scope.row.status === 24 , 'el-icon-error': scope.row.status !== 5 && scope.row.status !== 24 }"
+                 :style="{ fontSize: '45px', color: scope.row.status === 5 || scope.row.status === 24 ? '#54AC1C' : '#F95C61'  }">
               </i>
             </el-table-column>
             <el-table-column prop="channelName" label="频道名称" width="180">
@@ -400,7 +400,7 @@
             <el-table-column prop="itemName" label="节目标题">
             </el-table-column>
             <el-table-column label="进度">
-              <el-progress :status="scope.row.status != '5' ? 'exception' : 'success'" :text-inside="true"
+              <el-progress :status="scope.row.status != '5' && scope.row.status != '24' ? 'exception' : 'success'" :text-inside="true"
                            :stroke-width="26" slot-scope="scope" :percentage="scope.row.downloadProgress">
               </el-progress>
             </el-table-column>
