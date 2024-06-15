@@ -8,9 +8,13 @@ import io.github.yajuhua.download.commons.Operation;
 import io.github.yajuhua.download.commons.Type;
 import io.github.yajuhua.download.manager.DownloadManager;
 import io.github.yajuhua.download.manager.Request;
+import io.github.yajuhua.podcast2.alist.Alist;
+import io.github.yajuhua.podcast2.alist.dto.fs.PutDTO;
+import io.github.yajuhua.podcast2.alist.dto.task.upload.InfoDTO;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.common.utils.Http;
+import io.github.yajuhua.podcast2.controller.DownloadController;
 import io.github.yajuhua.podcast2.controller.PluginController;
 import io.github.yajuhua.podcast2.downloader.ytdlp.YtDlpUpdate;
 import io.github.yajuhua.podcast2.mapper.*;
@@ -27,6 +31,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Predicate;
@@ -64,6 +69,8 @@ public class Task {
     private PluginMapper pluginMapper;
     @Autowired
     private UserService userService;
+    @Autowired
+    private Alist alist;
 
     /**
      * 获取进度
@@ -132,15 +139,27 @@ public class Task {
                     }).collect(Collectors.toList());
 
                     for (Items items : itemsList) {
-                        File[] list = new File(dataPathProperties.getResourcesPath()).listFiles();
-                        for (File file : list) {
-                            if (file.getName().contains(items.getUuid())){
-                                log.info("删除过期节目:{}",file.getName());
-                                FileUtils.forceDelete(file);
-                                itemsMapper.deleteByUuid(items.getUuid());
+                        Integer status = items.getStatus();
+                        //删除本地文件
+                        if (Context.COMPLETED == status){
+                            File[] list = new File(dataPathProperties.getResourcesPath()).listFiles();
+                            for (File file : list) {
+                                if (file.getName().contains(items.getUuid())){
+                                    log.info("删除过期节目:{}",file.getName());
+                                    try {
+                                        FileUtils.forceDelete(file);
+                                        itemsMapper.deleteByUuid(items.getUuid());
+                                    } catch (IOException e) {
+                                        log.error("删除过期节目失败：{}",e.getMessage());
+                                    }
+                                }
                             }
+                        }else if (Context.ALIST_UPLOAD_SUCCESS == status){
+                            //删除AList的资源
+                            log.info("删除过期文件：{}",items.getFileName());
+                            alist.deleteFile(items.getFileName());
+                            itemsMapper.deleteByUuid(items.getUuid());
                         }
-
                     }
                 }
             }
@@ -395,5 +414,80 @@ public class Task {
             log.info("Github Action Status 更新完成");
         }
 
+    }
+
+    /**
+     * 上传节目资源到AList
+     * 每一分钟检查一次
+     */
+
+    @Scheduled(fixedRate = 1,timeUnit = TimeUnit.MINUTES)
+    public void uploadResourcesToAList(){
+        AlistInfo alistInfo = userService.getExtendInfo().getAlistInfo();
+        if (alistInfo.isOpen() && alist.isConnect()){
+            List<Items> uploadItems = itemsMapper.list().stream().filter(items ->
+                    Context.COMPLETED == items.getStatus()).collect(Collectors.toList());
+            uploadItems.addAll(DownloadController.reUploadItems);
+            String filePath = dataPathProperties.getResourcesPath();
+            for (Items uploadItem : uploadItems) {
+                PutDTO putDTO = null;
+                try {
+                    filePath = filePath + uploadItem.getFileName();
+                    log.info("开始上传：{}",filePath);
+                    putDTO = alist.addUploadFileTask(filePath);
+                    //1是正在上传 2是上传完成
+                    //排除异常情况
+                    Integer aListState = putDTO.getData().getTask().getState();
+                    if (200 != putDTO.getCode() || (0!=aListState && 1!=aListState && 2!=aListState)){
+                       throw new RuntimeException();
+                    }
+                } catch (RuntimeException e) {
+                    uploadItem.setStatus(Context.ALIST_UPLOAD_ERR);
+                    itemsMapper.update(uploadItem);
+                    log.error("上传失败：{}",uploadItem.getFileName());
+                    continue;
+                }
+                //获取上传任务状态
+                InfoDTO taskInfo;
+                Integer taskState;
+                while (true){
+                    taskInfo = alist.getUploadTaskInfo(putDTO.getData().getTask().getId());
+                    taskState = taskInfo.getData().getState();
+                    if (200 != taskInfo.getCode() || (1!=taskState && 2!=taskState)){
+                        uploadItem.setStatus(Context.ALIST_UPLOAD_ERR);
+                        itemsMapper.update(uploadItem);
+                        break;
+                    }else if (200 == taskInfo.getCode() && 2 == taskState){
+                        uploadItem.setStatus(Context.ALIST_UPLOAD_SUCCESS);
+                        itemsMapper.update(uploadItem);
+                        log.info("上传成功：{}",taskInfo.getData().getName());
+                        try {
+                            DownloadController.reUploadItems.remove(uploadItem);
+                            FileUtils.forceDelete(new File(filePath));
+                            log.info("删除本地文件成功：{}",filePath);
+                        } catch (IOException e) {
+                            log.error("删除本地文件错误：{}",e.getMessage());
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+    }
+
+    /**
+     * 每24小时刷新一次AList的token
+     */
+    @Scheduled(fixedRate = 24,timeUnit = TimeUnit.HOURS)
+    public void refreshAListToken(){
+        try {
+            AlistInfo alistInfo = userService.getExtendInfo().getAlistInfo();
+            if (alistInfo.isOpen()){
+                alist.refreshToken();
+            }
+        } catch (Exception e) {
+            log.error("刷新AListToken异常：{}",e.getMessage());
+        }
     }
 }
