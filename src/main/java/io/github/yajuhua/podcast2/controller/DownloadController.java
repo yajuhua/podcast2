@@ -7,6 +7,7 @@ import io.github.yajuhua.download.commons.Operation;
 import io.github.yajuhua.download.commons.Type;
 import io.github.yajuhua.download.manager.DownloadManager;
 import io.github.yajuhua.download.manager.Request;
+import io.github.yajuhua.podcast2.alist.Alist;
 import io.github.yajuhua.podcast2.common.constant.MessageConstant;
 import io.github.yajuhua.podcast2.common.constant.Unit;
 import io.github.yajuhua.podcast2.common.exception.DeleteException;
@@ -59,6 +60,9 @@ public class DownloadController {
     private SubMapper subMapper;
     @Autowired
     private Gson gson;
+    @Autowired
+    private Alist alist;
+    public static List<Items> reUploadItems = new ArrayList<>();
 
 
     /**
@@ -81,7 +85,7 @@ public class DownloadController {
     }
 
     /**
-     * 获取下载完成的信息
+     * 获取上传&下载完成的信息
      * @return
      */
     public Result<List<DownloadCompletedVO>> downloadCompleted(){
@@ -129,31 +133,33 @@ public class DownloadController {
     }
 
     /**
-     * 获取下载完成的信息
+     * 获取下载和上传完成的信息
      * @return
      */
-    @ApiOperation("获取完成下载的信息")
+    @ApiOperation("获取完成下载和上传的信息")
     @GetMapping("/completed")
     public Result<List<DownloadCompletedVO>> downloadDone(){
         return Result.success(downloadCompleted().getData().stream().filter(new Predicate<DownloadCompletedVO>() {
             @Override
             public boolean test(DownloadCompletedVO downloadCompletedVO) {
-                return downloadCompletedVO.getStatus().equals(Context.COMPLETED);
+                return downloadCompletedVO.getStatus().equals(Context.COMPLETED) || downloadCompletedVO.getStatus()
+                        .equals(Context.ALIST_UPLOAD_SUCCESS);
             }
         }).collect(Collectors.toList()));
     }
 
     /**
-     * 获取下载错误的信息
+     * 获取下载和上传错误的信息
      * @return
      */
-    @ApiOperation("获取下载错误的信息")
+    @ApiOperation("获取上传和下载错误的信息")
     @GetMapping("/error")
     public Result<List<DownloadCompletedVO>> downloadError(){
      return Result.success(downloadCompleted().getData().stream().filter(new Predicate<DownloadCompletedVO>() {
          @Override
          public boolean test(DownloadCompletedVO downloadCompletedVO) {
-             return !downloadCompletedVO.getStatus().equals(Context.COMPLETED);
+             return !downloadCompletedVO.getStatus().equals(Context.COMPLETED) && !downloadCompletedVO.getStatus()
+                     .equals(Context.ALIST_UPLOAD_SUCCESS);
          }
      }).collect(Collectors.toList()));
     }
@@ -162,7 +168,7 @@ public class DownloadController {
      * 获取下载详细信息
      * @return
      */
-    @ApiOperation("获取下载详细信息")
+    @ApiOperation("获取上传和下载详细信息")
     @GetMapping("/detail/{uuid}")
     public Result<DownloadDetailVO> detail(@PathVariable String uuid, HttpServletRequest request){
         Map map = new HashMap<>();
@@ -196,11 +202,11 @@ public class DownloadController {
     }
 
     /**
-     * 重新下载
+     * 重新下载和上传
      * @param uuid
      * @return
      */
-    @ApiOperation("重新下载")
+    @ApiOperation("重新下载和上传")
     @GetMapping("/reDownload/{uuid}")
     public Result reDownload(@PathVariable String uuid){
         log.info("重新下载:{}",uuid);
@@ -208,40 +214,49 @@ public class DownloadController {
         if (items == null){
             throw new ItemNotFoundException(MessageConstant.ITEMS_NOT_FOUND_FAILED);
         }
-
-        //先把之前的删除掉，不然在格式转换时出现错误
-        List<File> before = Arrays.stream(new File(dataPathProperties.getResourcesPath()).listFiles())
-                .filter(file -> file.getName().contains(items.getUuid())).collect(Collectors.toList());
-        try {
-            for (File file : before) {
-                log.info("删除文件:{}",file.getName());
-                FileUtils.forceDelete(file);
-            }
-        } catch (Exception e) {
-            throw new ItemNotFoundException(MessageConstant.ITEMS_RESOURCE_DELETE_FAILED);
-
+        //重新上传
+        if (DownloaderUtils.aListErrStatusCode().contains(items.getStatus())){
+            //加入上传列表任务
+            reUploadItems.add(items);
+            log.info("加入重新上传列表：{}",items.getFileName());
+            return Result.success();
         }
-        Map args = gson.fromJson(items.getArgs(), Map.class);
-        List<String> links = gson.fromJson(items.getLinks(),new TypeToken<List<String>>() {}.getType());
+        //重新下载
+        else {
+            //先把之前的删除掉，不然在格式转换时出现错误
+            List<File> before = Arrays.stream(new File(dataPathProperties.getResourcesPath()).listFiles())
+                    .filter(file -> file.getName().contains(items.getUuid())).collect(Collectors.toList());
+            try {
+                for (File file : before) {
+                    log.info("删除文件:{}",file.getName());
+                    FileUtils.forceDelete(file);
+                }
+            } catch (Exception e) {
+                throw new ItemNotFoundException(MessageConstant.ITEMS_RESOURCE_DELETE_FAILED);
 
-        //解析枚举
-        Type type = Type.valueOf(items.getType());
-        DownloadManager.Downloader downloader = DownloadManager.Downloader.valueOf(items.getDownloader());
-        Operation operation = Operation.valueOf(items.getOperation());
+            }
+            Map args = gson.fromJson(items.getArgs(), Map.class);
+            List<String> links = gson.fromJson(items.getLinks(),new TypeToken<List<String>>() {}.getType());
 
-        //构建下载请求
-        Request build = Request.builder()
-                .links(links)
-                .type(type)
-                .operation(operation)
-                .downloader(downloader)
-                .args(args)
-                .dir(new File(dataPathProperties.getResourcesPath()))
-                .channelUuid(items.getChannelUuid())
-                .uuid(items.getUuid())
-                .build();
-        Thread thread = new Thread(new ReDownload(build,itemsMapper,subMapper));
-        thread.start();
+            //解析枚举
+            Type type = Type.valueOf(items.getType());
+            DownloadManager.Downloader downloader = DownloadManager.Downloader.valueOf(items.getDownloader());
+            Operation operation = Operation.valueOf(items.getOperation());
+
+            //构建下载请求
+            Request build = Request.builder()
+                    .links(links)
+                    .type(type)
+                    .operation(operation)
+                    .downloader(downloader)
+                    .args(args)
+                    .dir(new File(dataPathProperties.getResourcesPath()))
+                    .channelUuid(items.getChannelUuid())
+                    .uuid(items.getUuid())
+                    .build();
+            Thread thread = new Thread(new ReDownload(build,itemsMapper,subMapper));
+            thread.start();
+        }
         return Result.success();
     }
 
@@ -257,14 +272,24 @@ public class DownloadController {
         for (String uuid : uuids) {
             Items items = itemsMapper.selectByUuid(uuid);
             if (items != null && DownloaderUtils.endStatusCode().contains(items.getStatus())){
-                //删除文件，如果有的话
-                List<File> deleteFiles = Arrays.stream(new File(dataPathProperties.getResourcesPath()).listFiles())
-                        .filter(file -> file.getName().contains(items.getUuid())).collect(Collectors.toList());
-                for (File file : deleteFiles) {
+                if (DownloaderUtils.aListStatusCode().contains(items.getStatus())){
+                    //删除AList中文件
                     try {
-                        FileUtils.forceDelete(file);
+                        alist.deleteFile(items.getFileName());
                     } catch (Exception e) {
-                        throw  new DeleteException(MessageConstant.ITEMS_RESOURCE_DELETE_FAILED);
+                        throw new RuntimeException(e);
+                    }
+
+                }else {
+                    //删除本地文件，如果有的话
+                    List<File> deleteFiles = Arrays.stream(new File(dataPathProperties.getResourcesPath()).listFiles())
+                            .filter(file -> file.getName().contains(items.getUuid())).collect(Collectors.toList());
+                    for (File file : deleteFiles) {
+                        try {
+                            FileUtils.forceDelete(file);
+                        } catch (Exception e) {
+                            throw  new DeleteException(MessageConstant.ITEMS_RESOURCE_DELETE_FAILED);
+                        }
                     }
                 }
                 //删除数据库记录
