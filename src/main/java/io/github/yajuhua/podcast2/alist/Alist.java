@@ -60,9 +60,13 @@ public class Alist {
         JsonObject object = new JsonObject();
         JsonArray array = new JsonArray();
         File file = new File(fileName);
+        String fileParent = file.getParent();
+        if (fileParent == null){
+            fileParent = "";
+        }
         array.add(URLEncoder.encode(file.getName()));
         object.add("names",array);
-        object.addProperty("dir",path + "/" + file.getParent());
+        object.addProperty("dir",path + "/" + fileParent);
         heads.put("Content-Type", "application/json");
         String json = Http.post(url + "/api/fs/remove", gson.toJson(object), heads);
         RemoveFileDTO fileDTO = gson.fromJson(json, RemoveFileDTO.class);
