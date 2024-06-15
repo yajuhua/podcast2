@@ -3,6 +3,7 @@ package io.github.yajuhua.podcast2.controller;
 import com.google.gson.Gson;
 import io.github.yajuhua.download.commons.Context;
 import io.github.yajuhua.download.manager.DownloadManager;
+import io.github.yajuhua.podcast2.alist.Alist;
 import io.github.yajuhua.podcast2.common.constant.MessageConstant;
 import io.github.yajuhua.podcast2.common.constant.ReflectionMethodName;
 import io.github.yajuhua.podcast2.common.constant.StatusCode;
@@ -26,6 +27,7 @@ import io.github.yajuhua.podcast2.pojo.vo.SubVO;
 import io.github.yajuhua.podcast2.service.ExtendService;
 import io.github.yajuhua.podcast2.service.ItemsService;
 import io.github.yajuhua.podcast2.service.SubService;
+import io.github.yajuhua.podcast2.service.UserService;
 import io.github.yajuhua.podcast2.task.Task;
 import io.github.yajuhua.podcast2API.Channel;
 import io.github.yajuhua.podcast2API.Item;
@@ -90,6 +92,10 @@ public class SubController {
     private ExtendService extendService;
     @Autowired
     private PluginMapper pluginMapper;
+    @Autowired
+    private Alist alist;
+    @Autowired
+    private UserService userService;
 
 
     /**
@@ -168,11 +174,32 @@ public class SubController {
         BeanUtils.copyProperties(sub,channel);
         List<Items> items = itemsService.selectByChannelUuid(uuid);
         List<Item> itemList = new ArrayList<>();
+        Integer status;
+        String url;
+        AlistInfo alistInfo = userService.getExtendInfo().getAlistInfo();
         for (Items item : items) {
-            if (item.getStatus() == Context.COMPLETED){
+            status = item.getStatus();
+            if (status == Context.COMPLETED || status == Context.ALIST_UPLOAD_SUCCESS){
                 Item item1 = new Item();
+                url = enclosureDomain + "/resources/" + item.getFileName();
+                if (status == Context.ALIST_UPLOAD_SUCCESS && alistInfo.isOpen()){
+                    //上传完成的
+                    try {
+                        url = alist.getFileUrl(item.getFileName());
+                    } catch (Exception e) {
+                        log.error("获取alist资源错误：{}",e.getMessage());
+                        item.setStatus(Context.ALIST_FILE_NOT_FOUND);
+                        itemsMapper.update(item);
+                        continue;
+                    }
+                }
+
+                if (status == Context.ALIST_UPLOAD_SUCCESS && !alistInfo.isOpen()){
+                    continue;
+                }
+
+                item1.setEnclosureType(item.getType().toLowerCase() + "/" + item.getFormat());
                 BeanUtils.copyProperties(item,item1);
-                String url = enclosureDomain + "/resources/" + item.getFileName();
                 item1.setEnclosure(url);
                 itemList.add(item1);
             }
@@ -258,11 +285,32 @@ public class SubController {
 
             //构建附件URL
             List<Item> itemList = new ArrayList<>();
+            Integer status;
+            String url;
+            AlistInfo alistInfo = userService.getExtendInfo().getAlistInfo();
             for (Items item : groupItems) {
-                if (item.getStatus() == Context.COMPLETED){
+                status = item.getStatus();
+                if (status == Context.COMPLETED || status == Context.ALIST_UPLOAD_SUCCESS){
                     Item item1 = new Item();
+                    url = enclosureDomain + "/resources/" + item.getFileName();
+                    if (status == Context.ALIST_UPLOAD_SUCCESS && alistInfo.isOpen()){
+                        //上传完成的
+                        try {
+                            url = alist.getFileUrl(item.getFileName());
+                        } catch (Exception e) {
+                            log.error("获取alist资源错误：{}",e.getMessage());
+                            item.setStatus(Context.ALIST_FILE_NOT_FOUND);
+                            itemsMapper.update(item);
+                            continue;
+                        }
+                    }
+
+                    if (status == Context.ALIST_UPLOAD_SUCCESS && !alistInfo.isOpen()){
+                        continue;
+                    }
+
+                    item1.setEnclosureType(item.getType().toLowerCase() + "/" + item.getFormat());
                     BeanUtils.copyProperties(item,item1);
-                    String url = enclosureDomain + "/resources/" + item.getFileName();
                     item1.setEnclosure(url);
                     itemList.add(item1);
                 }
@@ -300,11 +348,21 @@ public class SubController {
             }
         }).collect(Collectors.toList()).size();
 
-        List<Items> itemsError = itemsMapper.list().stream().filter(new Predicate<Items>() {
+        //下载错误的
+        List<Items> itemsDownloadError = itemsMapper.list().stream().filter(new Predicate<Items>() {
             @Override
             public boolean test(Items items) {
                 Integer status = items.getStatus();
                 return DownloaderUtils.errorStatusCode().contains(status) && subUuids.contains(items.getChannelUuid());
+            }
+        }).collect(Collectors.toList());
+
+        //上传错误的
+        List<Items> itemsUploadError = itemsMapper.list().stream().filter(new Predicate<Items>() {
+            @Override
+            public boolean test(Items items) {
+                Integer status = items.getStatus();
+                return DownloaderUtils.aListErrStatusCode().contains(status) && subUuids.contains(items.getChannelUuid());
             }
         }).collect(Collectors.toList());
 
@@ -320,12 +378,13 @@ public class SubController {
             item.setLink("https://github.com/yajuhua/podcast2");
             item.setImage("https://yajuhua.github.io/images/975x975-logo.png");
             item.setEnclosure("https://yajuhua.github.io/resources/error.mp3");
+            item.setEnclosureType("audio/mp3");
             serveStatusItems.add(item);
         }
-        if (!itemsError.isEmpty()) {
+        if (!itemsDownloadError.isEmpty()) {
             //将节目标题拼接到描述区
             StringBuilder desc = new StringBuilder("节目标题：");
-            for (Items items : itemsError) {
+            for (Items items : itemsDownloadError) {
                 desc.append(items.getTitle() + "\n");
             }
             item = new Item();
@@ -336,6 +395,25 @@ public class SubController {
             item.setLink("https://github.com/yajuhua/podcast2");
             item.setImage("https://yajuhua.github.io/images/975x975-logo.png");
             item.setEnclosure("https://yajuhua.github.io/resources/error.mp3");
+            item.setEnclosureType("audio/mp3");
+            serveStatusItems.add(item);
+        }
+
+        if (!itemsUploadError.isEmpty()) {
+            //将节目标题拼接到描述区
+            StringBuilder desc = new StringBuilder("节目标题：");
+            for (Items items : itemsDownloadError) {
+                desc.append(items.getTitle() + "\n");
+            }
+            item = new Item();
+            item.setTitle("节目上传错误，详细情况请查看服务。");
+            item.setDescription(desc.toString());
+            item.setDuration(10);
+            item.setCreateTime(System.currentTimeMillis());
+            item.setLink("https://github.com/yajuhua/podcast2");
+            item.setImage("https://yajuhua.github.io/images/975x975-logo.png");
+            item.setEnclosure("https://yajuhua.github.io/resources/error.mp3");
+            item.setEnclosureType("audio/mp3");
             serveStatusItems.add(item);
         }
 
@@ -366,7 +444,7 @@ public class SubController {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
             LocalDateTime localDateTime = null;
             //简单描述
-            StringBuilder desc = new StringBuilder("插件状态由Github Action检查，报错不一定是插件问题，可能是该网站屏蔽了Github Action(美国IP地址)。\n");
+            StringBuilder desc = new StringBuilder("插件状态由Github Action检查。\n");
 
             int descLength = desc.length();
             for (GithubActionWorkflowsDTO workflowsDTO : collect) {
@@ -417,20 +495,32 @@ public class SubController {
                 Task.getDownloadProgressVOSet().clear();
             }
 
-
             //删除相关资源
             List<Items> itemsList = itemsService.selectByChannelUuid(uuid);
             for (Items items : itemsList) {
-                //删除文件
-                File[] files = new File(dataPathProperties.getResourcesPath()).listFiles();
-                for (File file : files) {
-                    if (file.getName().contains(items.getUuid())){
-                        log.info("删除文件:{}",file.getName());
-                        try {
-                            FileUtils.forceDelete(file);
-                        } catch (IOException e) {
-                            log.error("删除文件失败:{}",e.getMessage());
+                //本地还是AList
+                if (items.getStatus() == Context.COMPLETED){
+                    //本地
+                    //删除文件
+                    File[] files = new File(dataPathProperties.getResourcesPath()).listFiles();
+                    for (File file : files) {
+                        if (file.getName().contains(items.getUuid())){
+                            log.info("删除本地文件:{}",file.getName());
+                            try {
+                                FileUtils.forceDelete(file);
+                            } catch (IOException e) {
+                                log.error("删除本地文件失败:{}",e.getMessage());
+                            }
                         }
+                    }
+                }
+                else if (items.getStatus() == Context.ALIST_UPLOAD_SUCCESS){
+                    //删除AList端文件
+                    log.info("删除AList端文件：{}",items.getFileName());
+                    try {
+                        alist.deleteFile(items.getFileName());
+                    } catch (Exception e) {
+                        log.error("删除AList端文件错误：{}",e.getMessage());
                     }
                 }
             }
