@@ -1,9 +1,7 @@
 package io.github.yajuhua.podcast2.common.utils;
 
 import io.github.yajuhua.download.commons.Context;
-import io.github.yajuhua.download.manager.DownloadManager;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -153,6 +151,13 @@ public class DownloaderUtils {
         map.put(18,"第一部分下载错误");
         map.put(19,"第二部分下载错误");
         map.put(20,"移除下载");
+        map.put(21,"alist正在上传");
+        map.put(22,"alist上传失败");
+        map.put(23,"alist连接失败");
+        map.put(24,"alist上传成功");
+        map.put(25,"alist找不到文件");
+        map.put(26,"alist删除文件错误");
+        map.put(27,"alist取消文件上传");
         return map.get(code);
     }
 
@@ -164,8 +169,32 @@ public class DownloaderUtils {
         List<Integer> endStatusCode = new ArrayList<>();
         Collections.addAll(endStatusCode, Context.COMPLETED,Context.DOWNLOAD_ERR,Context.MERGE_ERR,
                 Context.TO_MP4_ERR,Context.DOWNLOAD_PATH1_ERR,Context.DOWNLOAD_PATH2_ERR,Context.UNKNOWN,
-                Context.TO_M4A_ERR,Context.REMOVE);
+                Context.TO_M4A_ERR,Context.REMOVE,Context.ALIST_UPLOAD_ERR,Context.ALIST_CONNECT_ERR,
+                Context.ALIST_FILE_NOT_FOUND,Context.ALIST_FILE_DELETE_ERR,Context.ALIST_UPLOAD_SUCCESS);
         return endStatusCode;
+    }
+
+    /**
+     * AList状态码
+     * @return
+     */
+    public static List<Integer> aListStatusCode(){
+        List<Integer> aListStatusCode = new ArrayList<>();
+        Collections.addAll(aListStatusCode,Context.ALIST_UPLOAD_SUCCESS,Context.ALIST_UPLOAD_ERR,
+                Context.ALIST_UPLOAD_ERR,Context.ALIST_CONNECT_ERR,Context.ALIST_FILE_DELETE_ERR,
+                Context.ALIST_UPLOADING,Context.ALIST_UPLOAD_CANCEL);
+        return aListStatusCode;
+    }
+
+    /**
+     * AList错误状态码
+     * @return
+     */
+    public static List<Integer> aListErrStatusCode(){
+        List<Integer> aListErrStatusCode = new ArrayList<>();
+        Collections.addAll(aListErrStatusCode,Context.ALIST_UPLOAD_ERR,
+                Context.ALIST_UPLOAD_ERR,Context.ALIST_CONNECT_ERR,Context.ALIST_FILE_DELETE_ERR);
+        return aListErrStatusCode;
     }
 
     /**
