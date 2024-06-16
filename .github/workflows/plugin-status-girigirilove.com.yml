@@ -8,17 +8,20 @@ on:
 
 jobs:
   test:
+    permissions: write-all
     runs-on: ubuntu-latest
     steps:
-      - name: girigirilove
+      - uses: actions/checkout@v3
+      - name: Set up JDK 8
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+
+      - name: Install FFmpeg
         run: |
-          # Send HTTP GET request to the API endpoint
-          response=$(curl -s -o /dev/null -w "%{http_code}" ${{ secrets.TEST_PLUGIN_URL }}https://anime.girigirilove.com/GV25746/)
-          
-          # Check response status code
-          if [ $response -eq 200 ]; then
-            echo "API is working fine."
-          else
-            echo "API may have issues. Status code: $response"
-            exit 1
-          fi
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg          
+
+      - name: girigirilove
+        run: java -jar test/read-gitee-pipelines-0.0.1-jar-with-dependencies.jar "${{ secrets.TEST_GIRIGIRILOVE_STATUS_URL }}"
