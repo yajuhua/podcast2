@@ -584,7 +584,7 @@ public class SubController {
                     .maxDuration(addSubDTO.getMaxDuration())
                     .minDuration(addSubDTO.getMinDuration())
                     .createTime(System.currentTimeMillis())
-                    .status(StatusCode.NO_ACTION)
+                    .status(addSubDTO.getStatus())
                     .survivalTime(addSubDTO.getSurvivalTime())
                     .type(addSubDTO.getType())
                     .descKeywords(descKeywords)
@@ -653,7 +653,7 @@ public class SubController {
         sub.setTitleKeywords(titleKeywords);
         sub.setDescription(descKeywords);
         log.info("sub:{}",sub);
-        subService.commitEditSub(sub);
+        subMapper.update(sub);
         //2.更新extend表
         //清空之前的扩展
         extendMapper.deleteByUuid(sub.getUuid());

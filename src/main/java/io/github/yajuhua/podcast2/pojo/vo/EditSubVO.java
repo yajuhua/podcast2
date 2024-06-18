@@ -36,4 +36,6 @@ public class EditSubVO {
     private boolean titleInputVisible;
     private String descInputValue;
     private boolean descInputVisible;
+    private Integer status;
+    private String image;
 }
