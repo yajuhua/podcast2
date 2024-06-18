@@ -22,4 +22,5 @@ public class AddSubDTO {
     private List<String> descKeywords;
     private Integer isExtend;
     private List<InputAndSelectData> inputAndSelectDataList;
+    private Integer status;
 }
