@@ -48,26 +48,8 @@ public class SystemController {
     @ApiOperation("重启项目")
     @GetMapping("/restart")
     public Result restart() {
-        //重启之前先把所有订阅状态改成NO_ACTION,避免重启后无法操作
-        List<Sub> list = subMapper.list();
-        for (Sub sub : list) {
-            sub.setStatus(StatusCode.NO_ACTION);
-            subMapper.update(sub);
-        }
         Podcast2Application.restart();
         return Result.success();
-    }
-
-    /**
-     * 关闭之前先处理一些
-     */
-    @PreDestroy
-    public void shutdownBefore(){
-        List<Sub> list = subMapper.list();
-        for (Sub sub : list) {
-            sub.setStatus(StatusCode.NO_ACTION);
-            subMapper.update(sub);
-        }
     }
 
 

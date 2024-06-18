@@ -188,7 +188,6 @@ public class Update implements Runnable {
                     log.info("{}:暂无更新",sub.getTitle());
                     //加入当前时间浮动，让每次检查时间不一样 往后
                     sub.setCheckTime(nowTimeFloat(1,1,10,Units.Minutes));
-                    sub.setStatus(StatusCode.NO_ACTION);
                     //更新sub表
                     subMapper.update(sub);
                     return;
@@ -350,7 +349,6 @@ public class Update implements Runnable {
             e.printStackTrace();
         }finally {
             //更新sub表
-            sub.setStatus(StatusCode.NO_ACTION);
             sub.setIsFirst(StatusCode.NO);
             //加入当前时间浮动，让每次检查时间不一样 往后
             sub.setCheckTime(nowTimeFloat(1,1,10,Units.Minutes));

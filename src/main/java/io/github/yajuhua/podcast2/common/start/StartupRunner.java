@@ -75,18 +75,6 @@ public class StartupRunner implements ApplicationRunner{
         //初始化
         initConfig();
 
-        //将订阅状态全部恢复成NO_ACTION
-        List<Sub> list = subMapper.list();
-        list.forEach(new Consumer<Sub>() {
-            @Override
-            public void accept(Sub sub) {
-                sub.setStatus(StatusCode.NO_ACTION);
-            }
-        });
-        for (Sub sub : list) {
-            subMapper.update(sub);
-        }
-
         //2.2.0仅使用yt-dlp
         List<Downloader> downloaderList = downloaderMapper.list();
         if (downloaderList.isEmpty() || downloaderList.size() != 1){
