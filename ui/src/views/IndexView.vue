@@ -227,7 +227,24 @@
             <el-option label="2天" value="172800"></el-option>
             <el-option label="4天" value="345600"></el-option>
             <el-option label="7天" value="604800"></el-option>
+            <el-option label="自定义" value="-1"></el-option>
           </el-select>
+        </el-form-item>
+        <!--    自定义更新频率    -->
+        <el-form-item label="自定义" v-if="addSub.cron == '-1'">
+          <div style="margin-top: 15px">
+            <el-input v-model.number="addSub.customCron" placeholder="请输入更新频率"
+                      :min="1" type="number" size="medium"
+                      :style="{ width: '250px' }" class="input-with-select">
+            <el-select v-model="addSub.cronUnit" placeholder="更新频率单位" slot="append"
+                       :style="{ width: '100px' }">
+              <el-option label="秒钟" value="1"></el-option>
+              <el-option label="分钟" value="60"></el-option>
+              <el-option label="小时" value="3600"></el-option>
+              <el-option label="天" value="86400"></el-option>
+            </el-select>
+            </el-input>
+          </div>
         </el-form-item>
         <el-form-item label="过滤器">
           <el-select v-model="addSub.isFilter">
@@ -273,6 +290,7 @@
             <el-option label="自定义剧集" value="1"></el-option>
           </el-select>
         </el-form-item>
+
         <div v-show="addSub.episodes == '1'">
           <el-form-item label="自定义">
             <el-input v-model="addSub.customEpisodes"></el-input>
@@ -282,6 +300,14 @@
             </el-tooltip>
           </el-form-item>
         </div>
+
+        <el-form-item label="存放位置">
+          <el-select v-model="addSub.status" placeholder="请选择存放位置">
+            <el-option label="本地" value="21"></el-option>
+            <el-option label="alist" value="22"></el-option>
+          </el-select>
+        </el-form-item>
+
         <el-form-item label="更多选项">
           <el-button @click="getExtendList">更多选项</el-button>
         </el-form-item>
@@ -313,105 +339,137 @@
     </el-dialog>
 
     <!-- 编辑订阅 -->
-    <el-dialog :title="editSubData.title" :visible.sync="editSubVisible" width="audo">
-      <el-form ref="form" :model="editSubData" label-width="80px">
-        <el-form-item label="类型">
-          <el-select v-model="editSubData.type" placeholder="请选择类型">
-            <el-option label="视频" value="Video"></el-option>
-            <el-option label="音频" value="Audio"></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="存活时间">
-          <el-select v-model="editSubData.survivalTime" placeholder="请选择存活时间">
-            <el-option label="1天" value="86400"></el-option>
-            <el-option label="3天" value="259200"></el-option>
-            <el-option label="7天" value="604800"></el-option>
-            <el-option label="15天" value="1296000"></el-option>
-            <el-option label="30天" value="2592000"></el-option>
-            <el-option label="永久" value="-1"></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="更新频率">
-          <el-select v-model="editSubData.cron" placeholder="请选择更新频率">
-            <el-option label="20分钟" value="1200"></el-option>
-            <el-option label="30分钟" value="1800"></el-option>
-            <el-option label="60分钟" value="3600"></el-option>
-            <el-option label="2个小时" value="7200"></el-option>
-            <el-option label="6个小时" value="21600"></el-option>
-            <el-option label="12个小时" value="43200"></el-option>
-            <el-option label="1天" value="86400"></el-option>
-            <el-option label="2天" value="172800"></el-option>
-            <el-option label="4天" value="345600"></el-option>
-            <el-option label="7天" value="604800"></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="继续更新">
-          <el-select v-model="editSubData.isUpdate">
-            <el-option label="是" value="1"></el-option>
-            <el-option label="否" value="0"></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="过滤器">
-          <el-select v-model="editSubData.isFilter">
-            <el-option label="禁用" value="0"></el-option>
-            <el-option label="启用" value="1"></el-option>
-          </el-select>
-        </el-form-item>
-        <div v-show="editSubData.isFilter == '1'">
-          <el-form-item label="最小时长">
-            <el-input-number v-model="editSubData.minDuration" :min="-1"> 秒</el-input-number>
+    <el-dialog :title="editSubData.title" :visible.sync="editSubVisible" width="audo" v-loading="editSubData.loading" element-loading-text="正在获取数据中...">
+        <el-form ref="form" :model="editSubData" label-width="80px">
+          <el-form-item label="名称">
+            <el-input v-model="editSubData.title" placeholder="请输入名称"></el-input>
           </el-form-item>
-          <el-form-item label="最大时长">
-            <el-input-number v-model="editSubData.maxDuration" :min="-1"> 秒</el-input-number>
+          <el-form-item label="封面">
+            <el-input v-model="editSubData.image" placeholder="请输入封面链接"></el-input>
           </el-form-item>
-          <el-form-item label="标题">
-            <el-tag :key="keyword" v-for="keyword in editSubData.titleKeywords" closable :disable-transitions="false"
-              @close="editFilterHandleClose('title', keyword)">
-              {{ keyword }}
-            </el-tag>
-            <el-input class="input-new-tag" v-if="editSubData.titleInputVisible" v-model="editSubData.titleInputValue"
-              ref="saveTagInput" size="small" @keyup.enter.native="editFilterHandleInputConfirm('title')"
-              @blur="editFilterHandleInputConfirm('title')">
-            </el-input>
-            <el-button v-else class="button-new-tag" size="small" @click="editFilterShowInput('title')">+
-              关键字</el-button>
+          <el-form-item label="类型">
+            <el-select v-model="editSubData.type" placeholder="请选择类型">
+              <el-option label="视频" value="Video"></el-option>
+              <el-option label="音频" value="Audio"></el-option>
+            </el-select>
           </el-form-item>
-          <el-form-item label="描述">
-            <el-tag :key="keyword" v-for="keyword in editSubData.descKeywords" closable :disable-transitions="false"
-              @close="editFilterHandleClose('desc', keyword)">
-              {{ keyword }}
-            </el-tag>
-            <el-input class="input-new-tag" v-if="editSubData.descInputVisible" v-model="editSubData.descInputValue"
-              ref="saveTagInput" size="small" @keyup.enter.native="editFilterHandleInputConfirm('desc')"
-              @blur="editFilterHandleInputConfirm('desc')">
-            </el-input>
-            <el-button v-else class="button-new-tag" size="small" @click="editFilterShowInput('desc')">+ 关键字</el-button>
+          <el-form-item label="存活时间">
+            <el-select v-model="editSubData.survivalTime" placeholder="请选择存活时间">
+              <el-option label="1天" value="86400"></el-option>
+              <el-option label="3天" value="259200"></el-option>
+              <el-option label="7天" value="604800"></el-option>
+              <el-option label="15天" value="1296000"></el-option>
+              <el-option label="30天" value="2592000"></el-option>
+              <el-option label="永久" value="-1"></el-option>
+              <span v-show="false">{{ editSubData.survivalTime += '' }}</span>
+            </el-select>
           </el-form-item>
-        </div>
-        <!-- 扩展选项 -->
-        <div v-if="editSubData.isExtend == '1'">
-          <!-- select选择框 -->
-          <div v-for="(select, selectIndex) in editSubData.extendList.selectList" :key="select.id">
-            <el-form-item :label="select.name">
-              <el-select v-model="editSubData.selectListData[selectIndex].content">
-                <span v-show="false">{{ editSubData.selectListData[selectIndex].name = select.name }}</span>
-                <el-option v-for="(option) in select.options" :key="option" :label="option" :value="option"></el-option>
-              </el-select>
-            </el-form-item>
-          </div>
-          <!-- 输入框 -->
-          <div v-for="(input, inputIndex) in editSubData.extendList.inputList" :key="input.id">
-            <span v-show="false">{{ editSubData.inputListData[inputIndex].name = input.name }}</span>
-            <el-form-item :label="input.name">
-              <el-input v-model="editSubData.inputListData[inputIndex].content"></el-input>
-            </el-form-item>
-          </div>
-        </div>
+          <el-form-item label="更新频率">
+            <el-select v-model="editSubData.cron" placeholder="请选择更新频率">
+              <el-option label="20分钟" value="1200"></el-option>
+              <el-option label="30分钟" value="1800"></el-option>
+              <el-option label="60分钟" value="3600"></el-option>
+              <el-option label="2个小时" value="7200"></el-option>
+              <el-option label="6个小时" value="21600"></el-option>
+              <el-option label="12个小时" value="43200"></el-option>
+              <el-option label="1天" value="86400"></el-option>
+              <el-option label="2天" value="172800"></el-option>
+              <el-option label="4天" value="345600"></el-option>
+              <el-option label="7天" value="604800"></el-option>
+              <el-option label="自定义" value="-1"></el-option>
+            </el-select>
+          </el-form-item>
+          <!--    自定义更新频率    -->
+          <el-form-item label="自定义" v-if="editSubData.cron == '-1'">
+            <div style="margin-top: 15px">
+              <el-input v-model.number="editSubData.customCron" placeholder="请输入更新频率"
+                        :min="1" type="number" size="medium"
+                        :style="{ width: '250px' }" class="input-with-select">
+                <el-select v-model="editSubData.cronUnit" placeholder="更新频率单位" slot="append"
+                           :style="{ width: '100px' }">
+                  <el-option label="秒钟" value="1"></el-option>
+                  <el-option label="分钟" value="60"></el-option>
+                  <el-option label="小时" value="3600"></el-option>
+                  <el-option label="天" value="86400"></el-option>
+                </el-select>
+              </el-input>
+            </div>
+          </el-form-item>
 
-      </el-form>
-      <span slot="footer" class="dialog-footer">
+          <el-form-item label="继续更新">
+            <el-select v-model="editSubData.isUpdate">
+              <el-option label="是" value="1"></el-option>
+              <el-option label="否" value="0"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="过滤器">
+            <el-select v-model="editSubData.isFilter">
+              <el-option label="禁用" value="0"></el-option>
+              <el-option label="启用" value="1"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="存放位置">
+            <el-select v-model="editSubData.status">
+              <el-option label="本地" value="21"></el-option>
+              <el-option label="alist" value="22"></el-option>
+              <span v-show="false">{{ editSubData.status += '' }}</span>
+            </el-select>
+          </el-form-item>
+          <div v-show="editSubData.isFilter == '1'">
+            <el-form-item label="最小时长">
+              <el-input-number v-model="editSubData.minDuration" :min="-1"> 秒</el-input-number>
+            </el-form-item>
+            <el-form-item label="最大时长">
+              <el-input-number v-model="editSubData.maxDuration" :min="-1"> 秒</el-input-number>
+            </el-form-item>
+            <el-form-item label="标题">
+              <el-tag :key="keyword" v-for="keyword in editSubData.titleKeywords" closable :disable-transitions="false"
+                      @close="editFilterHandleClose('title', keyword)">
+                {{ keyword }}
+              </el-tag>
+              <el-input class="input-new-tag" v-if="editSubData.titleInputVisible" v-model="editSubData.titleInputValue"
+                        ref="saveTagInput" size="small" @keyup.enter.native="editFilterHandleInputConfirm('title')"
+                        @blur="editFilterHandleInputConfirm('title')">
+              </el-input>
+              <el-button v-else class="button-new-tag" size="small" @click="editFilterShowInput('title')">+
+                关键字</el-button>
+            </el-form-item>
+            <el-form-item label="描述">
+              <el-tag :key="keyword" v-for="keyword in editSubData.descKeywords" closable :disable-transitions="false"
+                      @close="editFilterHandleClose('desc', keyword)">
+                {{ keyword }}
+              </el-tag>
+              <el-input class="input-new-tag" v-if="editSubData.descInputVisible" v-model="editSubData.descInputValue"
+                        ref="saveTagInput" size="small" @keyup.enter.native="editFilterHandleInputConfirm('desc')"
+                        @blur="editFilterHandleInputConfirm('desc')">
+              </el-input>
+              <el-button v-else class="button-new-tag" size="small" @click="editFilterShowInput('desc')">+ 关键字</el-button>
+            </el-form-item>
+          </div>
+          <!-- 扩展选项 -->
+          <div v-if="editSubData.isExtend == '1'">
+            <!-- select选择框 -->
+            <div v-for="(select, selectIndex) in editSubData.extendList.selectList" :key="select.id">
+              <el-form-item :label="select.name">
+                <el-select v-model="editSubData.selectListData[selectIndex].content">
+                  <span v-show="false">{{ editSubData.selectListData[selectIndex].name = select.name }}</span>
+                  <el-option v-for="(option) in select.options" :key="option" :label="option" :value="option"></el-option>
+                </el-select>
+              </el-form-item>
+            </div>
+            <!-- 输入框 -->
+            <div v-for="(input, inputIndex) in editSubData.extendList.inputList" :key="input.id">
+              <span v-show="false">{{ editSubData.inputListData[inputIndex].name = input.name }}</span>
+              <el-form-item :label="input.name">
+                <el-input v-model="editSubData.inputListData[inputIndex].content"></el-input>
+              </el-form-item>
+            </div>
+          </div>
+
+        </el-form>
+        <span slot="footer" class="dialog-footer">
         <el-button @click="editSubVisible = false">取 消</el-button>
-        <el-button type="primary" @click="editSubCommit">修改</el-button>
+        <el-button type="primary" @click="editSubCommit" v-if="!editSubData.loading">修改</el-button>
       </span>
     </el-dialog>
 
@@ -458,7 +516,10 @@ export default {
         descInputVisible: false,
         extendList: { inputList: [], selectList: [] },
         inputListData: [],
-        selectListData: []
+        selectListData: [],
+        status: '21',
+        cronUnit: '1',
+        customCron: '0'
       },
       //初始数据
       initAddSub: {
@@ -483,7 +544,8 @@ export default {
         descInputVisible: false,
         extendList: { inputList: [], selectList: [] },
         inputListData: [],
-        selectListData: []
+        selectListData: [],
+        status: '21',
       },
       //编辑订阅
       editSubData: {
@@ -504,7 +566,12 @@ export default {
         titleInputValue: '',
         titleInputVisible: '',
         descInputValue: '',
-        descInputVisible: ''
+        descInputVisible: '',
+        status: null,
+        image: '',
+        cronUnit: '1',
+        customCron: '0',
+        loading: false
       },
       //初始数据结构
       initEditSubData: {
@@ -525,7 +592,11 @@ export default {
         titleInputValue: '',
         titleInputVisible: '',
         descInputValue: '',
-        descInputVisible: ''
+        descInputVisible: '',
+        status: '',
+        image: '',
+        cronUnit: '',
+        customCron: ''
       },
       loading: false,
       addSubStatus: '',
@@ -679,8 +750,18 @@ export default {
           return
         }
       }
+      //处理自定义更新频率
+      let tempAddSub = { ...this.addSub }; // 使用展开运算符进行深拷贝
+      if (tempAddSub.cron == -1){
+        tempAddSub.cron = tempAddSub.cronUnit*tempAddSub.customCron;
+        if (tempAddSub.cron < 1200){
+          this.$message.error("更新频率不能小于20分钟");
+          this.addSubStatus = ''
+          return;
+        }
+      }
       //将数据发送
-      axios.post('/sub/add', this.addSub)
+      axios.post('/sub/add', tempAddSub)
         .then(res => {
           if (res.data.code == '1') {
             this.$message.success('添加成功')
@@ -780,6 +861,7 @@ export default {
     getEditSubInfo(uuid) {
       //向清空之前的
       this.editSubData = this.initEditSubData;
+      this.editSubData.loading = true;
       console.log(uuid)
       this.editSubVisible = true
       axios.get('/sub/edit/' + uuid)
@@ -801,11 +883,21 @@ export default {
         }).catch(error => {
           console.log(error)
           this.$message.error('未知错误！')
-        })
+        }).finally(()=>{
+        this.editSubData.loading = false;
+      })
     },
     //编辑订阅提交
     editSubCommit() {
-      axios.put('/sub', this.editSubData)
+      let tempEditSubData = {...this.editSubData};
+      if (tempEditSubData.cron == -1){
+        tempEditSubData.cron = tempEditSubData.cronUnit*tempEditSubData.customCron;
+        if (tempEditSubData.cron < 1200){
+          this.$message.error("更新频率不能小于20分钟");
+          return;
+        }
+      }
+      axios.put('/sub', tempEditSubData)
         .then(res => {
           if (res.data.code == '1') {
             this.$message.success('编辑成功！')
