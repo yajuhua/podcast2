@@ -36,6 +36,9 @@ public class AlistConfig {
             }
         } catch (Exception e) {
             log.error("alist配置错误：{}",e.getMessage());
+            userService.updateExtendInfo(ExtendInfo.builder().
+                    alistInfo(AlistInfo.
+                            builder().open(false).build()).build());
         }
         return alist;
     }
