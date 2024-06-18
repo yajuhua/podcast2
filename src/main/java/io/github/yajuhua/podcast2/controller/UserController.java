@@ -1,9 +1,9 @@
 package io.github.yajuhua.podcast2.controller;
 
 import com.google.gson.Gson;
+import io.github.yajuhua.podcast2.alist.Alist;
 import io.github.yajuhua.podcast2.common.constant.JwtClaimsConstant;
 import io.github.yajuhua.podcast2.common.constant.MessageConstant;
-import io.github.yajuhua.podcast2.common.constant.StatusCode;
 import io.github.yajuhua.podcast2.common.exception.CertificateFileException;
 import io.github.yajuhua.podcast2.common.exception.SubNotFoundException;
 import io.github.yajuhua.podcast2.common.exception.UserException;
@@ -57,6 +57,8 @@ public class UserController {
     private DataPathProperties dataPathProperties;
     @Autowired
     private Gson gson;
+    @Autowired
+    private Alist alist;
 
     /**
      * 用户登录
@@ -183,7 +185,6 @@ public class UserController {
         }
         //添加到数据库
         for (DataExport export : dataExportList) {
-            export.getSub().setStatus(StatusCode.NO_ACTION);
             subMapper.addSub(export.getSub());
             extendMapper.batchExtend(export.getExtendList());
         }
@@ -431,6 +432,78 @@ public class UserController {
     public Result deletePluginUrl(){
         userService.deleteExtendInfo(ExtendInfo.builder().pluginUrl("").build());
         return Result.success();
+    }
+
+    /**
+     * 获取Alist状态
+     * @return
+     */
+    @ApiOperation("获取Alist状态")
+    @GetMapping("/alist/status")
+    public Result aListStatus(){
+        AlistInfo alistInfo = userService.getExtendInfo().getAlistInfo();
+        if (alistInfo.isOpen() && alist.isConnect()){
+            return Result.success();
+        } else if (alistInfo.isOpen() && !alist.isConnect()) {
+            return Result.error("Alist连接失败");
+        } else if (!alistInfo.isOpen()) {
+            return Result.error("Alist未开启");
+        }
+        return Result.success();
+    }
+
+    /**
+     * 更新Alist配置
+     * @return
+     */
+    @ApiOperation("更新Alist配置")
+    @PostMapping("/alist/update")
+    public Result aListUpdate(@RequestBody AlistInfo submitAlist){
+        AlistInfo alistInfo = submitAlist;
+        if (alistInfo.getUsername().length() == 0){
+            alistInfo.setUsername(null);
+        }
+        if (alistInfo.getPassword().length() == 0){
+            alistInfo.setPassword(null);
+        }
+        if (alistInfo.getPath().length() == 0){
+            alistInfo.setPath(null);
+        }
+        if (alistInfo.getUrl().length() == 0){
+            alistInfo.setUrl(null);
+        }
+        if (alistInfo.isOpen()){
+            userService.updateExtendInfo(ExtendInfo.builder().alistInfo(alistInfo).build());
+            //重新登录
+            alistInfo = userService.getExtendInfo().getAlistInfo();
+            alist.setUrl(alistInfo.getUrl());
+            alist.setPath(alistInfo.getPath());
+            alist.setUsername(alistInfo.getUsername());
+            alist.setPassword(alistInfo.getPassword());
+            try {
+                alist.refreshToken();
+                alist.existPath();
+            } catch (Exception e) {
+                return Result.error(e.getMessage());
+            }
+        }else {
+            userService.updateExtendInfo(ExtendInfo.builder().alistInfo(AlistInfo.builder().open(false).build()).build());
+            return Result.success();
+        }
+        return Result.success();
+    }
+
+    /**
+     * 获取alist配置信息
+     * @return
+     */
+    @ApiOperation("获取alist配置信息")
+    @GetMapping("/alist/info")
+    public Result<AlistInfo> aListInfo(){
+        AlistInfo alistInfo = userService.getExtendInfo().getAlistInfo();
+        alistInfo.setUsername(alistInfo.getUsername().length()>0?"******":alistInfo.getUsername());
+        alistInfo.setPassword(alistInfo.getPassword().length()>0?"******":alistInfo.getPassword());
+        return Result.success(alistInfo);
     }
 
 }

@@ -6,16 +6,14 @@ import io.github.yajuhua.podcast2.common.constant.MessageConstant;
 import io.github.yajuhua.podcast2.common.exception.AccountNotFoundException;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
 import io.github.yajuhua.podcast2.pojo.dto.UserLoginDTO;
+import io.github.yajuhua.podcast2.pojo.entity.AlistInfo;
 import io.github.yajuhua.podcast2.pojo.entity.ExtendInfo;
 import io.github.yajuhua.podcast2.pojo.entity.User;
 import io.github.yajuhua.podcast2.service.UserService;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.function.BiConsumer;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -68,7 +66,22 @@ public class UserServiceImpl implements UserService {
     public void updateExtendInfo(ExtendInfo extendInfo) {
         ExtendInfo update = getExtendInfo();
         if (extendInfo.getAlistInfo() != null){
-            update.setAlistInfo(extendInfo.getAlistInfo());
+            AlistInfo before = getExtendInfo().getAlistInfo();
+            AlistInfo after = extendInfo.getAlistInfo();
+            if (after.getUrl() != null){
+                before.setUrl(after.getUrl());
+            }
+            if (after.getPath() != null){
+                before.setPath(after.getPath());
+            }
+            if (after.getUsername() != null){
+                before.setUsername(after.getUsername());
+            }
+            if (after.getPassword() != null){
+                before.setPassword(after.getPassword());
+            }
+            before.setOpen(after.isOpen());
+            update.setAlistInfo(before);
         }
         if (extendInfo.getPath() != null){
             update.setPath(extendInfo.getPath());
