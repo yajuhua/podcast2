@@ -1,7 +1,6 @@
 package io.github.yajuhua.podcast2.pojo.entity;
 
-import lombok.Data;
-import lombok.ToString;
+import lombok.*;
 
 import java.io.Serializable;
 
@@ -10,6 +9,9 @@ import java.io.Serializable;
  */
 @Data
 @ToString
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AlistInfo implements Serializable {
     private String url;
     private String path;
