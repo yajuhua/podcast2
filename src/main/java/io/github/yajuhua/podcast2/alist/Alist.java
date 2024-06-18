@@ -213,4 +213,36 @@ public class Alist {
         }
         return true;
     }
+
+
+    /**
+     * 目录不存在将抛异常
+     * @param path
+     */
+    public void existPath(String path){
+        JsonObject object = new JsonObject();
+        object.addProperty("path",path);
+        object.addProperty("password",this.password);
+        heads.put("Content-Type", "application/json");
+        String json = Http.post(url + "/api/fs/get", gson.toJson(object), heads);
+        FileInfoDTO infoDTO = gson.fromJson(json, FileInfoDTO.class);
+        if (200 != infoDTO.getCode()){
+            throw new RuntimeException(path + "目录不存在：" + infoDTO.getMessage());
+        }
+    }
+
+    /**
+     * 目录不存在将抛异常
+     */
+    public void existPath(){
+        JsonObject object = new JsonObject();
+        object.addProperty("path",path);
+        object.addProperty("password",this.password);
+        heads.put("Content-Type", "application/json");
+        String json = Http.post(url + "/api/fs/get", gson.toJson(object), heads);
+        FileInfoDTO infoDTO = gson.fromJson(json, FileInfoDTO.class);
+        if (200 != infoDTO.getCode()){
+            throw new RuntimeException(path + "目录不存在：" + infoDTO.getMessage());
+        }
+    }
 }
