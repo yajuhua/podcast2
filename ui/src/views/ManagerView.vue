@@ -17,18 +17,19 @@
           <el-menu-item index="customDomainName">自定义域名</el-menu-item>
           <el-menu-item index="certificates">开启https</el-menu-item>
           <el-menu-item index="path">设置访问路径</el-menu-item>
+          <el-menu-item index="alist">alist</el-menu-item>
           <el-menu-item index="other">其他</el-menu-item>
         </el-submenu>
 
         <el-submenu index="download">
-          <template slot="title">下载&上传</template>
+          <template slot="title">下载|上传</template>
           <el-menu-item index="Downloading">正在下载&nbsp;<span v-if="download.progress.length > 0">{{
               download.progress.length
             }}</span></el-menu-item>
-          <el-menu-item index="Done">下载&上传已完成&nbsp;<span v-if="download.done.length > 0">{{
+          <el-menu-item index="Done">下载|上传已完成&nbsp;<span v-if="download.done.length > 0">{{
               download.done.length
             }}</span></el-menu-item>
-          <el-menu-item index="error">下载&上传错误&nbsp;<span v-if="download.error.length > 0">{{
+          <el-menu-item index="error">下载|上传错误&nbsp;<span v-if="download.error.length > 0">{{
               download.error.length
             }}</span></el-menu-item>
           <el-menu-item index="DownloaderInfo">下载器信息</el-menu-item>
@@ -235,6 +236,43 @@
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="deletePath()">删除</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+
+      <!--设置alist-->
+      <div v-show="activeMenu === 'alist'">
+        <el-form :inline="true" class="demo-form-inline" label-width="auto">
+
+          <el-form-item label="链接">
+            <el-tooltip class="item" effect="dark" content="如：http://192.168.123.3:5244"
+                        placement="top-start">
+              <el-input v-model="user.submitAlist.url" :placeholder="user.alistInfo.url" size="medium" :style="{ width: '300px' }" clearable></el-input>
+            </el-tooltip>
+          </el-form-item>
+          <br/>
+
+          <el-form-item label="用户名">
+            <el-input v-model="user.submitAlist.username" :placeholder="user.alistInfo.username" size="medium" :style="{ width: '300px' }" clearable></el-input>
+          </el-form-item>
+          <br/>
+
+          <el-form-item label="密码">
+            <el-input v-model="user.submitAlist.password" :placeholder="user.alistInfo.password" size="medium" :style="{ width: '300px' }" clearable></el-input>
+          </el-form-item>
+          <br/>
+
+          <el-form-item label="目录">
+            <el-tooltip class="item" effect="dark" content="如：/podcast2是alist根目录下的podcast2文件夹"
+                        placement="top-start">
+              <el-input v-model="user.submitAlist.path" :placeholder="user.alistInfo.path" size="medium" :style="{ width: '300px' }" clearable></el-input>
+            </el-tooltip>
+          </el-form-item>
+          <br/>
+
+          <el-form-item>
+            <el-button type="primary" @click="openAlist()" v-if="user.alistInfo.open==false">开启</el-button>
+            <el-button type="danger" @click="closeAlist()" v-if="user.alistInfo.open==true">关闭</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -597,7 +635,21 @@ export default {
         },
         path: '',
         githubProxyUrl: '',
-        pluginUrl: ''
+        pluginUrl: '',
+        submitAlist: {
+          url: '',
+          username: '',
+          password: '',
+          path: '',
+          open: false
+        },
+        alistInfo: {
+          url: '',
+          username: '',
+          password: '',
+          path: '',
+          open: false
+        }
       },
       system1: {
         info: []
@@ -636,6 +688,8 @@ export default {
     this.getGithubProxyUrl();
     //获取插件仓库链接
     this.getPluginUrl();
+    //获取alist配置信息
+    this.getAlistInfo();
   },
   methods: {
     toSubList() {
@@ -807,7 +861,6 @@ export default {
       if (ext == 'jar') {
         //构建一个表单把文件传进去
         let param = new FormData()
-        //TODO
         param.append("files", this.$refs.upload.uploadFiles[0].raw)
         axios.post('/common/upload/plugin', param, {
           headers: {
@@ -1920,6 +1973,75 @@ export default {
       }).catch(() => {
         this.$message.info('已取消批量删除')
       });
+    },
+    //更新alist配置
+    updateAlistInfo(){
+      axios.post('/user/alist/update',this.user.submitAlist)
+          .then(res => {
+            if (res.data.code == '1') {
+              this.getAlistInfo()
+              return 1;
+            } else {
+              this.$message.error(res.data.msg)
+              return 0;
+            }
+          })
+    },
+    //开启alist
+    openAlist(){
+      this.$confirm('此操作将开启Alist, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+          this.user.submitAlist.open = true;
+        axios.post('/user/alist/update',this.user.submitAlist)
+            .then(res => {
+              if (res.data.code == '1') {
+                this.getAlistInfo()
+                this.$message.success("alist开启成功")
+              } else {
+                this.$message.error(res.data.msg)
+              }
+            })
+      }).catch(() => {
+        this.$message.info('已取消开启')
+      });
+    },
+    //关闭alist
+    closeAlist(){
+      this.$confirm('此操作将关闭Alist, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.user.submitAlist.open = false;
+        axios.post('/user/alist/update',this.user.submitAlist)
+            .then(res => {
+              if (res.data.code == '1') {
+                this.getAlistInfo()
+                this.$message.success("alist关闭成功")
+              } else {
+                this.$message.error(res.data.msg)
+              }
+            })
+      }).catch(() => {
+        this.$message.info('已取消关闭')
+      });
+    },
+    //获取alist配置信息
+    getAlistInfo(){
+      axios.get('/user/alist/info')
+          .then(res => {
+            if (res.data.code == '1') {
+              this.user.alistInfo = res.data.data;
+            } else {
+              this.$message.error(res.data.msg);
+            }
+          }).catch(err => {
+        console.log(err);
+        this.$message.error('获取alist配置信息失败！')
+      })
     }
 
   }
