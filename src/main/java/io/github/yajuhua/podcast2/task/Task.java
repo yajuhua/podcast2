@@ -11,6 +11,7 @@ import io.github.yajuhua.download.manager.Request;
 import io.github.yajuhua.podcast2.alist.Alist;
 import io.github.yajuhua.podcast2.alist.dto.fs.PutDTO;
 import io.github.yajuhua.podcast2.alist.dto.task.upload.InfoDTO;
+import io.github.yajuhua.podcast2.common.constant.SubStatusCode;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.common.utils.Http;
@@ -425,11 +426,19 @@ public class Task {
     public void uploadResourcesToAList(){
         AlistInfo alistInfo = userService.getExtendInfo().getAlistInfo();
         if (alistInfo.isOpen() && alist.isConnect()){
+            //需要上传的
             List<Items> uploadItems = itemsMapper.list().stream().filter(items ->
                     Context.COMPLETED == items.getStatus()).collect(Collectors.toList());
             uploadItems.addAll(DownloadController.reUploadItems);
             String filePath = dataPathProperties.getResourcesPath();
+
             for (Items uploadItem : uploadItems) {
+                //订阅状态为21是存放本地，22是存放alist
+                Sub sub = subMapper.selectByUuid(uploadItem.getChannelUuid());
+                if (sub == null || sub.getStatus() != SubStatusCode.SAVE_ALIST){
+                    uploadItems.remove(uploadItem);
+                    break;
+                }
                 PutDTO putDTO = null;
                 try {
                     filePath = filePath + uploadItem.getFileName();
