@@ -424,63 +424,81 @@ public class Task {
 
     @Scheduled(fixedRate = 1,timeUnit = TimeUnit.MINUTES)
     public void uploadResourcesToAList(){
-        AlistInfo alistInfo = userService.getExtendInfo().getAlistInfo();
-        if (alistInfo.isOpen() && alist.isConnect()){
-            //需要上传的
-            List<Items> uploadItems = itemsMapper.list().stream().filter(items ->
-                    Context.COMPLETED == items.getStatus()).collect(Collectors.toList());
-            uploadItems.addAll(DownloadController.reUploadItems);
-            String filePath = dataPathProperties.getResourcesPath();
+        try {
+            if (userMapper.list().isEmpty()){
+                //首次部署时可能user还没初始化
+                log.warn("用户信息未初始化");
+                return;
+            }
+            AlistInfo alistInfo = userService.getExtendInfo().getAlistInfo();
+            if (alistInfo != null && alistInfo.isOpen() && alist.isConnect()){
+                //需要上传的状态码：5、!28
+                List<Items> uploadItems = itemsMapper.list().stream().filter(items ->
+                        Context.COMPLETED == items.getStatus()).collect(Collectors.toList());
+                uploadItems.addAll(DownloadController.reUploadItems);
+                String filePath = dataPathProperties.getResourcesPath();
 
-            for (Items uploadItem : uploadItems) {
-                //订阅状态为21是存放本地，22是存放alist
-                Sub sub = subMapper.selectByUuid(uploadItem.getChannelUuid());
-                if (sub == null || sub.getStatus() != SubStatusCode.SAVE_ALIST){
-                    uploadItems.remove(uploadItem);
-                    break;
-                }
-                PutDTO putDTO = null;
-                try {
-                    filePath = filePath + uploadItem.getFileName();
-                    log.info("开始上传：{}",filePath);
-                    putDTO = alist.addUploadFileTask(filePath);
-                    //1是正在上传 2是上传完成
-                    //排除异常情况
-                    Integer aListState = putDTO.getData().getTask().getState();
-                    if (200 != putDTO.getCode() || (0!=aListState && 1!=aListState && 2!=aListState)){
-                       throw new RuntimeException();
+                for (Items uploadItem : uploadItems) {
+                    //订阅状态为21是存放本地，22是存放alist
+                    Sub sub = subMapper.selectByUuid(uploadItem.getChannelUuid());
+                    if (sub == null || sub.getStatus() != SubStatusCode.SAVE_ALIST){
+                        uploadItems.remove(uploadItem);
+                        break;
                     }
-                } catch (RuntimeException e) {
-                    uploadItem.setStatus(Context.ALIST_UPLOAD_ERR);
-                    itemsMapper.update(uploadItem);
-                    log.error("上传失败：{}",uploadItem.getFileName());
-                    continue;
-                }
-                //获取上传任务状态
-                InfoDTO taskInfo;
-                Integer taskState;
-                while (true){
-                    taskInfo = alist.getUploadTaskInfo(putDTO.getData().getTask().getId());
-                    taskState = taskInfo.getData().getState();
-                    if (200 != taskInfo.getCode() || (1!=taskState && 2!=taskState)){
+                    PutDTO putDTO = null;
+                    try {
+                        filePath = filePath + uploadItem.getFileName();
+                        log.info("开始上传：{}",filePath);
+                        try {
+                            putDTO = alist.addUploadFileTask(filePath);
+                        } catch (OutOfMemoryError e) {
+                            if(e.getMessage().contains("Java heap space")){
+                                log.error("内存过小，无法上传大文件");
+                                uploadItem.setStatus(Context.ALIST_UPLOAD_OUT_OF_MEMORY);
+                                itemsMapper.update(uploadItem);
+                                break;
+                            }
+                        }
+                        //1是正在上传 2是上传完成
+                        //排除异常情况
+                        Integer aListState = putDTO.getData().getTask().getState();
+                        if (200 != putDTO.getCode() || (0!=aListState && 1!=aListState && 2!=aListState)){
+                           throw new RuntimeException();
+                        }
+                    } catch (RuntimeException e) {
                         uploadItem.setStatus(Context.ALIST_UPLOAD_ERR);
                         itemsMapper.update(uploadItem);
-                        break;
-                    }else if (200 == taskInfo.getCode() && 2 == taskState){
-                        uploadItem.setStatus(Context.ALIST_UPLOAD_SUCCESS);
-                        itemsMapper.update(uploadItem);
-                        log.info("上传成功：{}",taskInfo.getData().getName());
-                        try {
-                            DownloadController.reUploadItems.remove(uploadItem);
-                            FileUtils.forceDelete(new File(filePath));
-                            log.info("删除本地文件成功：{}",filePath);
-                        } catch (IOException e) {
-                            log.error("删除本地文件错误：{}",e.getMessage());
+                        log.error("上传失败：{}",uploadItem.getFileName());
+                        continue;
+                    }
+                    //获取上传任务状态
+                    InfoDTO taskInfo;
+                    Integer taskState;
+                    while (true){
+                        taskInfo = alist.getUploadTaskInfo(putDTO.getData().getTask().getId());
+                        taskState = taskInfo.getData().getState();
+                        if (200 != taskInfo.getCode() || (1!=taskState && 2!=taskState)){
+                            uploadItem.setStatus(Context.ALIST_UPLOAD_ERR);
+                            itemsMapper.update(uploadItem);
+                            break;
+                        }else if (200 == taskInfo.getCode() && 2 == taskState){
+                            uploadItem.setStatus(Context.ALIST_UPLOAD_SUCCESS);
+                            itemsMapper.update(uploadItem);
+                            log.info("上传成功：{}",taskInfo.getData().getName());
+                            try {
+                                DownloadController.reUploadItems.remove(uploadItem);
+                                FileUtils.forceDelete(new File(filePath));
+                                log.info("删除本地文件成功：{}",filePath);
+                            } catch (IOException e) {
+                                log.error("删除本地文件错误：{}",e.getMessage());
+                            }
+                            break;
                         }
-                        break;
                     }
                 }
             }
+        } catch (Exception e) {
+            log.error("alist上传任务失败：{}",e.getMessage());
         }
 
     }
@@ -491,6 +509,12 @@ public class Task {
     @Scheduled(fixedRate = 24,timeUnit = TimeUnit.HOURS)
     public void refreshAListToken(){
         try {
+            List<User> list = userMapper.list();
+            //首次部署时可能user还没初始化
+            if (list.isEmpty()){
+                log.warn("用户信息未初始化");
+               return;
+            }
             AlistInfo alistInfo = userService.getExtendInfo().getAlistInfo();
             if (alistInfo.isOpen()){
                 alist.refreshToken();
