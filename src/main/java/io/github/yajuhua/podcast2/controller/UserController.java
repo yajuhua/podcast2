@@ -501,8 +501,13 @@ public class UserController {
     @GetMapping("/alist/info")
     public Result<AlistInfo> aListInfo(){
         AlistInfo alistInfo = userService.getExtendInfo().getAlistInfo();
-        alistInfo.setUsername(alistInfo.getUsername().length()>0?"******":alistInfo.getUsername());
-        alistInfo.setPassword(alistInfo.getPassword().length()>0?"******":alistInfo.getPassword());
+
+        try {
+            alistInfo.setUsername(alistInfo.getUsername().length()>0?"******":alistInfo.getUsername());
+            alistInfo.setPassword(alistInfo.getPassword().length()>0?"******":alistInfo.getPassword());
+        } catch (Exception e) {
+            return Result.success(alistInfo);
+        }
         return Result.success(alistInfo);
     }
 
