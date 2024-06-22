@@ -142,8 +142,9 @@ public class DownloadController {
         return Result.success(downloadCompleted().getData().stream().filter(new Predicate<DownloadCompletedVO>() {
             @Override
             public boolean test(DownloadCompletedVO downloadCompletedVO) {
-                return downloadCompletedVO.getStatus().equals(Context.COMPLETED) || downloadCompletedVO.getStatus()
-                        .equals(Context.ALIST_UPLOAD_SUCCESS);
+                Integer status = downloadCompletedVO.getStatus();
+                return status.equals(Context.COMPLETED) || status.equals(Context.ALIST_UPLOAD_SUCCESS) ||
+                        status.equals(Context.ALIST_UPLOAD_OUT_OF_MEMORY);
             }
         }).collect(Collectors.toList()));
     }
