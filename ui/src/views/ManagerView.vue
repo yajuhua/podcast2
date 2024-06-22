@@ -22,14 +22,14 @@
         </el-submenu>
 
         <el-submenu index="download">
-          <template slot="title">下载|上传</template>
+          <template slot="title">下载 | 上传</template>
           <el-menu-item index="Downloading">正在下载&nbsp;<span v-if="download.progress.length > 0">{{
               download.progress.length
             }}</span></el-menu-item>
-          <el-menu-item index="Done">下载|上传已完成&nbsp;<span v-if="download.done.length > 0">{{
+          <el-menu-item index="Done">下载 | 上传已完成&nbsp;<span v-if="download.done.length > 0">{{
               download.done.length
             }}</span></el-menu-item>
-          <el-menu-item index="error">下载|上传错误&nbsp;<span v-if="download.error.length > 0">{{
+          <el-menu-item index="error">下载 | 上传错误&nbsp;<span v-if="download.error.length > 0">{{
               download.error.length
             }}</span></el-menu-item>
           <el-menu-item index="DownloaderInfo">下载器信息</el-menu-item>
@@ -55,7 +55,7 @@
               <el-input v-model="download.detail.createTime"></el-input>
             </div>
           </el-form-item>
-          <el-form-item label="下载状态">
+          <el-form-item label="状态">
             <div @click="copy(download.detail.status)">
               <el-input v-model="download.detail.status"></el-input>
             </div>
@@ -1195,7 +1195,7 @@ export default {
     },
     //重新下载
     reDownload(uuid) {
-      this.$confirm('此操作将重新下载, 是否继续?', '提示', {
+      this.$confirm('此操作将重新处理该节目, 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
@@ -1203,20 +1203,20 @@ export default {
         axios.get('/download/reDownload/' + uuid)
             .then(res => {
               if (res.data.code == '1') {
-                this.$message.success('正在重新下载中');
+                this.$message.success('正在重新处理中');
                 //重新获取完成下载信息
                 this.getDownloadDone();
               } else {
                 this.$message.error(res.data.msg);
               }
             }).catch(err => {
-          this.$message.error('重新下载失败！');
+          this.$message.error('重新处理失败！');
           console.log(err)
         })
       }).catch(() => {
         this.$message({
           type: 'info',
-          message: '已取消重新下载'
+          message: '已取消重新处理'
         });
       });
 
