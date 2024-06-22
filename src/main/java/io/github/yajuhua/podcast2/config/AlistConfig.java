@@ -1,6 +1,7 @@
 package io.github.yajuhua.podcast2.config;
 
 import io.github.yajuhua.podcast2.alist.Alist;
+import io.github.yajuhua.podcast2.mapper.UserMapper;
 import io.github.yajuhua.podcast2.pojo.entity.AlistInfo;
 import io.github.yajuhua.podcast2.pojo.entity.ExtendInfo;
 import io.github.yajuhua.podcast2.service.UserService;
@@ -18,10 +19,16 @@ public class AlistConfig {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private UserMapper userMapper;
 
     @Bean
     public Alist alist(){
         Alist alist = new Alist();
+        if (userMapper.list().isEmpty()){
+            log.warn("用户信息未初始化");
+            return alist;
+        }
         try {
             ExtendInfo extendInfo = userService.getExtendInfo();
             if (extendInfo != null && extendInfo.getAlistInfo() != null){
@@ -36,9 +43,13 @@ public class AlistConfig {
             }
         } catch (Exception e) {
             log.error("alist配置错误：{}",e.getMessage());
-            userService.updateExtendInfo(ExtendInfo.builder().
-                    alistInfo(AlistInfo.
-                            builder().open(false).build()).build());
+            try {
+                userService.updateExtendInfo(ExtendInfo.builder().
+                        alistInfo(AlistInfo.
+                                builder().open(false).build()).build());
+            } catch (Exception ex) {
+                log.error("更新alist配置失败：{}",ex.getMessage());
+            }
         }
         return alist;
     }
