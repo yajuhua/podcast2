@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -54,9 +55,13 @@ public class UserServiceImpl implements UserService {
         ExtendInfo extendInfo = null;
         try {
             extendInfo = gson.fromJson(user.getUuid(), ExtendInfo.class);
+            if (extendInfo.getAlistInfo() == null){
+                extendInfo.setAlistInfo(AlistInfo.builder().build());
+            }
         } catch (Exception e) {
             extendInfo = ExtendInfo.builder()
-                    .uuid(user.getUuid())
+                    .uuid(UUID.randomUUID().toString())
+                    .alistInfo(AlistInfo.builder().build())
                     .build();
         }
         return extendInfo;
