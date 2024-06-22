@@ -83,8 +83,11 @@ public class Alist {
      */
     public PutDTO addUploadFileTask(String filePath){
         File file = new File(filePath);
-        if (!file.exists() && !file.isFile()){
-            throw new RuntimeException("仅支持文件上传");
+        if (!file.exists()){
+            throw new RuntimeException("文件不存在：" + file.getName());
+        }
+        if (!file.isFile()){
+            throw new RuntimeException("仅支持文件上传：" + file.getName());
         }
         heads.put("File-Path", URLEncoder.encode(path + "/" + file.getName()));
         heads.put("As-Task","true");
