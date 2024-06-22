@@ -234,7 +234,12 @@ public class PluginController {
 
         log.info("安装插件的uuid:{}",installUuids);
         //1.获取下载链接
-        String json = Http.get(repoProperties.getPluginUrl());
+        //获取自定义插件仓库
+        String pluginUrl = userService.getExtendInfo().getPluginUrl();
+        if (pluginUrl == null){
+            pluginUrl = repoProperties.getPluginUrl();
+        }
+        String json = Http.get(pluginUrl);
         PluginMetadata pluginMetadata = new Gson().fromJson(json, PluginMetadata.class);
         List<String> finalInstallUuids = installUuids;
         List<PluginInfo> collect = pluginMetadata.getPluginList().stream().filter(pluginInfo -> {
@@ -248,7 +253,7 @@ public class PluginController {
         log.info(collect.toString());
 
         //2.下载插件文件
-        URL url = new URL(repoProperties.getPluginUrl());
+        URL url = new URL(pluginUrl);
         String p = url.getProtocol() + "://" + url.getHost();
         for (PluginInfo info : collect) {
             String dlUrl = p + info.getUrl();

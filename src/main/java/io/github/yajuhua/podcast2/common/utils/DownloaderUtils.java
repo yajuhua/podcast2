@@ -7,8 +7,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -158,6 +156,7 @@ public class DownloaderUtils {
         map.put(25,"alist找不到文件");
         map.put(26,"alist删除文件错误");
         map.put(27,"alist取消文件上传");
+        map.put(28,"内存过小，无法上传到alist");
         return map.get(code);
     }
 
@@ -193,7 +192,8 @@ public class DownloaderUtils {
     public static List<Integer> aListErrStatusCode(){
         List<Integer> aListErrStatusCode = new ArrayList<>();
         Collections.addAll(aListErrStatusCode,Context.ALIST_UPLOAD_ERR,
-                Context.ALIST_UPLOAD_ERR,Context.ALIST_CONNECT_ERR,Context.ALIST_FILE_DELETE_ERR);
+                Context.ALIST_UPLOAD_ERR,Context.ALIST_CONNECT_ERR,Context.ALIST_FILE_DELETE_ERR,
+                Context.ALIST_UPLOAD_OUT_OF_MEMORY);
         return aListErrStatusCode;
     }
 
@@ -210,14 +210,7 @@ public class DownloaderUtils {
         // 计算剩余秒数
         long seconds = s % 60;
 
-        // 创建LocalTime对象，表示时间部分
-        LocalTime time = LocalTime.of((int) hours, (int) minutes, (int) seconds);
-
-        // 使用DateTimeFormatter将LocalTime格式化为"00:20:00"的字符串
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-        String formattedTime = time.format(formatter);
-
-        return formattedTime;
+        return String.format("%02d:%02d:%02d",hours,minutes,seconds);
     }
 
     /**
