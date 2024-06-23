@@ -44,6 +44,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -178,30 +179,34 @@ public class SubController {
         String url;
         AlistInfo alistInfo = userService.getExtendInfo().getAlistInfo();
         for (Items item : items) {
-            status = item.getStatus();
-            if (status == Context.COMPLETED || status == Context.ALIST_UPLOAD_SUCCESS){
-                Item item1 = new Item();
-                url = enclosureDomain + "/resources/" + item.getFileName();
-                if (status == Context.ALIST_UPLOAD_SUCCESS && alistInfo.isOpen()){
-                    //上传完成的
-                    try {
-                        url = alist.getFileUrl(item.getFileName());
-                    } catch (Exception e) {
-                        log.error("获取alist资源错误：{}",e.getMessage());
-                        item.setStatus(Context.ALIST_FILE_NOT_FOUND);
-                        itemsMapper.update(item);
+            try {
+                status = item.getStatus();
+                if (status == Context.COMPLETED || status == Context.ALIST_UPLOAD_SUCCESS || status == Context.ALIST_UPLOAD_OUT_OF_MEMORY){
+                    Item item1 = new Item();
+                    url = enclosureDomain + "/resources/" + item.getFileName();
+                    if (status == Context.ALIST_UPLOAD_SUCCESS && alistInfo.isOpen()){
+                        //上传完成的
+                        try {
+                            url = alist.getFileUrl(item.getFileName());
+                        } catch (Exception e) {
+                            log.error("获取alist资源错误：{}",e.getMessage());
+                            item.setStatus(Context.ALIST_FILE_NOT_FOUND);
+                            itemsMapper.update(item);
+                            continue;
+                        }
+                    }
+
+                    if (status == Context.ALIST_UPLOAD_SUCCESS && !alistInfo.isOpen()){
                         continue;
                     }
-                }
 
-                if (status == Context.ALIST_UPLOAD_SUCCESS && !alistInfo.isOpen()){
-                    continue;
+                    item1.setEnclosureType(item.getType().toLowerCase() + "/" + item.getFormat());
+                    BeanUtils.copyProperties(item,item1);
+                    item1.setEnclosure(url);
+                    itemList.add(item1);
                 }
-
-                item1.setEnclosureType(item.getType().toLowerCase() + "/" + item.getFormat());
-                BeanUtils.copyProperties(item,item1);
-                item1.setEnclosure(url);
-                itemList.add(item1);
+            } catch (BeansException e) {
+                log.error("节目信息异常：{} - 名称：{}",e.getMessage(),item.getTitle());
             }
         }
 
@@ -487,48 +492,56 @@ public class SubController {
     public Result delete(@RequestParam List<String> uuids) throws Exception {
         log.info("delete uuids:{}",uuids);
         for (String uuid : uuids) {
-            //结束下载如果有的话
-            for (DownloadManager dm : Task.downloadManagerList) {
-                //dm.killByChannelUuid(uuid);
-                //更新是单线程,在同一时间只有一个订阅在更新下载
-                dm.killAll();
-                Task.getDownloadProgressVOSet().clear();
-            }
+            //删除订阅资源线程
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        //结束下载如果有的话
+                        for (DownloadManager dm : Task.downloadManagerList) {
+                            //dm.killByChannelUuid(uuid);
+                            //更新是单线程,在同一时间只有一个订阅在更新下载
+                            dm.killAll();
+                            Task.getDownloadProgressVOSet().clear();
+                        }
 
-            //删除相关资源
-            List<Items> itemsList = itemsService.selectByChannelUuid(uuid);
-            for (Items items : itemsList) {
-                //本地还是AList
-                if (items.getStatus() == Context.COMPLETED){
-                    //本地
-                    //删除文件
-                    File[] files = new File(dataPathProperties.getResourcesPath()).listFiles();
-                    for (File file : files) {
-                        if (file.getName().contains(items.getUuid())){
-                            log.info("删除本地文件:{}",file.getName());
-                            try {
-                                FileUtils.forceDelete(file);
-                            } catch (IOException e) {
-                                log.error("删除本地文件失败:{}",e.getMessage());
+                        //删除相关资源
+                        List<Items> itemsList = itemsService.selectByChannelUuid(uuid);
+                        for (Items items : itemsList) {
+                            //本地还是AList
+                            if (items.getStatus() == Context.COMPLETED){
+                                //本地
+                                //删除文件
+                                File[] files = new File(dataPathProperties.getResourcesPath()).listFiles();
+                                for (File file : files) {
+                                    if (file.getName().contains(items.getUuid())){
+                                        log.info("删除本地文件:{}",file.getName());
+                                        try {
+                                            FileUtils.forceDelete(file);
+                                        } catch (IOException e) {
+                                            log.error("删除本地文件失败:{}",e.getMessage());
+                                        }
+                                    }
+                                }
+                            }
+                            else if (items.getStatus() == Context.ALIST_UPLOAD_SUCCESS){
+                                //删除AList端文件
+                                log.info("删除AList端文件：{}",items.getFileName());
+                                try {
+                                    alist.deleteFile(items.getFileName());
+                                } catch (Exception e) {
+                                    log.error("删除AList端文件错误：{}",e.getMessage());
+                                }
                             }
                         }
-                    }
-                }
-                else if (items.getStatus() == Context.ALIST_UPLOAD_SUCCESS){
-                    //删除AList端文件
-                    log.info("删除AList端文件：{}",items.getFileName());
-                    try {
-                        alist.deleteFile(items.getFileName());
                     } catch (Exception e) {
-                        log.error("删除AList端文件错误：{}",e.getMessage());
+                        log.error("删除订阅资源异常：{}",e.getMessage());
                     }
                 }
-            }
+            }).start();
             //删除sub订阅
             subMapper.deleteByUuid(uuid);
             //删除items
-            itemsMapper.deleteByChannelUuid(uuid);
-            //删除items数据库记录
             itemsMapper.deleteByChannelUuid(uuid);
             //删除extend数据库记录
             extendMapper.deleteByUuid(uuid);
