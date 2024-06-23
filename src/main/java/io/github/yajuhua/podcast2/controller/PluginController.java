@@ -140,6 +140,20 @@ public class PluginController {
             pluginVOList.add(pluginVO);
         }
 
+        for (Plugin plugin : localPluginList) {
+            boolean isExist = map.containsKey(plugin.getName());
+            if (!isExist){
+                pluginVOList.add(PluginVO.builder()
+                        .install(true)
+                        .version(plugin.getVersion())
+                        .name(plugin.getName())
+                        .uuid(plugin.getUuid())
+                        .update(plugin.getUpdateTime())
+                        .hasUpdate(false)
+                        .build());
+            }
+        }
+
         // 创建一个 Map 用于存储每个插件名称对应的最新版本号
         Map<String, String> latestVersions = new HashMap<>();
 
