@@ -174,10 +174,14 @@ public class StartupRunner implements ApplicationRunner{
             userMapper.insert(user);
         }else {
             try {
-                gson.fromJson(list.get(0).getUuid(), ExtendInfo.class);
+                ExtendInfo extendInfo1 = gson.fromJson(list.get(0).getUuid(), ExtendInfo.class);
+                if (extendInfo1.getAlistInfo() == null){
+                    extendInfo1.setAlistInfo(AlistInfo.builder().build());
+                    userService.updateExtendInfo(extendInfo1);
+                }
             } catch (Exception e) {
                 log.info("init extendInfo...");
-                extendInfo = ExtendInfo.builder().uuid(list.get(0).getUuid()).build();
+                extendInfo = ExtendInfo.builder().uuid(UUID.randomUUID().toString()).alistInfo(AlistInfo.builder().build()).build();
                 userService.updateExtendInfo(extendInfo);
             }
         }
