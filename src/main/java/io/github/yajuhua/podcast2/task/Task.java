@@ -196,7 +196,7 @@ public class Task {
                 }
             }
         } catch (Exception e) {
-            log.error("清除数据库未记录的文件异常");
+            log.error("清除数据库未记录的文件异常：{}",e.getMessage());
         }
     }
 
@@ -300,75 +300,79 @@ public class Task {
      */
     @Scheduled(fixedDelay = 120000)
     public void checkForUndownload() throws Exception{
-        List<Items> itemsList = itemsMapper.list();
-        List<Items> unsuccessfulDownloads = itemsList.stream().filter(new Predicate<Items>() {
-            @Override
-            public boolean test(Items items) {
-                //正在下载中且没有文件名为null的
-                return Context.DOWNLOADING.equals(items.getStatus()) && items.getFileName() == null || items.getFileName().equals("");
-            }
-        }).collect(Collectors.toList());
+        try {
+            List<Items> itemsList = itemsMapper.list();
+            List<Items> unsuccessfulDownloads = itemsList.stream().filter(new Predicate<Items>() {
+                @Override
+                public boolean test(Items items) {
+                    //正在下载中且没有文件名为null的
+                    return Context.DOWNLOADING.equals(items.getStatus()) && items.getFileName() == null || items.getFileName().equals("");
+                }
+            }).collect(Collectors.toList());
 
-        if (!unsuccessfulDownloads.isEmpty()) {
-            //重新下载
-            log.info("重新下载");
-            ThreadPoolExecutor pool = new ThreadPoolExecutor(
-                    1,    //核心线程数有1个
-                    1,  //最大线程数
-                    8,    //临时线程存活的时间8秒。 意思是临时线程8秒没有任务执行，就会被销毁掉。
-                    TimeUnit.SECONDS,//时间单位（秒）
-                    new ArrayBlockingQueue<>(unsuccessfulDownloads.size()), //任务阻塞队列，没有来得及执行的任务在，任务队列中等待
-                    Executors.defaultThreadFactory(), //用于创建线程的工厂对象
-                    new ThreadPoolExecutor.CallerRunsPolicy() //拒绝策略
-            );
-            for (Items items : unsuccessfulDownloads) {
-                //如果是首次更新就不用
-                Sub sub = subMapper.selectByUuid(items.getChannelUuid());
-                if (sub != null) {
-                    Integer isFirst = sub.getIsFirst();
-                    log.info("订阅:{}-节目:{}",sub.getTitle(),items.getTitle());
-                    //之前版本中type和operation是null，要排除这种情况
-                    if (isFirst !=null && isFirst == 0 && items.getType() != null && items.getOperation() != null) {
-                        Map args = gson.fromJson(items.getArgs(), Map.class);
-                        List<String> links = gson.fromJson(items.getLinks(),new TypeToken<List<String>>() {}.getType());
-                        Request request = Request.builder()
-                                .args(args)
-                                .uuid(items.getUuid())
-                                .channelUuid(items.getChannelUuid())
-                                .type(Type.valueOf(items.getType()))
-                                .operation(Operation.valueOf(items.getOperation()))
-                                .downloader(DownloadManager.Downloader.YtDlp)
-                                .dir(new File(dataPathProperties.getResourcesPath()))
-                                .links(links)
-                                .build();
-                        ReDownload reDownload = new ReDownload(request, itemsMapper, subMapper);
-                        pool.execute(reDownload);
-                        Thread.sleep(2000);
+            if (!unsuccessfulDownloads.isEmpty()) {
+                //重新下载
+                log.info("重新下载");
+                ThreadPoolExecutor pool = new ThreadPoolExecutor(
+                        1,    //核心线程数有1个
+                        1,  //最大线程数
+                        8,    //临时线程存活的时间8秒。 意思是临时线程8秒没有任务执行，就会被销毁掉。
+                        TimeUnit.SECONDS,//时间单位（秒）
+                        new ArrayBlockingQueue<>(unsuccessfulDownloads.size()), //任务阻塞队列，没有来得及执行的任务在，任务队列中等待
+                        Executors.defaultThreadFactory(), //用于创建线程的工厂对象
+                        new ThreadPoolExecutor.CallerRunsPolicy() //拒绝策略
+                );
+                for (Items items : unsuccessfulDownloads) {
+                    //如果是首次更新就不用
+                    Sub sub = subMapper.selectByUuid(items.getChannelUuid());
+                    if (sub != null) {
+                        Integer isFirst = sub.getIsFirst();
+                        log.info("订阅:{}-节目:{}",sub.getTitle(),items.getTitle());
+                        //之前版本中type和operation是null，要排除这种情况
+                        if (isFirst !=null && isFirst == 0 && items.getType() != null && items.getOperation() != null) {
+                            Map args = gson.fromJson(items.getArgs(), Map.class);
+                            List<String> links = gson.fromJson(items.getLinks(),new TypeToken<List<String>>() {}.getType());
+                            Request request = Request.builder()
+                                    .args(args)
+                                    .uuid(items.getUuid())
+                                    .channelUuid(items.getChannelUuid())
+                                    .type(Type.valueOf(items.getType()))
+                                    .operation(Operation.valueOf(items.getOperation()))
+                                    .downloader(DownloadManager.Downloader.YtDlp)
+                                    .dir(new File(dataPathProperties.getResourcesPath()))
+                                    .links(links)
+                                    .build();
+                            ReDownload reDownload = new ReDownload(request, itemsMapper, subMapper);
+                            pool.execute(reDownload);
+                            Thread.sleep(2000);
+                        }else {
+                            log.info("数据不全:{}-删除该记录",items.getTitle());
+                            itemsMapper.deleteByUuid(items.getUuid());
+                        }
                     }else {
-                        log.info("数据不全:{}-删除该记录",items.getTitle());
+                        //清理掉
+                        log.info("未找到所属频道:{}-删除该节目记录",items.getTitle());
                         itemsMapper.deleteByUuid(items.getUuid());
                     }
-                }else {
-                    //清理掉
-                    log.info("未找到所属频道:{}-删除该节目记录",items.getTitle());
-                    itemsMapper.deleteByUuid(items.getUuid());
                 }
-            }
-            pool.shutdown();
-            Date start = new Date();
-            while (true){
-                Date end = new Date();
-                long minutes = (end.getTime() - start.getTime())/1000/60;
-                //每个下载最多是30分钟
-                if (minutes > unsuccessfulDownloads.size()*30){
-                    log.error("重新下载超时");
-                    return;
-                } else if (pool.isTerminated()) {
-                    log.info("重新下载结束");
-                    return;
+                pool.shutdown();
+                Date start = new Date();
+                while (true){
+                    Date end = new Date();
+                    long minutes = (end.getTime() - start.getTime())/1000/60;
+                    //每个下载最多是30分钟
+                    if (minutes > unsuccessfulDownloads.size()*30){
+                        log.error("重新下载超时");
+                        return;
+                    } else if (pool.isTerminated()) {
+                        log.info("重新下载结束");
+                        return;
+                    }
                 }
-            }
 
+            }
+        } catch (Exception e) {
+            log.error("检查未下载完成的节目异常：{}",e.getMessage());
         }
     }
 
@@ -392,19 +396,17 @@ public class Task {
 
         //获取数据并转对象
         for (String link : githubActionLinkList) {
-            if (link != null){
-                String json = Http.get(link);
-                GithubActionWorkflowsDTO actionWorkflowsDTO = gson.fromJson(json, GithubActionWorkflowsDTO.class);
-                if (actionWorkflowsDTO.getTotalCount() != null && actionWorkflowsDTO.getTotalCount() != 0){
-                    tmp.add(actionWorkflowsDTO);
-                }
-                //等待500毫秒
-                try {
+            try {
+                if (link != null){
+                    String json = Http.get(link);
+                    GithubActionWorkflowsDTO actionWorkflowsDTO = gson.fromJson(json, GithubActionWorkflowsDTO.class);
+                    if (actionWorkflowsDTO.getTotalCount() != null && actionWorkflowsDTO.getTotalCount() != 0){
+                        tmp.add(actionWorkflowsDTO);
+                    }
                     Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    log.error("等待异常：{}",e.getMessage());
                 }
-
+            } catch (Exception e) {
+                log.error("获取插件状态错误：",e.getMessage());
             }
         }
 
@@ -436,70 +438,70 @@ public class Task {
                 List<Items> uploadItems = itemsMapper.list().stream().filter(items ->
                         Context.COMPLETED == items.getStatus()).collect(Collectors.toList());
                 uploadItems.addAll(DownloadController.reUploadItems);
-                String filePath = dataPathProperties.getResourcesPath();
+                String resourcesPath = dataPathProperties.getResourcesPath();
 
                 for (Items uploadItem : uploadItems) {
-                    //订阅状态为21是存放本地，22是存放alist
-                    Sub sub = subMapper.selectByUuid(uploadItem.getChannelUuid());
-                    if (sub == null || sub.getStatus() != SubStatusCode.SAVE_ALIST){
-                        uploadItems.remove(uploadItem);
-                        break;
-                    }
                     PutDTO putDTO = null;
+                    String filePath = new File(resourcesPath + uploadItem.getFileName()).getPath();
                     try {
-                        filePath = filePath + uploadItem.getFileName();
-                        log.info("开始上传：{}",filePath);
-                        try {
-                            putDTO = alist.addUploadFileTask(filePath);
-                        } catch (OutOfMemoryError e) {
-                            if(e.getMessage().contains("Java heap space")){
-                                log.error("内存过小，无法上传大文件");
-                                uploadItem.setStatus(Context.ALIST_UPLOAD_OUT_OF_MEMORY);
-                                itemsMapper.update(uploadItem);
-                                break;
-                            }
+
+                        //移除记录
+                        DownloadController.reUploadItems.remove(uploadItem);
+                        //订阅状态为21是存放本地，22是存放alist
+                        Sub sub = subMapper.selectByUuid(uploadItem.getChannelUuid());
+                        if (sub == null || sub.getStatus() != SubStatusCode.SAVE_ALIST){
+                            continue;
                         }
+
                         //1是正在上传 2是上传完成
+                        log.info("开始上传：{}",filePath);
+                        putDTO = alist.addUploadFileTask(filePath);
                         //排除异常情况
                         Integer aListState = putDTO.getData().getTask().getState();
                         if (200 != putDTO.getCode() || (0!=aListState && 1!=aListState && 2!=aListState)){
                            throw new RuntimeException();
                         }
+
+                        //获取上传任务状态
+                        InfoDTO taskInfo;
+                        Integer taskState;
+                        while (true){
+                            taskInfo = alist.getUploadTaskInfo(putDTO.getData().getTask().getId());
+                            taskState = taskInfo.getData().getState();
+                            if (200 != taskInfo.getCode() || (1!=taskState && 2!=taskState)){
+                                uploadItem.setStatus(Context.ALIST_UPLOAD_ERR);
+                                itemsMapper.update(uploadItem);
+                                break;
+                            }else if (200 == taskInfo.getCode() && 2 == taskState){
+                                uploadItem.setStatus(Context.ALIST_UPLOAD_SUCCESS);
+                                itemsMapper.update(uploadItem);
+                                log.info("上传成功：{}",taskInfo.getData().getName());
+                                try {
+                                    DownloadController.reUploadItems.remove(uploadItem);
+                                    FileUtils.forceDelete(new File(filePath));
+                                    log.info("删除本地文件成功：{}",filePath);
+                                } catch (IOException e) {
+                                    log.error("删除本地文件错误：{}",e.getMessage());
+                                }
+                                break;
+                            }
+                        }
+
+                    }catch (OutOfMemoryError error){
+                        log.error("内存过小，无法上传大文件");
+                        uploadItem.setStatus(Context.ALIST_UPLOAD_OUT_OF_MEMORY);
+                        itemsMapper.update(uploadItem);
                     } catch (RuntimeException e) {
                         uploadItem.setStatus(Context.ALIST_UPLOAD_ERR);
                         itemsMapper.update(uploadItem);
-                        log.error("上传失败：{}",uploadItem.getFileName());
-                        continue;
-                    }
-                    //获取上传任务状态
-                    InfoDTO taskInfo;
-                    Integer taskState;
-                    while (true){
-                        taskInfo = alist.getUploadTaskInfo(putDTO.getData().getTask().getId());
-                        taskState = taskInfo.getData().getState();
-                        if (200 != taskInfo.getCode() || (1!=taskState && 2!=taskState)){
-                            uploadItem.setStatus(Context.ALIST_UPLOAD_ERR);
-                            itemsMapper.update(uploadItem);
-                            break;
-                        }else if (200 == taskInfo.getCode() && 2 == taskState){
-                            uploadItem.setStatus(Context.ALIST_UPLOAD_SUCCESS);
-                            itemsMapper.update(uploadItem);
-                            log.info("上传成功：{}",taskInfo.getData().getName());
-                            try {
-                                DownloadController.reUploadItems.remove(uploadItem);
-                                FileUtils.forceDelete(new File(filePath));
-                                log.info("删除本地文件成功：{}",filePath);
-                            } catch (IOException e) {
-                                log.error("删除本地文件错误：{}",e.getMessage());
-                            }
-                            break;
-                        }
+                        log.error("上传失败 - 文件：{} - 详细：{}",uploadItem.getFileName(),e.getMessage());
                     }
                 }
             }
         } catch (Exception e) {
             log.error("alist上传任务失败：{}",e.getMessage());
         }
+
 
     }
 
