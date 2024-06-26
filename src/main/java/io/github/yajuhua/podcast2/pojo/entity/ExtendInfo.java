@@ -16,7 +16,6 @@ public class ExtendInfo {
     private String githubProxyUrl;//github 加速站
     private String pluginUrl;//插件仓库链接
     private AlistInfo alistInfo;//alist配置信息
-
-    //dao 增删改查 user表中uuid字段
+    private AddressFilter addressFilter;//地址过滤
 
 }

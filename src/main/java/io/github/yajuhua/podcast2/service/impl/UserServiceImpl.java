@@ -6,6 +6,7 @@ import io.github.yajuhua.podcast2.common.constant.MessageConstant;
 import io.github.yajuhua.podcast2.common.exception.AccountNotFoundException;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
 import io.github.yajuhua.podcast2.pojo.dto.UserLoginDTO;
+import io.github.yajuhua.podcast2.pojo.entity.AddressFilter;
 import io.github.yajuhua.podcast2.pojo.entity.AlistInfo;
 import io.github.yajuhua.podcast2.pojo.entity.ExtendInfo;
 import io.github.yajuhua.podcast2.pojo.entity.User;
@@ -13,6 +14,7 @@ import io.github.yajuhua.podcast2.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -58,10 +60,14 @@ public class UserServiceImpl implements UserService {
             if (extendInfo.getAlistInfo() == null){
                 extendInfo.setAlistInfo(AlistInfo.builder().build());
             }
+            if (extendInfo.getAddressFilter() == null){
+                extendInfo.setAddressFilter(AddressFilter.builder().blacklist(new ArrayList<>()).whitelist(new ArrayList<>()).build());
+            }
         } catch (Exception e) {
             extendInfo = ExtendInfo.builder()
                     .uuid(UUID.randomUUID().toString())
                     .alistInfo(AlistInfo.builder().build())
+                    .addressFilter(AddressFilter.builder().blacklist(new ArrayList<>()).whitelist(new ArrayList<>()).build())
                     .build();
         }
         return extendInfo;
@@ -99,6 +105,17 @@ public class UserServiceImpl implements UserService {
         }
         if (extendInfo.getUuid() != null){
             update.setUuid(extendInfo.getUuid());
+        }
+        if (extendInfo.getAddressFilter() != null){
+            AddressFilter addressFilter = extendInfo.getAddressFilter();
+            if (addressFilter.getWhitelist() != null){
+                //白名单
+                update.getAddressFilter().setWhitelist(addressFilter.getWhitelist());
+            }
+            if (addressFilter.getBlacklist() != null){
+                //黑名单
+                update.getAddressFilter().setBlacklist(addressFilter.getBlacklist());
+            }
         }
         String extendInfoJson = gson.toJson(update);
         userMapper.update(User.builder().uuid(extendInfoJson).build());

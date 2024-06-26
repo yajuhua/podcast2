@@ -12,6 +12,7 @@ import io.github.yajuhua.podcast2.common.properties.JwtProperties;
 import io.github.yajuhua.podcast2.common.result.Result;
 import io.github.yajuhua.podcast2.common.utils.CertUtils;
 import io.github.yajuhua.podcast2.common.utils.JwtUtil;
+import io.github.yajuhua.podcast2.common.utils.NetWorkUtils;
 import io.github.yajuhua.podcast2.mapper.ExtendMapper;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
@@ -510,5 +511,47 @@ public class UserController {
         }
         return Result.success(alistInfo);
     }
+
+    /**
+     * 添加黑名单
+     * @return
+     */
+    @ApiOperation("更新黑白名单")
+    @PostMapping("/addressFilter/update")
+    public Result updateWhiteBlacklist(@RequestBody AddressFilter addressFilter){
+        List<String> blacklist = addressFilter.getBlacklist();
+        List<String> whitelist = addressFilter.getWhitelist();
+
+        //校验格式是否合法
+        for (String b : blacklist) {
+            boolean validIp = NetWorkUtils.isValidIp(b);
+            boolean validIpRange = NetWorkUtils.isValidIpRange(b);
+            if (!validIp && !validIpRange){
+               return Result.error("输入的IP地址格式不对：" + b);
+            }
+        }
+        for (String w : whitelist) {
+            boolean validIp = NetWorkUtils.isValidIp(w);
+            boolean validIpRange = NetWorkUtils.isValidIpRange(w);
+            if (!validIp && !validIpRange){
+               return Result.error("输入的IP地址格式不对：" + w);
+            }
+        }
+        ExtendInfo update = ExtendInfo.builder().addressFilter(addressFilter).build();
+        userService.updateExtendInfo(update);
+        return Result.success();
+    }
+
+    /**
+     * 获取地址过滤
+     * @return
+     */
+    @ApiOperation("获取黑白名单")
+    @GetMapping("/addressFilter")
+    public Result<AddressFilter> getAddressFilter(){
+        return Result.success(userService.getExtendInfo().getAddressFilter());
+    }
+
+
 
 }

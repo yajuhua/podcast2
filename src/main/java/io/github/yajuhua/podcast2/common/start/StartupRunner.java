@@ -177,11 +177,24 @@ public class StartupRunner implements ApplicationRunner{
                 ExtendInfo extendInfo1 = gson.fromJson(list.get(0).getUuid(), ExtendInfo.class);
                 if (extendInfo1.getAlistInfo() == null){
                     extendInfo1.setAlistInfo(AlistInfo.builder().build());
-                    userService.updateExtendInfo(extendInfo1);
                 }
+
+                if (extendInfo1.getAddressFilter() == null){
+                    extendInfo1.setAddressFilter(AddressFilter.builder()
+                            .whitelist(new ArrayList<>())
+                            .blacklist(new ArrayList<>())
+                            .build());
+                }
+                userService.updateExtendInfo(extendInfo1);
             } catch (Exception e) {
                 log.info("init extendInfo...");
-                extendInfo = ExtendInfo.builder().uuid(UUID.randomUUID().toString()).alistInfo(AlistInfo.builder().build()).build();
+                extendInfo = ExtendInfo.builder().uuid(UUID.randomUUID().toString())
+                        .alistInfo(AlistInfo.builder().build())
+                        .addressFilter(AddressFilter.builder()
+                                .blacklist(new ArrayList<>())
+                                .whitelist(new ArrayList<>())
+                                .build()).
+                        build();
                 userService.updateExtendInfo(extendInfo);
             }
         }

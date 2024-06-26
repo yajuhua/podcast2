@@ -1,6 +1,7 @@
 package io.github.yajuhua.podcast2.controller;
 
 import com.google.gson.Gson;
+import io.github.yajuhua.podcast2.common.utils.NetWorkUtils;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
 import io.github.yajuhua.podcast2.pojo.entity.UserMoreInfo;
 import io.github.yajuhua.podcast2.service.UserService;
@@ -13,6 +14,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 @RestController
@@ -34,7 +37,11 @@ public class ViewController {
      */
     @ApiOperation("转发到index.html页面")
     @GetMapping("/")
-    public Resource index() throws IOException {
+    public Resource index(HttpServletRequest request) throws IOException {
+        boolean ban = NetWorkUtils.isBan(request.getRemoteAddr(), userService.getExtendInfo().getAddressFilter());
+        if (ban){
+            return new ClassPathResource("static/403.html");
+        }
         if (userService.getExtendInfo().getPath() == null ){
             return new ClassPathResource("static/index.html");
         }
@@ -49,7 +56,11 @@ public class ViewController {
      */
     @ApiOperation("设置路径访问")
     @GetMapping("/p/{path}")
-    public Resource path(@PathVariable String path) throws IOException {
+    public Resource path(@PathVariable String path, HttpServletRequest request) throws IOException {
+        boolean ban = NetWorkUtils.isBan(request.getRemoteAddr(), userService.getExtendInfo().getAddressFilter());
+        if (ban){
+            return new ClassPathResource("static/403.html");
+        }
         log.info("path:{}",path);
         String path1 = userService.getExtendInfo().getPath();
         if (path1 == null || path1.equals(path)){
