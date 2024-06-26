@@ -134,7 +134,7 @@
             </div>
             <div class="logs">
               <div v-for="log in system.logs" :key="log.id">
-                <p>{{ formatLog(log) }}</p>
+                <LogMessage :message="formatLog(log)"/>
               </div>
             </div>
           </el-card>
@@ -192,7 +192,7 @@
               </div>
               <div class="logs">
                 <div v-for="log in system.historyLogs" :key="log.id">
-                  <p>{{ formatLog(log) }}</p>
+                  <LogMessage :message="formatLog(log)"/>
                 </div>
               </div>
             </el-card>
@@ -686,8 +686,10 @@
 
 <script>
 import axios from 'axios';
+import LogMessage from "@/views/LogMessage";
 
 export default {
+  components: {LogMessage},
   data() {
     return {
       activeMenu: 'info',
