@@ -1,13 +1,13 @@
 package io.github.yajuhua.podcast2.controller;
 
 import io.github.yajuhua.podcast2.Podcast2Application;
-import io.github.yajuhua.podcast2.common.constant.StatusCode;
+import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.properties.InfoProperties;
 import io.github.yajuhua.podcast2.common.result.Result;
 import io.github.yajuhua.podcast2.common.utils.Http;
+import io.github.yajuhua.podcast2.common.utils.LogUtils;
 import io.github.yajuhua.podcast2.common.utils.PluginLoader;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
-import io.github.yajuhua.podcast2.pojo.entity.Sub;
 import io.github.yajuhua.podcast2.pojo.vo.KeyValue;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -16,13 +16,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.PreDestroy;
+import java.io.File;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,6 +42,8 @@ public class SystemController {
     public static LocalDateTime startTime;
     @Autowired
     private SubMapper subMapper;
+    @Autowired
+    private DataPathProperties dataPathProperties;
 
 
     /**
@@ -112,6 +117,32 @@ public class SystemController {
         keyValueList.add(new KeyValue("运行时间",runningTime));
 
         return Result.success(keyValueList);
+    }
+
+    /**
+     * 根据时间区间获取历史日志
+     * @return
+     */
+    @ApiOperation("根据时间区间获取历史日志")
+    @GetMapping("/logs/history/between")
+    public Result<List<String>> historyLogsByDate(@RequestParam String start, @RequestParam String end, @RequestParam String level) throws Exception{
+        //TODO 前端超过两个小时仅提供下载查看
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime startLocalDateTime = LocalDateTime.parse(start,formatter);
+        LocalDateTime endLocalDateTime = LocalDateTime.parse(end,formatter);
+        List<String> logs = LogUtils.logs(startLocalDateTime, endLocalDateTime, new File(dataPathProperties.getLogsPath()), level);
+        return Result.success(logs);
+    }
+
+    /**
+     * 根据时间区间获取历史日志
+     * @return
+     */
+    @ApiOperation("获取最近日志")
+    @GetMapping("/logs/history/latest")
+    public Result<List<String>> historyLogsByLatest(@RequestParam Long minutes, @RequestParam String level) throws Exception{
+        List<String> logs = LogUtils.getRecent(minutes, TimeUnit.MINUTES, new File(dataPathProperties.getLogsPath()), level);
+        return Result.success(logs);
     }
 
 
