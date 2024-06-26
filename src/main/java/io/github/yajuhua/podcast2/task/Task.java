@@ -3,6 +3,8 @@ package io.github.yajuhua.podcast2.task;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.mixpanel.mixpanelapi.MessageBuilder;
+import com.mixpanel.mixpanelapi.MixpanelAPI;
 import io.github.yajuhua.download.commons.Context;
 import io.github.yajuhua.download.commons.Operation;
 import io.github.yajuhua.download.commons.Type;
@@ -13,6 +15,8 @@ import io.github.yajuhua.podcast2.alist.dto.fs.PutDTO;
 import io.github.yajuhua.podcast2.alist.dto.task.upload.InfoDTO;
 import io.github.yajuhua.podcast2.common.constant.SubStatusCode;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
+import io.github.yajuhua.podcast2.common.properties.InfoProperties;
+import io.github.yajuhua.podcast2.common.properties.MixpanelProperties;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.common.utils.Http;
 import io.github.yajuhua.podcast2.controller.DownloadController;
@@ -27,6 +31,8 @@ import io.github.yajuhua.podcast2.service.SubService;
 import io.github.yajuhua.podcast2.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -72,6 +78,10 @@ public class Task {
     private UserService userService;
     @Autowired
     private Alist alist;
+    @Autowired
+    private MixpanelProperties mixpanelProperties;
+    @Autowired
+    private InfoProperties infoProperties;
 
     /**
      * 获取进度
@@ -523,6 +533,39 @@ public class Task {
             }
         } catch (Exception e) {
             log.error("刷新AListToken异常：{}",e.getMessage());
+        }
+    }
+
+    /**
+     * 收集用户使用情况
+     */
+    @Scheduled(fixedRate = 1,timeUnit = TimeUnit.DAYS)
+    public void collectUserInfo(){
+        try {
+            List<User> list = userMapper.list();
+            if (!list.isEmpty()) {
+                log.info("收集用户使用情况");
+                String uuid = userService.getExtendInfo().getUuid();
+                String firstVersion = list.get(0).getFirstVersion();
+                String nowVersion = infoProperties.getVersion();
+                List<Plugin> pluginList = pluginMapper.list();
+
+                MessageBuilder messageBuilder =
+                        new MessageBuilder(mixpanelProperties.getProjectToken());
+
+                JSONObject onlineProps = new JSONObject();
+                onlineProps.put("uuid", uuid);
+                onlineProps.put("firstVersion", firstVersion);
+                onlineProps.put("nowVersion", nowVersion);
+                onlineProps.put("pluginNumber", pluginList.size());
+                onlineProps.put("pluginList", pluginList);
+                JSONObject update = messageBuilder.event(uuid,"online",onlineProps);
+
+                MixpanelAPI mixpanel = new MixpanelAPI();
+                mixpanel.sendMessage(update);
+            }
+        } catch (Exception e) {
+            log.error("收集用户使用情况异常：{}",e.getMessage());
         }
     }
 }

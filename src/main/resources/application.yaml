@@ -39,6 +39,9 @@ podcast2:
     update: ${timestamp}
     version: ${project.version}
 
+mixpanel:
+  project-token: "82849a4efc04b98d0a20d7fbbe3c2b27"
+
 
 
 
