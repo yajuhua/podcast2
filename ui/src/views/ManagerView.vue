@@ -7,7 +7,8 @@
         <el-submenu index="system">
           <template slot="title">项目</template>
           <el-menu-item index="info">概况</el-menu-item>
-          <el-menu-item index="logs">日志</el-menu-item>
+          <el-menu-item index="logs">实时日志</el-menu-item>
+          <el-menu-item index="historyLogs">历史日志</el-menu-item>
         </el-submenu>
 
         <el-submenu index="user">
@@ -18,6 +19,7 @@
           <el-menu-item index="certificates">开启https</el-menu-item>
           <el-menu-item index="path">设置访问路径</el-menu-item>
           <el-menu-item index="alist">alist</el-menu-item>
+          <el-menu-item index="ipAddressFilter">地址过滤</el-menu-item>
           <el-menu-item index="other">其他</el-menu-item>
         </el-submenu>
 
@@ -120,7 +122,7 @@
       </el-dialog>
     </div>
 
-    <!--查看日志-->
+    <!--查看实时日志-->
     <div class="main">
       <div v-show="activeMenu === 'logs'">
         <title>实时日志页面</title>
@@ -139,443 +141,547 @@
         </div>
       </div>
 
+      <!--查看历史日志-->
+      <div class="main">
+        <div v-show="activeMenu === 'historyLogs'">
+          <title>历史日志页面</title>
+          <div id="historyLogspage">
+            <el-card v-loading="">
+              <div slot="header" class="clearfix">
+                <!-- 自定义日志时间范围 -->
+                <el-date-picker
+                    v-model="system.selectHistoryByTime"
+                    type="datetimerange"
+                    start-placeholder="开始日期"
+                    end-placeholder="结束日期"
+                    :default-time="['00:00:00']"
+                    format="yyyy-MM-dd HH:mm:ss"
+                    value-format="yyyy-MM-dd HH:mm:ss"
+                    align="center"
+                    v-if="system.historyLogsLatest == -1">
+                </el-date-picker>
+                <span>&nbsp;</span>
+                <el-select v-model="system.historyLogsLatest" placeholder="查看最近">
+                  <el-option label="最近10分钟" value="10"></el-option>
+                  <el-option label="最近20分钟" value="20"></el-option>
+                  <el-option label="最近30分钟" value="30"></el-option>
+                  <el-option label="最近60分钟" value="60"></el-option>
+                  <el-option label="最近120分钟" value="120"></el-option>
+                  <el-option label="自定义" value="-1"></el-option>
+                </el-select>
+                <span>&nbsp;</span>
+                <el-select v-model="system.historyLogsLevel" placeholder="级别">
+                  <el-option label="error" value="error"></el-option>
+                  <el-option label="info" value="info"></el-option>
+                </el-select>
+                <span>&nbsp;</span>
+                <el-button type="primary" plain v-if="system.historyLogsLatest != -1" @click="getHistoryLogs()">查看
+                </el-button>
+                <span>&nbsp;</span>
 
-      <!--显示项目介绍-->
-      <div v-show="activeMenu === 'about'">
-        <el-menu>
-          <el-menu-item>
-            <iframe src="https://yajuhua.github.io" width="100%" style="height: 95vh;"
-                    frameborder="0"></iframe>
-          </el-menu-item>
-        </el-menu>
-      </div>
+                <span>&nbsp;</span>
+                <el-button type="primary" v-if="system.selectHistoryByTime.length==2 && system.historyLogsLatest == -1"
+                           @click="getHistoryLogsByTime()">查看
+                </el-button>
+                <span>&nbsp;</span>
+
+                <el-button type="primary" v-if="system.historyLogs.length != 0" @click="downloadLogs()">下载日志
+                </el-button>
+
+                <el-button style="float: right;" type="danger" @click="clearHistoryLogs">清除日志</el-button>
+              </div>
+              <div class="logs">
+                <div v-for="log in system.historyLogs" :key="log.id">
+                  <p>{{ formatLog(log) }}</p>
+                </div>
+              </div>
+            </el-card>
+          </div>
+        </div>
 
 
-      <!--修改用户名和密码-->
-      <div v-show="activeMenu === 'changePassword'">
-        <el-form :inline="true" class="demo-form-inline">
-          <el-form-item label="用户名">
-            <el-input v-model="user.account.username" placeholder="请输入用户名"></el-input>
-          </el-form-item>
-          <el-form-item label="密码">
-            <el-input v-model="user.account.password" placeholder="请输入密码"></el-input>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="userAccountChange()">修改</el-button>
-          </el-form-item>
-        </el-form>
-      </div>
+        <!--显示项目介绍-->
+        <div v-show="activeMenu === 'about'">
+          <el-menu>
+            <el-menu-item>
+              <iframe src="https://yajuhua.github.io" width="100%" style="height: 95vh;"
+                      frameborder="0"></iframe>
+            </el-menu-item>
+          </el-menu>
+        </div>
 
-      <!--自定义域名-->
-      <div v-show="activeMenu === 'customDomainName'">
-        <el-form :inline="true" class="demo-form-inline">
 
-          <el-form-item label="选择">
-            <el-select v-model="user.domain.select">
-              <el-option label="默认" value='0'></el-option>
-              <el-option label="修改" value='1'></el-option>
-            </el-select>
-          </el-form-item>
+        <!--修改用户名和密码-->
+        <div v-show="activeMenu === 'changePassword'">
+          <el-form :inline="true" class="demo-form-inline">
+            <el-form-item label="用户名">
+              <el-input v-model="user.account.username" placeholder="请输入用户名"></el-input>
+            </el-form-item>
+            <el-form-item label="密码">
+              <el-input v-model="user.account.password" placeholder="请输入密码"></el-input>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="userAccountChange()">修改</el-button>
+            </el-form-item>
+          </el-form>
+        </div>
 
-          <div v-if="user.domain.select == '1'">
-            <el-form-item label="附件域名">
-              <el-input v-model="user.domain.value" placeholder="请输入"></el-input>
-              <el-tooltip class="item" effect="dark" content="如https://yajuhua.github.io:8088"
+        <!--自定义域名-->
+        <div v-show="activeMenu === 'customDomainName'">
+          <el-form :inline="true" class="demo-form-inline">
+
+            <el-form-item label="选择">
+              <el-select v-model="user.domain.select">
+                <el-option label="默认" value='0'></el-option>
+                <el-option label="修改" value='1'></el-option>
+              </el-select>
+            </el-form-item>
+
+            <div v-if="user.domain.select == '1'">
+              <el-form-item label="附件域名">
+                <el-input v-model="user.domain.value" placeholder="请输入"></el-input>
+                <el-tooltip class="item" effect="dark" content="如https://yajuhua.github.io:8088"
+                            placement="top-start">
+                  <i class="el-icon-question"></i>
+                </el-tooltip>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" @click="changeDomain()">修改</el-button>
+              </el-form-item>
+            </div>
+          </el-form>
+        </div>
+
+        <!-- 开启https -->
+        <div v-show="activeMenu === 'certificates'">
+          <div v-if="user.cert.list.length > 0" @click="switchSsl()">
+            <el-switch v-model="user.cert.switchSsl" active-text="开启"></el-switch>
+          </div>
+          <br>
+          <el-upload class="upload-demo" ref="uploadCertFile" action="/user/cert"
+                     :on-change="certFilehandleChange" :on-remove="certFilehandleRemove" :file-list="user.cert.fileList"
+                     :auto-upload="false" :multiple="true" name="files" v-if="user.cert.list.length == 0">
+            <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
+            <el-button style="margin-left: 10px;" size="small" type="success"
+                       @click="uploadCert">上传到服务器
+            </el-button>
+            <div slot="tip" class="el-upload__tip">只能上传crt和key文件</div>
+          </el-upload>
+          <el-table ref="multipleTable" :data="user.cert.list" tooltip-effect="dark" style="width: 100%">
+            <el-table-column>
+              <el-tag>crt</el-tag>
+              <el-tag type="success">key</el-tag>
+            </el-table-column>
+
+            <el-table-column label="操作" width="180">
+              <el-button type="danger" @click="deleteCert()">删除</el-button>
+            </el-table-column>
+          </el-table>
+
+        </div>
+
+        <!--设置访问路径-->
+        <div v-show="activeMenu === 'path'">
+          <el-form :inline="true" class="demo-form-inline">
+
+            <el-form-item label="访问路径">
+              <el-input v-model="user.path" placeholder="请输入路径"></el-input>
+              <el-tooltip class="item" effect="dark" content="如果设置为podcast2,那么面板访问路径/p/podcast2"
                           placement="top-start">
                 <i class="el-icon-question"></i>
               </el-tooltip>
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" @click="changeDomain()">修改</el-button>
+              <el-button type="primary" @click="updatePath()">修改</el-button>
             </el-form-item>
-          </div>
-        </el-form>
-      </div>
-
-      <!-- 开启https -->
-      <div v-show="activeMenu === 'certificates'">
-        <div v-if="user.cert.list.length > 0" @click="switchSsl()">
-          <el-switch v-model="user.cert.switchSsl" active-text="开启"></el-switch>
+            <el-form-item>
+              <el-button type="primary" @click="deletePath()">删除</el-button>
+            </el-form-item>
+          </el-form>
         </div>
-        <br>
-        <el-upload class="upload-demo" ref="uploadCertFile" action="/user/cert"
-                   :on-change="certFilehandleChange" :on-remove="certFilehandleRemove" :file-list="user.cert.fileList"
-                   :auto-upload="false" :multiple="true" name="files" v-if="user.cert.list.length == 0">
-          <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
-          <el-button style="margin-left: 10px;" size="small" type="success"
-                     @click="uploadCert">上传到服务器
+
+        <!--设置alist-->
+        <div v-show="activeMenu === 'alist'">
+          <el-form :inline="true" class="demo-form-inline" label-width="auto">
+
+            <el-form-item label="链接">
+              <el-tooltip class="item" effect="dark" content="如：http://192.168.123.3:5244"
+                          placement="top-start">
+                <el-input v-model="user.submitAlist.url" :placeholder="user.alistInfo.url" size="medium"
+                          :style="{ width: '300px' }" clearable></el-input>
+              </el-tooltip>
+            </el-form-item>
+            <br/>
+
+            <el-form-item label="用户名">
+              <el-input v-model="user.submitAlist.username" :placeholder="user.alistInfo.username" size="medium"
+                        :style="{ width: '300px' }" clearable></el-input>
+            </el-form-item>
+            <br/>
+
+            <el-form-item label="密码">
+              <el-input v-model="user.submitAlist.password" :placeholder="user.alistInfo.password" size="medium"
+                        :style="{ width: '300px' }" clearable></el-input>
+            </el-form-item>
+            <br/>
+
+            <el-form-item label="目录">
+              <el-tooltip class="item" effect="dark" content="如：/podcast2是alist根目录下的podcast2文件夹"
+                          placement="top-start">
+                <el-input v-model="user.submitAlist.path" :placeholder="user.alistInfo.path" size="medium"
+                          :style="{ width: '300px' }" clearable></el-input>
+              </el-tooltip>
+            </el-form-item>
+            <br/>
+
+            <el-form-item>
+              <el-button type="primary" @click="openAlist()" v-if="user.alistInfo.open==false">开启</el-button>
+              <el-button type="danger" @click="closeAlist()" v-if="user.alistInfo.open==true">关闭</el-button>
+            </el-form-item>
+          </el-form>
+        </div>
+        <!--设置地址过滤-->
+        <div v-show="activeMenu === 'ipAddressFilter'">
+          <el-form ref="blacklistForm" label-width="100px" class="demo-dynamic">
+            <el-form-item
+                v-for="(ip, index) in user.ipAddressFilter.blacklist"
+                :label="'黑IP地址' + (index + 1)"
+                :key="ip.key"
+                :prop="user.ipAddressFilter.blacklist[index]"
+                :rules="[{ required: true, message: '不能为空', trigger: 'blur' }]">
+              <el-tooltip class="item" effect="dark" content="支持单个IP和IP范围（192.168.123.1-192.168.123.100）" placement="right">
+              <el-input v-model="user.ipAddressFilter.blacklist[index]" style="width: 300px;" maxlength="31" minlength="15"></el-input>
+              </el-tooltip>
+              <span>&nbsp;</span>
+              <el-button @click.prevent="removeBlackIp(ip)">删除</el-button>
+            </el-form-item>
+          </el-form>
+          <el-form ref="whitelistForm" label-width="100px" class="demo-dynamic">
+            <el-form-item
+                v-for="(ip, index) in user.ipAddressFilter.whitelist"
+                :label="'白IP地址' + (index + 1)"
+                :key="ip.key"
+                :prop="user.ipAddressFilter.whitelist[index]"
+                :rules="[{ required: true, message: '不能为空', trigger: 'blur' }]">
+              <el-tooltip class="item" effect="dark" content="支持单个IP和IP范围（192.168.123.1-192.168.123.100）" placement="right">
+              <el-input v-model="user.ipAddressFilter.whitelist[index]" style="width: 300px;" maxlength="31" minlength="15"></el-input>
+              </el-tooltip>
+              <span>&nbsp;</span>
+              <el-button @click.prevent="removeWhiteIp(ip)">删除</el-button>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="submitWhiteBlacklist()">提交</el-button>
+              <el-button @click="addBlacklist()" type="info">新增黑名单</el-button>
+              <el-button @click="addWhitelist()">新增白名单</el-button>
+              <el-button @click="clearWhiteBlacklist()" type="warning">重置</el-button>
+            </el-form-item>
+          </el-form>
+        </div>
+
+        <!--其他设置-->
+        <div v-show="activeMenu === 'other'">
+          <!--设置Github加速站-->
+          <el-form :inline="true" class="demo-form-inline">
+            <el-form-item label="Github加速站">
+              <el-input v-model="user.githubProxyUrl" placeholder="请输入Github加速站"></el-input>
+              <el-tooltip class="item" effect="dark"
+                          content="国内无法直接通过yt-dlp更新需要设置Github加速站,当然代理除外。"
+                          placement="top-start">
+                <i class="el-icon-question"></i>
+              </el-tooltip>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="updateGithubProxyUrl()">修改</el-button>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="deleteGithubProxyUrl()">删除</el-button>
+            </el-form-item>
+          </el-form>
+          <!--自定义插件仓库链接-->
+          <el-form :inline="true" class="demo-form-inline">
+            <el-form-item label="自定义插件仓库">
+              <el-input v-model="user.pluginUrl" placeholder="请输入插件仓库链接"></el-input>
+              <el-tooltip class="item" effect="dark" content="若内置插件仓库无法访问可以自定义"
+                          placement="top-start">
+                <i class="el-icon-question"></i>
+              </el-tooltip>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="updatePluginUrl()">修改</el-button>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="deletePluginUrl()">删除</el-button>
+            </el-form-item>
+          </el-form>
+        </div>
+
+
+        <!--数据迁移-->
+        <div v-show="activeMenu === 'dataMigration'">
+          <el-button type="success" round @click="dataExport()">导出</el-button>
+          <el-button type="primary" round @click="dataImport()">
+            导入
+            <!--ref属性用于重置文件，避免浏览器认为是同一个文件-->
+            <input type="file" class="custom-file-input" @change="handleFileSelect" ref="fileInput"/>
           </el-button>
-          <div slot="tip" class="el-upload__tip">只能上传crt和key文件</div>
-        </el-upload>
-        <el-table ref="multipleTable" :data="user.cert.list" tooltip-effect="dark" style="width: 100%">
-          <el-table-column>
-            <el-tag>crt</el-tag>
-            <el-tag type="success">key</el-tag>
-          </el-table-column>
+          <el-table ref="multipleTable" :data="user.dataMigration.subData" tooltip-effect="dark"
+                    style="width: 100%" @selection-change="dataExportHandleSelectionChange">
+            <el-table-column type="selection" width="55">
+            </el-table-column>
+            <el-table-column type="index" width="50">
+            </el-table-column>
+            <el-table-column label="更新时间" width="120" prop="updateTime">
+            </el-table-column>
+            <el-table-column label="频道名称" prop="title" show-overflow-tooltip>
+            </el-table-column>
+          </el-table>
 
-          <el-table-column label="操作" width="180">
-            <el-button type="danger" @click="deleteCert()">删除</el-button>
-          </el-table-column>
-        </el-table>
-
-      </div>
-
-      <!--设置访问路径-->
-      <div v-show="activeMenu === 'path'">
-        <el-form :inline="true" class="demo-form-inline">
-
-          <el-form-item label="访问路径">
-            <el-input v-model="user.path" placeholder="请输入路径"></el-input>
-            <el-tooltip class="item" effect="dark" content="如果设置为podcast2,那么面板访问路径/p/podcast2"
-                        placement="top-start">
-              <i class="el-icon-question"></i>
-            </el-tooltip>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="updatePath()">修改</el-button>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="deletePath()">删除</el-button>
-          </el-form-item>
-        </el-form>
-      </div>
-
-      <!--设置alist-->
-      <div v-show="activeMenu === 'alist'">
-        <el-form :inline="true" class="demo-form-inline" label-width="auto">
-
-          <el-form-item label="链接">
-            <el-tooltip class="item" effect="dark" content="如：http://192.168.123.3:5244"
-                        placement="top-start">
-              <el-input v-model="user.submitAlist.url" :placeholder="user.alistInfo.url" size="medium" :style="{ width: '300px' }" clearable></el-input>
-            </el-tooltip>
-          </el-form-item>
-          <br/>
-
-          <el-form-item label="用户名">
-            <el-input v-model="user.submitAlist.username" :placeholder="user.alistInfo.username" size="medium" :style="{ width: '300px' }" clearable></el-input>
-          </el-form-item>
-          <br/>
-
-          <el-form-item label="密码">
-            <el-input v-model="user.submitAlist.password" :placeholder="user.alistInfo.password" size="medium" :style="{ width: '300px' }" clearable></el-input>
-          </el-form-item>
-          <br/>
-
-          <el-form-item label="目录">
-            <el-tooltip class="item" effect="dark" content="如：/podcast2是alist根目录下的podcast2文件夹"
-                        placement="top-start">
-              <el-input v-model="user.submitAlist.path" :placeholder="user.alistInfo.path" size="medium" :style="{ width: '300px' }" clearable></el-input>
-            </el-tooltip>
-          </el-form-item>
-          <br/>
-
-          <el-form-item>
-            <el-button type="primary" @click="openAlist()" v-if="user.alistInfo.open==false">开启</el-button>
-            <el-button type="danger" @click="closeAlist()" v-if="user.alistInfo.open==true">关闭</el-button>
-          </el-form-item>
-        </el-form>
-      </div>
-
-      <!--其他设置-->
-      <div v-show="activeMenu === 'other'">
-        <!--设置Github加速站-->
-        <el-form :inline="true" class="demo-form-inline">
-          <el-form-item label="Github加速站">
-            <el-input v-model="user.githubProxyUrl" placeholder="请输入Github加速站"></el-input>
-            <el-tooltip class="item" effect="dark"
-                        content="国内无法直接通过yt-dlp更新需要设置Github加速站,当然代理除外。"
-                        placement="top-start">
-              <i class="el-icon-question"></i>
-            </el-tooltip>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="updateGithubProxyUrl()">修改</el-button>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="deleteGithubProxyUrl()">删除</el-button>
-          </el-form-item>
-        </el-form>
-        <!--自定义插件仓库链接-->
-        <el-form :inline="true" class="demo-form-inline">
-          <el-form-item label="自定义插件仓库">
-            <el-input v-model="user.pluginUrl" placeholder="请输入插件仓库链接"></el-input>
-            <el-tooltip class="item" effect="dark" content="若内置插件仓库无法访问可以自定义"
-                        placement="top-start">
-              <i class="el-icon-question"></i>
-            </el-tooltip>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="updatePluginUrl()">修改</el-button>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="deletePluginUrl()">删除</el-button>
-          </el-form-item>
-        </el-form>
-      </div>
-
-
-      <!--数据迁移-->
-      <div v-show="activeMenu === 'dataMigration'">
-        <el-button type="success" round @click="dataExport()">导出</el-button>
-        <el-button type="primary" round @click="dataImport()">
-          导入
-          <!--ref属性用于重置文件，避免浏览器认为是同一个文件-->
-          <input type="file" class="custom-file-input" @change="handleFileSelect" ref="fileInput"/>
-        </el-button>
-        <el-table ref="multipleTable" :data="user.dataMigration.subData" tooltip-effect="dark"
-                  style="width: 100%" @selection-change="dataExportHandleSelectionChange">
-          <el-table-column type="selection" width="55">
-          </el-table-column>
-          <el-table-column type="index" width="50">
-          </el-table-column>
-          <el-table-column label="更新时间" width="120" prop="updateTime">
-          </el-table-column>
-          <el-table-column label="频道名称" prop="title" show-overflow-tooltip>
-          </el-table-column>
-        </el-table>
-
-        <!-- 选择导入订阅 -->
-        <el-dialog title="导入" :visible.sync="user.dataMigration.dataImportVisible" width="40%">
-          <div>
-            <el-table ref="multipleTable" :data="user.dataMigration.import" tooltip-effect="dark"
-                      style="width: 100%" @selection-change="dataImportHandleSelectionChange">
-              <el-table-column type="selection" width="55">
-              </el-table-column>
-              <el-table-column type="index" width="50">
-              </el-table-column>
-              <el-table-column label="频道名称" prop="sub.title" show-overflow-tooltip>
-              </el-table-column>
-            </el-table>
-          </div>
-          <span slot="footer" class="dialog-footer">
+          <!-- 选择导入订阅 -->
+          <el-dialog title="导入" :visible.sync="user.dataMigration.dataImportVisible" width="40%">
+            <div>
+              <el-table ref="multipleTable" :data="user.dataMigration.import" tooltip-effect="dark"
+                        style="width: 100%" @selection-change="dataImportHandleSelectionChange">
+                <el-table-column type="selection" width="55">
+                </el-table-column>
+                <el-table-column type="index" width="50">
+                </el-table-column>
+                <el-table-column label="频道名称" prop="sub.title" show-overflow-tooltip>
+                </el-table-column>
+              </el-table>
+            </div>
+            <span slot="footer" class="dialog-footer">
                         <el-button @click="user.dataMigration.dataImportVisible = false">取 消</el-button>
                         <el-button type="primary" @click="dataImportToServer()">导 入</el-button>
                     </span>
-        </el-dialog>
+          </el-dialog>
 
-      </div>
+        </div>
 
 
-      <!--查看正在下载-->
-      <div v-show="activeMenu === 'Downloading'">
-        <el-table :data="download.progress" stripe style="width: 100%">
-          <el-table-column prop="channelName" label="频道名称" width="180">
-          </el-table-column>
-          <el-table-column prop="itemName" label="节目名称" width="180">
-          </el-table-column>
-          <el-table-column label="进度">
-            <el-progress :text-inside="true" :stroke-width="26" slot-scope="scope"
-                         :percentage="scope.row.downloadProgress"></el-progress>
-          </el-table-column>
-          <el-table-column prop="downloadSpeed" label="速度">
-          </el-table-column>
-          <el-table-column prop="downloadTimeLeft" label="剩余时间">
-          </el-table-column>
-          <el-table-column label="操作">
-            <template slot-scope="scope">
-              <el-button type="primary" @click="downloadDetail(scope.row.uuid)">详细</el-button>
-              <el-button type="danger"
-                         @click="deleteDownloading(scope.row.uuid)">删除
+        <!--查看正在下载-->
+        <div v-show="activeMenu === 'Downloading'">
+          <el-table :data="download.progress" stripe style="width: 100%">
+            <el-table-column prop="channelName" label="频道名称" width="180">
+            </el-table-column>
+            <el-table-column prop="itemName" label="节目名称" width="180">
+            </el-table-column>
+            <el-table-column label="进度">
+              <el-progress :text-inside="true" :stroke-width="26" slot-scope="scope"
+                           :percentage="scope.row.downloadProgress"></el-progress>
+            </el-table-column>
+            <el-table-column prop="downloadSpeed" label="速度">
+            </el-table-column>
+            <el-table-column prop="downloadTimeLeft" label="剩余时间">
+            </el-table-column>
+            <el-table-column label="操作">
+              <template slot-scope="scope">
+                <el-button type="primary" @click="downloadDetail(scope.row.uuid)">详细</el-button>
+                <el-button type="danger"
+                           @click="deleteDownloading(scope.row.uuid)">删除
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+
+        <!--查看已完成-->
+        <div v-show="activeMenu === 'Done'">
+          <div style="height: 90vh; overflow-y: scroll">
+            <el-button type="danger" round @click="batchDeleteDownloadDone()"
+                       v-if="download.selectionDownloadDone.length > 1">批量删除
+            </el-button>
+            <el-table :data="download.done" stripe style="width: 100%" ref="selectDownloadDone"
+                      @selection-change="handleSelectionDownloadDone">
+              <el-table-column
+                  type="selection"
+                  width="55">
+              </el-table-column>
+              <el-table-column
+                  type="index"
+                  width="50">
+              </el-table-column>
+              <el-table-column label="状态" width="180">
+                <i slot-scope="scope"
+                   :class="{ 'el-icon-success': scope.row.status === 5 || scope.row.status === 24 , 'el-icon-error': scope.row.status !== 5 && scope.row.status !== 24 }"
+                   :style="{ fontSize: '45px', color: scope.row.status === 5 || scope.row.status === 24 ? '#54AC1C' : '#F95C61'  }">
+                </i>
+              </el-table-column>
+              <el-table-column prop="channelName" label="频道名称" width="180">
+              </el-table-column>
+              <el-table-column prop="itemName" label="节目标题">
+              </el-table-column>
+              <el-table-column label="进度">
+                <el-progress :status="scope.row.status != '5' && scope.row.status != '24' ? 'exception' : 'success'"
+                             :text-inside="true"
+                             :stroke-width="26" slot-scope="scope" :percentage="scope.row.downloadProgress">
+                </el-progress>
+              </el-table-column>
+              <el-table-column label="操作">
+                <div slot-scope="scope">
+                  <el-button type="success" @click="reDownload(scope.row.uuid)">重新</el-button>
+                  <el-button type="primary" @click="downloadDetail(scope.row.uuid)">详细</el-button>
+                  <el-button type="danger" @click="downloadDelete(scope.row.uuid)">删除</el-button>
+                </div>
+
+              </el-table-column>
+            </el-table>
+          </div>
+        </div>
+
+        <!--查看上传&下载错误-->
+        <div v-show="activeMenu === 'error'">
+          <div style="height: 90vh; overflow-y: scroll">
+            <el-table :data="download.error" stripe style="width: 100%">
+              <el-table-column label="状态" width="180">
+                <i slot-scope="scope"
+                   :class="{ 'el-icon-success': scope.row.status === 5 || scope.row.status === 24 , 'el-icon-error': scope.row.status !== 5 && scope.row.status !== 24 }"
+                   :style="{ fontSize: '45px', color: scope.row.status === 5 || scope.row.status === 24 ? '#54AC1C' : '#F95C61'  }">
+                </i>
+              </el-table-column>
+              <el-table-column prop="channelName" label="频道名称" width="180">
+              </el-table-column>
+              <el-table-column prop="itemName" label="节目标题">
+              </el-table-column>
+              <el-table-column label="进度">
+                <el-progress :status="scope.row.status != '5' && scope.row.status != '24' ? 'exception' : 'success'"
+                             :text-inside="true"
+                             :stroke-width="26" slot-scope="scope" :percentage="scope.row.downloadProgress">
+                </el-progress>
+              </el-table-column>
+              <el-table-column label="操作">
+                <div slot-scope="scope">
+                  <el-button type="success" @click="reDownload(scope.row.uuid)">重新</el-button>
+                  <el-button type="primary" @click="downloadDetail(scope.row.uuid)">详细</el-button>
+                  <el-button type="danger" @click="downloadDelete(scope.row.uuid)">删除</el-button>
+                </div>
+
+              </el-table-column>
+            </el-table>
+          </div>
+        </div>
+
+        <!--查看下载器信息-->
+        <div v-show="activeMenu === 'DownloaderInfo'">
+          <el-table :data="download.info" stripe style="width: 100%">
+            <el-table-column prop="name" label="名称">
+            </el-table-column>
+            <el-table-column prop="version" label="版本">
+            </el-table-column>
+            <el-table-column prop="updateTime" label="更新时间">
+            </el-table-column>
+          </el-table>
+        </div>
+
+        <!--插件设置-->
+        <div v-show="activeMenu === 'pluginSettings'">
+          <div @click="autoUpdatePlugin()">
+            <el-switch v-model="plugin.autoUpdate" active-text="自动更新"></el-switch>
+          </div>
+
+        </div>
+
+        <!-- 插件列表 -->
+        <div v-show="activeMenu === 'pluginList'">
+
+          <!-- 插件详细信息 -->
+          <el-dialog title="详细信息" :visible.sync="plugin.detailVisible" width="30%">
+            <el-table :data="plugin.detail" stripe style="width: 100%">
+              <el-table-column prop="name">
+              </el-table-column>
+              <el-table-column prop="content">
+              </el-table-column>
+            </el-table>
+            <span slot="footer" class="dialog-footer">
+                        <el-button type="primary" @click="plugin.detailVisible = false">确 定</el-button>
+                    </span>
+          </el-dialog>
+
+          <el-input v-model="plugin.search" style="width: 20%" placeholder="搜索插件"></el-input>&nbsp;
+          <el-button type="primary" @click="pluginSearch()" :icon="plugin.searchIng">搜索</el-button>
+          <el-button type="primary" @click="getPluginList()">全部</el-button>
+          <br><br>
+          <el-upload class="upload-demo" ref="upload" :auto-upload="false" :limit="1">
+            <el-button slot="trigger" size="small" type="primary">上传本地插件</el-button>
+            <el-button style="margin-left: 10px;" size="small" type="success"
+                       @click="submitUpload">上传到服务器
+            </el-button>
+            <div slot="tip" class="el-upload__tip">只能上传jar文件</div>
+          </el-upload>
+          <el-table :data="plugin.list" stripe style="width: 100%">
+            <el-table-column prop="name" label="名称" width="180">
+            </el-table-column>
+            <el-table-column prop="version" label="版本" width="180">
+            </el-table-column>
+            <el-table-column prop="update" label="更新时间">
+            </el-table-column>
+            <el-table-column fixed="right" label="操作">
+              <div slot-scope="scope">
+                <div v-if="scope.row.install === true && !scope.row.hasUpdate">
+                  <!-- 已经安装的，可卸载 -->
+                  <el-button type="danger" @click="pluginDelete(scope.row.uuid)">卸载</el-button>
+                  <el-button type="primary" @click="pluginDetail(scope.row.uuid)">详细</el-button>
+                  <el-button type="info" @click="getPluginSettings(scope.row.name)">设置</el-button>
+                </div>
+                <div v-if="scope.row.install === false">
+                  <el-button type="success" @click="pluginInstall(scope.row.uuid)"
+                             :ref="scope.row.uuid">安装
+                  </el-button>
+                  <el-button type="primary" @click="pluginDetail(scope.row.uuid)">详细</el-button>
+                </div>
+                <div v-if="scope.row.hasUpdate === true && scope.row.install === true">
+                  <el-button type="danger" @click="pluginDelete(scope.row.uuid)">卸载</el-button>
+                  <el-button type="primary" @click="pluginDetail(scope.row.uuid)">详细</el-button>
+                  <el-button type="info" @click="getPluginSettings(scope.row.name)">设置</el-button>
+                  <el-button type="warning" :ref="scope.row.name"
+                             @click="pluginUpdate(scope.row.name)">更新
+                  </el-button>
+                </div>
+
+              </div>
+            </el-table-column>
+          </el-table>
+        </div>
+
+        <!-- 插件更新 -->
+        <div v-show="activeMenu === 'pluginUpdate'">
+          <el-table :data="plugin.updateList" stripe style="width: 100%" ref="multipleTable"
+                    @selection-change="handleSelectionChange">
+            <el-table-column type="selection" width="55">
+            </el-table-column>
+            <el-table-column prop="name" label="名称" width="180">
+            </el-table-column>
+            <el-table-column prop="version" label="版本" width="180">
+            </el-table-column>
+            <el-table-column prop="update" label="更新时间">
+            </el-table-column>
+            <el-table-column fixed="right" label="操作">
+              <el-button type="warning" slot-scope="scope" @click="pluginUpdate(scope.row.name)"
+                         :ref="scope.row.name">更新
               </el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-      </div>
-
-      <!--查看已完成-->
-      <div v-show="activeMenu === 'Done'">
-        <div style="height: 90vh; overflow-y: scroll">
-          <el-button type="danger" round @click="batchDeleteDownloadDone()" v-if="download.selectionDownloadDone.length > 1">批量删除</el-button>
-          <el-table :data="download.done" stripe style="width: 100%" ref="selectDownloadDone" @selection-change="handleSelectionDownloadDone">
-            <el-table-column
-                type="selection"
-                width="55">
-            </el-table-column>
-            <el-table-column
-                type="index"
-                width="50">
-            </el-table-column>
-            <el-table-column label="状态" width="180">
-              <i slot-scope="scope"
-                 :class="{ 'el-icon-success': scope.row.status === 5 || scope.row.status === 24 , 'el-icon-error': scope.row.status !== 5 && scope.row.status !== 24 }"
-                 :style="{ fontSize: '45px', color: scope.row.status === 5 || scope.row.status === 24 ? '#54AC1C' : '#F95C61'  }">
-              </i>
-            </el-table-column>
-            <el-table-column prop="channelName" label="频道名称" width="180">
-            </el-table-column>
-            <el-table-column prop="itemName" label="节目标题">
-            </el-table-column>
-            <el-table-column label="进度">
-              <el-progress :status="scope.row.status != '5' && scope.row.status != '24' ? 'exception' : 'success'" :text-inside="true"
-                           :stroke-width="26" slot-scope="scope" :percentage="scope.row.downloadProgress">
-              </el-progress>
-            </el-table-column>
-            <el-table-column label="操作">
-              <div slot-scope="scope">
-                <el-button type="success" @click="reDownload(scope.row.uuid)">重新</el-button>
-                <el-button type="primary" @click="downloadDetail(scope.row.uuid)">详细</el-button>
-                <el-button type="danger" @click="downloadDelete(scope.row.uuid)">删除</el-button>
-              </div>
-
             </el-table-column>
           </el-table>
-        </div>
-      </div>
-
-      <!--查看上传&下载错误-->
-      <div v-show="activeMenu === 'error'">
-        <div style="height: 90vh; overflow-y: scroll">
-          <el-table :data="download.error" stripe style="width: 100%">
-            <el-table-column label="状态" width="180">
-              <i slot-scope="scope"
-                 :class="{ 'el-icon-success': scope.row.status === 5 || scope.row.status === 24 , 'el-icon-error': scope.row.status !== 5 && scope.row.status !== 24 }"
-                 :style="{ fontSize: '45px', color: scope.row.status === 5 || scope.row.status === 24 ? '#54AC1C' : '#F95C61'  }">
-              </i>
-            </el-table-column>
-            <el-table-column prop="channelName" label="频道名称" width="180">
-            </el-table-column>
-            <el-table-column prop="itemName" label="节目标题">
-            </el-table-column>
-            <el-table-column label="进度">
-              <el-progress :status="scope.row.status != '5' && scope.row.status != '24' ? 'exception' : 'success'" :text-inside="true"
-                           :stroke-width="26" slot-scope="scope" :percentage="scope.row.downloadProgress">
-              </el-progress>
-            </el-table-column>
-            <el-table-column label="操作">
-              <div slot-scope="scope">
-                <el-button type="success" @click="reDownload(scope.row.uuid)">重新</el-button>
-                <el-button type="primary" @click="downloadDetail(scope.row.uuid)">详细</el-button>
-                <el-button type="danger" @click="downloadDelete(scope.row.uuid)">删除</el-button>
-              </div>
-
-            </el-table-column>
-          </el-table>
-        </div>
-      </div>
-
-      <!--查看下载器信息-->
-      <div v-show="activeMenu === 'DownloaderInfo'">
-        <el-table :data="download.info" stripe style="width: 100%">
-          <el-table-column prop="name" label="名称">
-          </el-table-column>
-          <el-table-column prop="version" label="版本">
-          </el-table-column>
-          <el-table-column prop="updateTime" label="更新时间">
-          </el-table-column>
-        </el-table>
-      </div>
-
-      <!--插件设置-->
-      <div v-show="activeMenu === 'pluginSettings'">
-        <div @click="autoUpdatePlugin()">
-          <el-switch v-model="plugin.autoUpdate" active-text="自动更新"></el-switch>
+          <div class="footer">
+            <el-button v-if="plugin.updateNames.length > 1" type="warning"
+                       @click="pluginBatchUpdate">批量更新
+            </el-button>
+          </div>
         </div>
 
-      </div>
-
-      <!-- 插件列表 -->
-      <div v-show="activeMenu === 'pluginList'">
-
-        <!-- 插件详细信息 -->
-        <el-dialog title="详细信息" :visible.sync="plugin.detailVisible" width="30%">
-          <el-table :data="plugin.detail" stripe style="width: 100%">
+        <!--项目概况-->
+        <div v-show="activeMenu === 'info'">
+          <h2>项目概况</h2>
+          <el-button type="danger" @click="restart()">重启</el-button>&nbsp;<el-button type="primary"
+                                                                                       @click="checkForUpdate()">检查更新
+        </el-button>
+          <el-table :data="system1.info" stripe style="width: 100%">
             <el-table-column prop="name">
             </el-table-column>
             <el-table-column prop="content">
             </el-table-column>
           </el-table>
-          <span slot="footer" class="dialog-footer">
-                        <el-button type="primary" @click="plugin.detailVisible = false">确 定</el-button>
-                    </span>
-        </el-dialog>
-
-        <el-input v-model="plugin.search" style="width: 20%" placeholder="搜索插件"></el-input>&nbsp;
-        <el-button type="primary" @click="pluginSearch()" :icon="plugin.searchIng">搜索</el-button>
-        <el-button type="primary" @click="getPluginList()">全部</el-button>
-        <br><br>
-        <el-upload class="upload-demo" ref="upload" :auto-upload="false" :limit="1">
-          <el-button slot="trigger" size="small" type="primary">上传本地插件</el-button>
-          <el-button style="margin-left: 10px;" size="small" type="success"
-                     @click="submitUpload">上传到服务器
-          </el-button>
-          <div slot="tip" class="el-upload__tip">只能上传jar文件</div>
-        </el-upload>
-        <el-table :data="plugin.list" stripe style="width: 100%">
-          <el-table-column prop="name" label="名称" width="180">
-          </el-table-column>
-          <el-table-column prop="version" label="版本" width="180">
-          </el-table-column>
-          <el-table-column prop="update" label="更新时间">
-          </el-table-column>
-          <el-table-column fixed="right" label="操作">
-            <div slot-scope="scope">
-              <div v-if="scope.row.install === true && !scope.row.hasUpdate">
-                <!-- 已经安装的，可卸载 -->
-                <el-button type="danger" @click="pluginDelete(scope.row.uuid)">卸载</el-button>
-                <el-button type="primary" @click="pluginDetail(scope.row.uuid)">详细</el-button>
-                <el-button type="info" @click="getPluginSettings(scope.row.name)">设置</el-button>
-              </div>
-              <div v-if="scope.row.install === false">
-                <el-button type="success" @click="pluginInstall(scope.row.uuid)"
-                           :ref="scope.row.uuid">安装
-                </el-button>
-                <el-button type="primary" @click="pluginDetail(scope.row.uuid)">详细</el-button>
-              </div>
-              <div v-if="scope.row.hasUpdate === true && scope.row.install === true">
-                <el-button type="danger" @click="pluginDelete(scope.row.uuid)">卸载</el-button>
-                <el-button type="primary" @click="pluginDetail(scope.row.uuid)">详细</el-button>
-                <el-button type="info" @click="getPluginSettings(scope.row.name)">设置</el-button>
-                <el-button type="warning" :ref="scope.row.name"
-                           @click="pluginUpdate(scope.row.name)">更新
-                </el-button>
-              </div>
-
-            </div>
-          </el-table-column>
-        </el-table>
-      </div>
-
-      <!-- 插件更新 -->
-      <div v-show="activeMenu === 'pluginUpdate'">
-        <el-table :data="plugin.updateList" stripe style="width: 100%" ref="multipleTable"
-                  @selection-change="handleSelectionChange">
-          <el-table-column type="selection" width="55">
-          </el-table-column>
-          <el-table-column prop="name" label="名称" width="180">
-          </el-table-column>
-          <el-table-column prop="version" label="版本" width="180">
-          </el-table-column>
-          <el-table-column prop="update" label="更新时间">
-          </el-table-column>
-          <el-table-column fixed="right" label="操作">
-            <el-button type="warning" slot-scope="scope" @click="pluginUpdate(scope.row.name)"
-                       :ref="scope.row.name">更新
-            </el-button>
-          </el-table-column>
-        </el-table>
-        <div class="footer">
-          <el-button v-if="plugin.updateNames.length > 1" type="warning"
-                     @click="pluginBatchUpdate">批量更新
-          </el-button>
         </div>
       </div>
-
-      <!--项目概况-->
-      <div v-show="activeMenu === 'info'">
-        <h2>项目概况</h2>
-        <el-button type="danger" @click="restart()">重启</el-button>&nbsp;<el-button type="primary"
-                                                                                     @click="checkForUpdate()">检查更新
-      </el-button>
-        <el-table :data="system1.info" stripe style="width: 100%">
-          <el-table-column prop="name">
-          </el-table-column>
-          <el-table-column prop="content">
-          </el-table-column>
-        </el-table>
-      </div>
     </div>
-  </div>
 </template>
 
 <script>
@@ -606,10 +712,14 @@ export default {
         detail: {},
         downloadDetailVisible: false,
         error: [],
-        selectionDownloadDone:[]
+        selectionDownloadDone: []
       },
       system: {
-        logs: []
+        logs: [],
+        historyLogs: [],
+        historyLogsLatest: 10,
+        historyLogsLevel: 'error',
+        selectHistoryByTime: []
       },
       user: {
         domain: {
@@ -649,6 +759,10 @@ export default {
           password: '',
           path: '',
           open: false
+        },
+        ipAddressFilter: {
+          whitelist: [],
+          blacklist: []
         }
       },
       system1: {
@@ -690,6 +804,8 @@ export default {
     this.getPluginUrl();
     //获取alist配置信息
     this.getAlistInfo();
+    //获取黑白名单
+    this.getAddressFilter();
   },
   methods: {
     toSubList() {
@@ -1224,6 +1340,10 @@ export default {
     //清空日志
     clearLogs() {
       this.system.logs = [];
+    },
+    //清空历史日志
+    clearHistoryLogs() {
+      this.system.historyLogs = [];
     },
     //删除下载
     downloadDelete(uuid) {
@@ -1975,8 +2095,8 @@ export default {
       });
     },
     //更新alist配置
-    updateAlistInfo(){
-      axios.post('/user/alist/update',this.user.submitAlist)
+    updateAlistInfo() {
+      axios.post('/user/alist/update', this.user.submitAlist)
           .then(res => {
             if (res.data.code == '1') {
               this.getAlistInfo()
@@ -1988,14 +2108,14 @@ export default {
           })
     },
     //开启alist
-    openAlist(){
+    openAlist() {
       this.$confirm('此操作将开启Alist, 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-          this.user.submitAlist.open = true;
-        axios.post('/user/alist/update',this.user.submitAlist)
+        this.user.submitAlist.open = true;
+        axios.post('/user/alist/update', this.user.submitAlist)
             .then(res => {
               if (res.data.code == '1') {
                 this.getAlistInfo()
@@ -2009,14 +2129,14 @@ export default {
       });
     },
     //关闭alist
-    closeAlist(){
+    closeAlist() {
       this.$confirm('此操作将关闭Alist, 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
         this.user.submitAlist.open = false;
-        axios.post('/user/alist/update',this.user.submitAlist)
+        axios.post('/user/alist/update', this.user.submitAlist)
             .then(res => {
               if (res.data.code == '1') {
                 this.getAlistInfo()
@@ -2030,7 +2150,7 @@ export default {
       });
     },
     //获取alist配置信息
-    getAlistInfo(){
+    getAlistInfo() {
       axios.get('/user/alist/info')
           .then(res => {
             if (res.data.code == '1') {
@@ -2042,8 +2162,110 @@ export default {
         console.log(err);
         this.$message.error('获取alist配置信息失败！')
       })
-    }
+    },
+    //查看最近历史日志
+    getHistoryLogs() {
+      axios.get('/system/logs/history/latest?' + 'minutes=' + this.system.historyLogsLatest + '&level=' + this.system.historyLogsLevel)
+          .then(res => {
+            if (res.data.code == '1') {
+              this.system.historyLogs = res.data.data;
+            } else {
+              this.$message.error(res.data.msg);
+            }
+          }).catch(err => {
+        console.log(err);
+        this.$message.error('最近日志失败！')
+      })
+    },
+    getHistoryLogsByTime() {
+      axios.get('/system/logs/history/between?start=' + this.system.selectHistoryByTime[0] + '&end=' + this.system.selectHistoryByTime[1] + '&level=' + this.system.historyLogsLevel)
+          .then(res => {
+            if (res.data.code == '1') {
+              this.system.historyLogs = res.data.data;
+            } else {
+              this.$message.error(res.data.msg);
+            }
+          }).catch(err => {
+        console.log(err);
+        this.$message.error('获取日志失败！')
+      })
+    },
+    //下载日志
+    downloadLogs() {
+      //不能为空
+      if (this.system.historyLogs.length != 0) {
+        const blob = new Blob([this.system.historyLogs.join("\n")], {type: 'text/plain'});
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', this.system.historyLogsLevel + '.log');
+        document.body.appendChild(link);
+        link.click();
+      } else {
+        this.$message.error('不能下载空日志！');
+      }
+    },
+    removeBlackIp(item) {
+      let index = this.user.ipAddressFilter.blacklist.indexOf(item)
+      if (index !== -1) {
+        this.user.ipAddressFilter.blacklist.splice(index, 1)
+      }
+    },
+    addBlacklist() {
+      this.user.ipAddressFilter.blacklist.push('');
+    },
+    removeWhiteIp(item) {
+      let index = this.user.ipAddressFilter.whitelist.indexOf(item)
+      if (index !== -1) {
+        this.user.ipAddressFilter.whitelist.splice(index, 1)
+      }
+    },
+    addWhitelist() {
+      this.user.ipAddressFilter.whitelist.push('');
+    },
+    //清空黑白名单
+    clearWhiteBlacklist() {
+      this.user.ipAddressFilter.blacklist = []
+      this.user.ipAddressFilter.whitelist = []
+    },
+    //提交黑白名单
+    submitWhiteBlacklist() {
+      this.$confirm('此操作将提交黑白名单, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        axios.post('/user/addressFilter/update',this.user.ipAddressFilter)
+            .then(res => {
+              if (res.data.code == '1') {
+                this.$message.success("提交黑白名单成功！")
+                this.getAddressFilter();
+              } else {
+                this.$message.error(res.data.msg);
+              }
+            }).catch(err => {
+          console.log(err);
+          this.$message.error(err.toString());
+        })
+      }).catch(() => {
+        this.$message.info('已取消提交')
+      });
+    },
+    //获取黑白名单
+    getAddressFilter() {
+      axios.get('/user/addressFilter')
+          .then(res => {
+            if (res.data.code == '1') {
+              this.user.ipAddressFilter = res.data.data;
+            } else {
+              this.$message.error(res.data.msg);
+            }
+          }).catch(err => {
+        console.log(err);
+        this.$message.error('获取黑白名单错误！')
+      })
 
+    }
   }
 }
 </script>
