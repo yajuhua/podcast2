@@ -186,20 +186,8 @@ public class SubController {
                     url = enclosureDomain + "/resources/" + item.getFileName();
                     if (status == Context.ALIST_UPLOAD_SUCCESS && alistInfo.isOpen()){
                         //上传完成的
-                        try {
-                            url = alist.getFileUrl(item.getFileName());
-                        } catch (Exception e) {
-                            log.error("获取alist资源错误：{}",e.getMessage());
-                            item.setStatus(Context.ALIST_FILE_NOT_FOUND);
-                            itemsMapper.update(item);
-                            continue;
-                        }
+                        url = enclosureDomain + "/resources/alist/" + item.getFileName();
                     }
-
-                    if (status == Context.ALIST_UPLOAD_SUCCESS && !alistInfo.isOpen()){
-                        continue;
-                    }
-
                     item1.setEnclosureType(item.getType().toLowerCase() + "/" + item.getFormat());
                     BeanUtils.copyProperties(item,item1);
                     item1.setEnclosure(url);
@@ -300,20 +288,8 @@ public class SubController {
                     url = enclosureDomain + "/resources/" + item.getFileName();
                     if (status == Context.ALIST_UPLOAD_SUCCESS && alistInfo.isOpen()){
                         //上传完成的
-                        try {
-                            url = alist.getFileUrl(item.getFileName());
-                        } catch (Exception e) {
-                            log.error("获取alist资源错误：{}",e.getMessage());
-                            item.setStatus(Context.ALIST_FILE_NOT_FOUND);
-                            itemsMapper.update(item);
-                            continue;
-                        }
+                        url = enclosureDomain + "/resources/alist/" + item.getFileName();
                     }
-
-                    if (status == Context.ALIST_UPLOAD_SUCCESS && !alistInfo.isOpen()){
-                        continue;
-                    }
-
                     item1.setEnclosureType(item.getType().toLowerCase() + "/" + item.getFormat());
                     BeanUtils.copyProperties(item,item1);
                     item1.setEnclosure(url);
