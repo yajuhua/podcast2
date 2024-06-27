@@ -50,11 +50,17 @@ public class LogUtils {
             if (map != null && !map.isEmpty()){
                 LocalDateTime startTime = map.get("start");
                 LocalDateTime endTime = map.get("end");
-                if (!(startTime.isAfter(end) || endTime.isBefore(start))){
-                    if (file.getName().contains(level.toLowerCase())){
-                        logFiles.add(file);
+                //TODO starTime和endTime可能存在null，需要排除
+                startTime = startTime==null?endTime:startTime;
+                endTime = endTime==null?startTime:endTime;
+                if(startTime!= null && endTime != null){
+                    if (!(startTime.isAfter(end) || endTime.isBefore(start))){
+                        if (file.getName().contains(level.toLowerCase())){
+                            logFiles.add(file);
+                        }
                     }
                 }
+
             }
         }
 
@@ -210,7 +216,8 @@ public class LogUtils {
     @Test
     public void testRecentLog()throws Exception{
         //TODO VO和Controller
-        List<String> info = getRecent(10L, TimeUnit.MINUTES, new File("E:\\data\\logs"), "error");
+        String path = "C:\\Users\\Administrator\\Desktop\\fsdownload\\logs\\logs";
+        List<String> info = getRecent(10L, TimeUnit.MINUTES, new File(path), "error");
         for (String s : info) {
             System.out.println(s);
         }
