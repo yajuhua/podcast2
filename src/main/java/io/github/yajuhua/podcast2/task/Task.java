@@ -31,7 +31,6 @@ import io.github.yajuhua.podcast2.service.SubService;
 import io.github.yajuhua.podcast2.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -52,6 +51,7 @@ public class Task {
     public static Boolean addSubStatus = false;//避免添加订阅时更新yt-dlp
     public static Boolean updateStatus = false;//避免更新订阅时更新插件之类的
     public static List<DownloadManager> downloadManagerList = new ArrayList<>();//存放下载管理
+    public static Map<String,List<LogMessage>> collectUpdateLogMessagesMap = new HashMap<>();//存放订阅更新日志
     @Autowired
     private UserMapper userMapper;
     @Autowired
@@ -98,10 +98,12 @@ public class Task {
     public void updateSub(){
         ExecutorService executor = Executors.newSingleThreadExecutor();
         long timeout;
+        String uuid = null;
         try {
             //1.获取需要更新的订阅
             List<Sub> subList = subService.selectUpdateList();
             for (Sub sub : subList) {
+                uuid = sub.getUuid();
                 int downloadItemNum;
                 String[] customEpisodes = sub.getCustomEpisodes().split(",");
                 downloadItemNum = sub.getIsFirst().equals(1) && sub.getEpisodes().equals(-1)?30:1;
@@ -115,10 +117,13 @@ public class Task {
                     future.cancel(true);
                     subMapper.update(sub);//保持原样
                     log.error("更新超时:{}{}",sub.getTitle(),e.getMessage());
+                    collectUpdateLogMessages(sub.getUuid(),"更新超时","error");
                 }
+                collectUpdateLogMessages(sub.getUuid(),"更新成功","info");
             }
         } catch (Exception e) {
             log.error("更新异常:{}详细:{}",e.getMessage(),e.getStackTrace());
+            collectUpdateLogMessages(uuid,e.getMessage(),"error");
         }finally {
             Task.updateStatus = false;
             if (Task.downloadProgressVOSet != null){
@@ -567,5 +572,23 @@ public class Task {
         } catch (Exception e) {
             log.error("收集用户使用情况异常：{}",e.getMessage());
         }
+    }
+
+    /**
+     * 收集订阅更新日志信息
+     * @param uuid
+     * @param msg
+     * @param level
+     */
+    public static void collectUpdateLogMessages(String uuid, String msg, String level){
+        Map<String, List<LogMessage>> sources = collectUpdateLogMessagesMap;
+        List<LogMessage> logMessages = sources.get(uuid);
+        if (logMessages == null){
+            logMessages = new ArrayList<>();
+        } else if (logMessages.size() >= 10) {
+            logMessages.remove(0);
+        }
+        logMessages.add(LogMessage.builder().msg(msg).level(level.toLowerCase()).build());
+        sources.put(uuid,logMessages);
     }
 }

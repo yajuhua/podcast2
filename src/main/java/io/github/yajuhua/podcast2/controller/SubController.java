@@ -28,6 +28,7 @@ import io.github.yajuhua.podcast2.service.ExtendService;
 import io.github.yajuhua.podcast2.service.ItemsService;
 import io.github.yajuhua.podcast2.service.SubService;
 import io.github.yajuhua.podcast2.service.UserService;
+import io.github.yajuhua.podcast2.task.LogMessage;
 import io.github.yajuhua.podcast2.task.Task;
 import io.github.yajuhua.podcast2API.Channel;
 import io.github.yajuhua.podcast2API.Item;
@@ -454,7 +455,50 @@ public class SubController {
                 serveStatusItems.add(item);
             }
         }
+
+        //最近更新错误超过10次
+        Item item1 = updateErrorLogMessges(subList.get(0));
+        if (item1 != null){
+            serveStatusItems.add(item1);
+        }
         return serveStatusItems;
+    }
+
+    /**
+     * 获取更新错误日志信息
+     * @param sub
+     * @return
+     */
+    private Item updateErrorLogMessges(Sub sub){
+        List<LogMessage> logMessages = Task.collectUpdateLogMessagesMap.get(sub.getUuid());
+        if (logMessages == null){
+            return null;
+        }
+        List<LogMessage> collect = logMessages.stream().filter(new Predicate<LogMessage>() {
+            @Override
+            public boolean test(LogMessage logMessage) {
+                return "error".equals(logMessage.getLevel());
+            }
+        }).collect(Collectors.toList());
+
+        boolean in = collect.size() < 10;
+        if (in){
+            return null;
+        }
+        StringBuilder desc = new StringBuilder();
+        for (LogMessage message : collect) {
+            desc.append(message.getMsg()).append("\n");
+        }
+        Item item = new Item();
+        item.setTitle("最近更新错误超过10次");
+        item.setDescription(desc.toString());
+        item.setDuration(10);
+        item.setCreateTime(System.currentTimeMillis());
+        item.setLink("https://github.com/yajuhua/podcast2");
+        item.setImage("https://yajuhua.github.io/images/975x975-logo.png");
+        item.setEnclosure("https://yajuhua.github.io/resources/error.mp3");
+
+        return item;
     }
 
 
