@@ -315,6 +315,8 @@ public class Task {
      */
     @Scheduled(fixedDelay = 120000)
     public void checkForUndownload() throws Exception{
+        Sub sub = null;
+        Items itemsT = null;
         try {
             List<Items> itemsList = itemsMapper.list();
             List<Items> unsuccessfulDownloads = itemsList.stream().filter(new Predicate<Items>() {
@@ -327,7 +329,6 @@ public class Task {
 
             if (!unsuccessfulDownloads.isEmpty()) {
                 //重新下载
-                log.info("重新下载");
                 ThreadPoolExecutor pool = new ThreadPoolExecutor(
                         1,    //核心线程数有1个
                         1,  //最大线程数
@@ -339,10 +340,11 @@ public class Task {
                 );
                 for (Items items : unsuccessfulDownloads) {
                     //如果是首次更新就不用
-                    Sub sub = subMapper.selectByUuid(items.getChannelUuid());
+                     sub = subMapper.selectByUuid(items.getChannelUuid());
+                     itemsT = items;
                     if (sub != null) {
                         Integer isFirst = sub.getIsFirst();
-                        log.info("订阅:{}-节目:{}",sub.getTitle(),items.getTitle());
+                        log.info("开始重新下载 - 订阅：{} - 节目：{}",sub.getTitle(),items.getTitle());
                         //之前版本中type和operation是null，要排除这种情况
                         if (isFirst !=null && isFirst == 0 && items.getType() != null && items.getOperation() != null) {
                             Map args = gson.fromJson(items.getArgs(), Map.class);
@@ -361,12 +363,15 @@ public class Task {
                             pool.execute(reDownload);
                             Thread.sleep(2000);
                         }else {
-                            log.info("数据不全:{}-删除该记录",items.getTitle());
+                            log.error("重新下载失败 - 数据不全 - 订阅：{} - 节目：{}",sub.getTitle(),items.getTitle());
+                            //订阅equal改成none,一般重新下载失败都是突然中断更新导致数据不全。
+                            Sub none = Sub.builder().uuid(sub.getUuid()).equal("none").build();
+                            subMapper.update(none);
                             itemsMapper.deleteByUuid(items.getUuid());
                         }
                     }else {
                         //清理掉
-                        log.info("未找到所属频道:{}-删除该节目记录",items.getTitle());
+                        log.error("未找到该节目所属订阅 - 删除该节目记录：{}",items.getTitle());
                         itemsMapper.deleteByUuid(items.getUuid());
                     }
                 }
@@ -377,10 +382,10 @@ public class Task {
                     long minutes = (end.getTime() - start.getTime())/1000/60;
                     //每个下载最多是30分钟
                     if (minutes > unsuccessfulDownloads.size()*30){
-                        log.error("重新下载超时");
+                        log.error("重新下载超时 - 订阅：{} - 节目：{}",sub.getTitle(),itemsT.getTitle());
                         return;
                     } else if (pool.isTerminated()) {
-                        log.info("重新下载结束");
+                        log.info("重新下载结束 - 订阅：{} - 节目：{}",sub.getTitle(),itemsT.getTitle());
                         return;
                     }
                 }
