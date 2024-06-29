@@ -190,6 +190,32 @@ docker run -id --name=podcast2 \
 yajuhua/podcast2:latest
 
 ````
+##### 重新开始
+> 如果使用最新版都无法解决，可以试试删除所有数据
+````shell
+# 停止容器
+docker stop podcast2
+
+# 删除容器
+docker rm podcast2
+
+# 删除本地镜像
+docker rmi yajuhua/podcast2:latest
+
+# 删除数据
+docker volume rm podcast2
+
+# 拉取最新镜像
+docker pull yajuhua/podcast2:latest
+
+#创建新的容器
+docker run -id --name=podcast2 \
+-p 8088:8088 \
+--restart=always \
+--mount source=podcast2,destination=/data \
+yajuhua/podcast2:latest
+
+````
 ## 插件bug或失效
 由于插件是并非使用官方接口，难免存在不稳定性。若发现插件失效，请[issues](https://github.com/yajuhua/podcast2/issues/new/choose)
 
