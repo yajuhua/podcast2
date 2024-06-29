@@ -19,6 +19,7 @@ import io.github.yajuhua.podcast2.mapper.UserMapper;
 import io.github.yajuhua.podcast2.pojo.dto.UserLoginDTO;
 import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.UserLoginVO;
+import io.github.yajuhua.podcast2.service.ExtendService;
 import io.github.yajuhua.podcast2.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -60,6 +61,8 @@ public class UserController {
     private Gson gson;
     @Autowired
     private Alist alist;
+    @Autowired
+    private ExtendService extendService;
 
     /**
      * 用户登录
@@ -187,7 +190,7 @@ public class UserController {
         //添加到数据库
         for (DataExport export : dataExportList) {
             subMapper.addSub(export.getSub());
-            extendMapper.batchExtend(export.getExtendList());
+            extendService.batchExtend(export.getExtendList());
         }
         return Result.success();
     }
