@@ -236,18 +236,30 @@ public class Update implements Runnable {
                 }
 
                 Request request = item.getRequest();
-                //参数设置
-                Map args = request.getArgs();
-                if (args == null || !request.getDownloader().equals(DownloadManager.Downloader.YtDlp)){
-                    args = new HashMap();
-                }
-                args.put("-N","10");//多线程用于m3u8下载
-                request.setArgs(args);
                 request.setUuid(UUID.randomUUID().toString());
                 request.setChannelUuid(sub.getUuid());
                 request.setDir(new File(dataPathProperties.getResourcesPath()));
-                request.setDownloader(DownloadManager.Downloader.YtDlp);
 
+                boolean isArm = System.getProperty("os.arch").equals("arm");
+                if (isArm && request.getDownloader().equals(DownloadManager.Downloader.Nm3u8DlRe)){
+                    //arm32不支持N_m3u8DL-RE
+                    Map args = request.getArgs();
+                    if (args == null){
+                        args = new HashMap();
+                    }
+                    args.put("-N","10");//多线程用于m3u8下载
+                    request.setArgs(args);
+                    request.setDownloader(DownloadManager.Downloader.YtDlp);
+                }
+                if (!isArm && request.getDownloader().equals(DownloadManager.Downloader.Nm3u8DlRe)){
+                    //以在非ansi环境显示进度信息 & 用于移除ANSI颜色 https://github.com/RikaCelery/N_m3u8DL-RE
+                    Map args = request.getArgs();
+                    if (args == null){
+                        args = new HashMap();
+                    }
+                    args.put("--force-ansi-console","");
+                    request.setArgs(args);
+                }
                 item.setRequest(request);
                 filterItems.add(item);
                 downloadManager.add(request);

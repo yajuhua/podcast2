@@ -1,15 +1,9 @@
-FROM debian:stable-slim
-COPY app.jar /
-COPY yt-dlp /usr/sbin/
-COPY ffmpeg /usr/sbin/
-COPY jre8 /usr/sbin/jre8
-ENV JAVA_HOME=/usr/sbin/jre8
-ENV PATH="$JAVA_HOME/bin:$PATH"
-ENV LANG=C.UTF-8
+FROM yajuhua/podcast2-base-v2:latest
+ADD app.jar /
 EXPOSE 8088
-WORKDIR /
-ENV TZ=Asia/Shanghai
-CMD ["java","-jar","app.jar"]
+ENV LANG zh_CN.utf8
+RUN yt-dlp -U
+CMD ["start-app"]
 
 LABEL author.email="yajuhua@outlook.com"  author.name="yajuhua"
 

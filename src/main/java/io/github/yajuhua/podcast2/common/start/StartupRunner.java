@@ -75,14 +75,16 @@ public class StartupRunner implements ApplicationRunner{
         //初始化
         initConfig();
 
-        //2.2.0仅使用yt-dlp
+
         List<Downloader> downloaderList = downloaderMapper.list();
-        if (downloaderList.isEmpty() || downloaderList.size() != 1){
+        if (downloaderList.isEmpty() || downloaderList.size() != 3){
             String osArch = System.getProperty("os.arch");
             log.info("系统架构:{}",osArch);
             log.info("更新下载器信息");
             downloaderMapper.deleteAll();
-            Downloader build = Downloader.builder()
+
+            //yt-dlp
+            Downloader ytdlp = Downloader.builder()
                     .name(DownloaderUtils.Downloader.YtDlp.name())
                     .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.YtDlp))
                     //只更新yt-dlp
@@ -90,7 +92,28 @@ public class StartupRunner implements ApplicationRunner{
                     .refreshDuration(24)
                     .updateTime(System.currentTimeMillis())
                     .build();
-            downloaderMapper.insert(build);
+            downloaderMapper.insert(ytdlp);
+
+            //aria2
+            Downloader aria2 = Downloader.builder()
+                    .name(DownloaderUtils.Downloader.Aria2.name())
+                    .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.Aria2))
+                    .isUpdate(0)
+                    .refreshDuration(24)
+                    .updateTime(System.currentTimeMillis())
+                    .build();
+            downloaderMapper.insert(aria2);
+
+            //N_m3u8DL-RE
+            Downloader nm3u8DlRe = Downloader.builder()
+                    .name(DownloaderUtils.Downloader.Nm3u8DlRe.name())
+                    .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.Nm3u8DlRe))
+                    .isUpdate(0)
+                    .refreshDuration(24)
+                    .updateTime(System.currentTimeMillis())
+                    .build();
+            downloaderMapper.insert(nm3u8DlRe);
+
             log.info("下载器信息更新完成");
         }
 
