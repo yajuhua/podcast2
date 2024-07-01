@@ -41,14 +41,6 @@ public class ReDownload implements Runnable{
         items.setUuid(request.getUuid());
         items.setStatus(Context.DOWNLOADING);
 
-        //v2.2.0开始移除了aria2c和N_m3u8DL-RE,要将所有请求改成yt-dlp
-        if (!request.getDownloader().equals(DownloadManager.Downloader.YtDlp)){
-            Map args = new HashMap();
-            request.setDownloader(DownloadManager.Downloader.YtDlp);
-            request.setArgs(args);
-            items.setDownloader(request.getDownloader().toString());
-        }
-
         itemsMapper.update(items);
         downloadManager.add(request);
         //开始下载
