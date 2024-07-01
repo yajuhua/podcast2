@@ -512,9 +512,13 @@ public class Task {
                         uploadItem.setStatus(Context.ALIST_UPLOAD_OUT_OF_MEMORY);
                         itemsMapper.update(uploadItem);
                     } catch (RuntimeException e) {
-                        uploadItem.setStatus(Context.ALIST_UPLOAD_ERR);
-                        itemsMapper.update(uploadItem);
                         log.error("上传失败 - 文件：{} - 详细：{}",uploadItem.getFileName(),e.getMessage());
+                        if (e.getMessage().contains("文件不存在")){
+                            uploadItem.setStatus(Context.DOWNLOAD_ERR);
+                        }else {
+                            uploadItem.setStatus(Context.ALIST_UPLOAD_ERR);
+                        }
+                        itemsMapper.update(uploadItem);
                     }
                 }
             }
