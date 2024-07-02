@@ -15,9 +15,7 @@ import io.github.yajuhua.podcast2.common.exception.ItemNotFoundException;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.result.Result;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
-import io.github.yajuhua.podcast2.mapper.DownloaderMapper;
-import io.github.yajuhua.podcast2.mapper.ItemsMapper;
-import io.github.yajuhua.podcast2.mapper.SubMapper;
+import io.github.yajuhua.podcast2.mapper.*;
 import io.github.yajuhua.podcast2.pojo.entity.Downloader;
 import io.github.yajuhua.podcast2.pojo.entity.Items;
 import io.github.yajuhua.podcast2.pojo.entity.Sub;
@@ -63,6 +61,10 @@ public class DownloadController {
     @Autowired
     private Alist alist;
     public static List<Items> reUploadItems = new ArrayList<>();
+    @Autowired
+    public PluginMapper pluginMapper;
+    @Autowired
+    private SettingsMapper settingsMapper;
 
 
     /**
@@ -255,7 +257,7 @@ public class DownloadController {
                     .channelUuid(items.getChannelUuid())
                     .uuid(items.getUuid())
                     .build();
-            Thread thread = new Thread(new ReDownload(build,itemsMapper,subMapper));
+            Thread thread = new Thread(new ReDownload(build,itemsMapper,subMapper,pluginMapper,dataPathProperties,settingsMapper));
             thread.start();
         }
         return Result.success();

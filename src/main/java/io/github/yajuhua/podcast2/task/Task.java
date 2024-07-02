@@ -359,7 +359,7 @@ public class Task {
                                     .dir(new File(dataPathProperties.getResourcesPath()))
                                     .links(links)
                                     .build();
-                            ReDownload reDownload = new ReDownload(request, itemsMapper, subMapper);
+                            ReDownload reDownload = new ReDownload(request,itemsMapper,subMapper,pluginMapper,dataPathProperties,settingsMapper);
                             pool.execute(reDownload);
                             Thread.sleep(2000);
                         }else {

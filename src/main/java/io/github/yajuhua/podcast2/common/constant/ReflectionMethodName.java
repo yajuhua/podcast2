@@ -10,4 +10,5 @@ public class ReflectionMethodName {
     public static final String GET_EXTENSION = "getExtensions"; //扩展选项
     public static final String GET_INFO = "getInfo"; //插件选项
     public static final String SETTINGS = "settings"; //插件设置
+    public static final String GET_REQUEST = "getRequest"; //获取下载请求
 }
