@@ -14,8 +14,8 @@ import io.github.yajuhua.podcast2.common.result.Result;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.common.utils.ExtendListUtil;
 import io.github.yajuhua.podcast2.common.utils.Http;
-import io.github.yajuhua.podcast2.common.utils.PluginLoader;
 import io.github.yajuhua.podcast2.mapper.*;
+import io.github.yajuhua.podcast2.plugin.PluginManager;
 import io.github.yajuhua.podcast2.pojo.dto.AddSubDTO;
 import io.github.yajuhua.podcast2.pojo.dto.GetExtendListDTO;
 import io.github.yajuhua.podcast2.pojo.dto.GithubActionWorkflowsDTO;
@@ -33,6 +33,7 @@ import io.github.yajuhua.podcast2.task.Task;
 import io.github.yajuhua.podcast2API.Channel;
 import io.github.yajuhua.podcast2API.Item;
 import io.github.yajuhua.podcast2API.Params;
+import io.github.yajuhua.podcast2API.Podcast2;
 import io.github.yajuhua.podcast2API.extension.build.ExtendList;
 import io.github.yajuhua.podcast2API.extension.build.Input;
 import io.github.yajuhua.podcast2API.extension.build.Select;
@@ -98,6 +99,9 @@ public class SubController {
     private Alist alist;
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private PluginManager pluginManager;
 
 
     /**
@@ -580,7 +584,8 @@ public class SubController {
             //构建插件参数
             Params params = new Params();
             params.setUrl(addSubDTO.getUrl());
-            List<Settings> settingsFromDB = settingsMapper.selectByPluginName(Http.getSecondLevelDomain(addSubDTO.getPlugin()));
+            String secondLevelDomain = Http.getSecondLevelDomain(addSubDTO.getPlugin());
+            List<Settings> settingsFromDB = settingsMapper.selectByPluginName(secondLevelDomain);
             List<Setting> settings = new ArrayList<>();
             for (Settings dbSetting : settingsFromDB) {
                 Setting setting = new Setting();
@@ -590,11 +595,8 @@ public class SubController {
             params.setSettings(settings);
 
             //获取插件Channel数据
-            Class aClass = PluginLoader.selectByName(Http.getSecondLevelDomain(addSubDTO.getPlugin()), dataPathProperties).get(0);
-            Constructor constructor = aClass.getConstructor(String.class);
-            Object o = constructor.newInstance(gson.toJson(params));
-            String channelStr = gson.toJson(aClass.getMethod(ReflectionMethodName.CHANNEL).invoke(o));
-            Channel channel = gson.fromJson(channelStr, Channel.class);
+            Podcast2 instance = pluginManager.getPluginInstanceByDomainName(secondLevelDomain, params);
+            Channel channel = instance.channel();
 
             log.info("addSubDTO:{}",addSubDTO);
             String descKeywords = String.join(",", addSubDTO.getDescKeywords());
@@ -633,7 +635,6 @@ public class SubController {
             //将扩展选项写入数据库
             extendService.batchExtend(extendList);
 
-            PluginLoader.close(aClass);
             //添加插件信息
             return Result.success();
         }catch (InvocationTargetException e){
@@ -658,15 +659,19 @@ public class SubController {
         log.info("getExtendListDTO:{}",getExtendListDTO);
         Params params = new Params();
         params.setUrl(getExtendListDTO.getUrl());
+        String secondLevelDomain = Http.getSecondLevelDomain(getExtendListDTO.getPlugin());
 
-        //获取插件信息
-        Class aClass = PluginLoader.selectByName(Http.getSecondLevelDomain(getExtendListDTO.getPlugin()), dataPathProperties).get(0);
+        //获取插件扩展信息
+/*        Class aClass = PluginLoader.selectByName(Http.getSecondLevelDomain(getExtendListDTO.getPlugin()), dataPathProperties).get(0);
         Constructor constructor = aClass.getConstructor(String.class);
         Object o = constructor.newInstance(gson.toJson(params));
         String extendListStr = gson.toJson(aClass.getMethod(ReflectionMethodName.GET_EXTENSION).invoke(o));
         ExtendList extendList = gson.fromJson(extendListStr, ExtendList.class);
+        PluginLoader.close(aClass);*/
 
-        PluginLoader.close(aClass);
+        Podcast2 instance = pluginManager.getPluginInstanceByDomainName(secondLevelDomain, params);
+        ExtendList extendList = instance.getExtensions();
+
         return Result.success(ExtendListUtil.buildExtendListVO(extendList));
     }
 

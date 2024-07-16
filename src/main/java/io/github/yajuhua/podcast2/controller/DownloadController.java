@@ -16,6 +16,7 @@ import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.result.Result;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.mapper.*;
+import io.github.yajuhua.podcast2.plugin.PluginManager;
 import io.github.yajuhua.podcast2.pojo.entity.Downloader;
 import io.github.yajuhua.podcast2.pojo.entity.Items;
 import io.github.yajuhua.podcast2.pojo.entity.Sub;
@@ -65,6 +66,9 @@ public class DownloadController {
     public PluginMapper pluginMapper;
     @Autowired
     private SettingsMapper settingsMapper;
+
+    @Autowired
+    private PluginManager pluginManager;
 
 
     /**
@@ -257,7 +261,7 @@ public class DownloadController {
                     .channelUuid(items.getChannelUuid())
                     .uuid(items.getUuid())
                     .build();
-            Thread thread = new Thread(new ReDownload(build,itemsMapper,subMapper,pluginMapper,dataPathProperties,settingsMapper));
+            Thread thread = new Thread(new ReDownload(build,itemsMapper,subMapper,pluginMapper,dataPathProperties,settingsMapper,pluginManager));
             thread.start();
         }
         return Result.success();

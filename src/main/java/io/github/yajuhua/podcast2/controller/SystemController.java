@@ -1,12 +1,12 @@
 package io.github.yajuhua.podcast2.controller;
 
+import io.github.yajuhua.download.commons.utils.CommonUtils;
 import io.github.yajuhua.podcast2.Podcast2Application;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.properties.InfoProperties;
 import io.github.yajuhua.podcast2.common.result.Result;
 import io.github.yajuhua.podcast2.common.utils.Http;
 import io.github.yajuhua.podcast2.common.utils.LogUtils;
-import io.github.yajuhua.podcast2.common.utils.PluginLoader;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
 import io.github.yajuhua.podcast2.pojo.vo.KeyValue;
 import io.swagger.annotations.Api;
@@ -77,7 +77,7 @@ public class SystemController {
 
         if (versionStr != null){
             version = versionStr.split("v")[1];
-            int compareVersion = PluginLoader.compareVersion(version,infoProperties.getVersion().substring(1));
+            int compareVersion = CommonUtils.compareVersion(version,infoProperties.getVersion().substring(1));
             if (compareVersion == 0){
                 return Result.success("当前版本已是最新版");
             }else if(compareVersion == 1){

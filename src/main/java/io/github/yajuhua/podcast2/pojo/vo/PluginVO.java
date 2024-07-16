@@ -16,4 +16,5 @@ public class PluginVO {
     private Boolean install;
     private String uuid;
     private Boolean hasUpdate;
+    private String keyInfo;//重要信息
 }

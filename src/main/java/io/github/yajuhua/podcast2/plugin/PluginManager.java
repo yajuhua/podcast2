@@ -3,21 +3,30 @@ package io.github.yajuhua.podcast2.plugin;
 import com.google.gson.Gson;
 import io.github.yajuhua.download.commons.utils.CommonUtils;
 import io.github.yajuhua.podcast2.annotation.DatabaseAndPluginFileSync;
+import io.github.yajuhua.podcast2.common.exception.BaseException;
+import io.github.yajuhua.podcast2.common.properties.InfoProperties;
 import io.github.yajuhua.podcast2.common.utils.Http;
+import io.github.yajuhua.podcast2.mapper.ExtendMapper;
 import io.github.yajuhua.podcast2.mapper.PluginMapper;
-import io.github.yajuhua.podcast2.pojo.entity.Plugin;
-import io.github.yajuhua.podcast2.pojo.entity.PluginInfo;
-import io.github.yajuhua.podcast2.pojo.entity.PluginMetadata;
+import io.github.yajuhua.podcast2.mapper.SettingsMapper;
+import io.github.yajuhua.podcast2.mapper.SubMapper;
+import io.github.yajuhua.podcast2.pojo.entity.*;
+import io.github.yajuhua.podcast2.service.UserService;
 import io.github.yajuhua.podcast2API.Params;
 import io.github.yajuhua.podcast2API.Podcast2;
+import io.github.yajuhua.podcast2API.Type;
+import io.github.yajuhua.podcast2API.extension.reception.InputAndSelectData;
+import io.github.yajuhua.podcast2API.setting.Setting;
 import lombok.Data;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.util.DigestUtils;
 
 import java.io.*;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.time.LocalDate;
@@ -38,10 +47,15 @@ public class PluginManager extends ClassLoader{
 
     private static String PROPERTIES_FILE_NAME = "plugin.properties";
 
-    private static Map<Class,URLClassLoader> fileClassLoaderMap = new HashMap<>();
+    private static Map<String,URLClassLoader> fileLoaderMap = new HashMap<>();
     private Gson gson = new Gson();
     private String remotePluginRepoUrl;
     private PluginMapper pluginMapper;
+    private SubMapper subMapper;
+    private SettingsMapper settingsMapper;
+    private ExtendMapper extendMapper;
+    private UserService userService;
+    private InfoProperties infoProperties;
 
     public PluginManager(File pluginDir) {
         this.pluginDir = pluginDir;
@@ -52,14 +66,21 @@ public class PluginManager extends ClassLoader{
         this.remotePluginRepoUrl = remotePluginRepoUrl;
     }
 
-    public PluginManager(File pluginDir, String remotePluginRepoUrl, PluginMapper pluginMapper) {
+    public PluginManager(File pluginDir, String remotePluginRepoUrl, PluginMapper pluginMapper,
+                         SubMapper subMapper, SettingsMapper settingsMapper, ExtendMapper extendMapper,
+                         UserService userService, InfoProperties infoProperties) {
         this.pluginDir = pluginDir;
         this.remotePluginRepoUrl = remotePluginRepoUrl;
         this.pluginMapper = pluginMapper;
+        this.subMapper = subMapper;
+        this.settingsMapper = settingsMapper;
+        this.extendMapper = extendMapper;
+        this.userService = userService;
+        this.infoProperties = infoProperties;
     }
 
     @DatabaseAndPluginFileSync
-    private Class getPlugin(String name){
+    public Class getPlugin(String name){
         //如果有多个，取最新版本
         List<PluginData> collect = getPluginDataList(name).stream().sorted(new Comparator<PluginData>() {
             @Override
@@ -86,7 +107,7 @@ public class PluginManager extends ClassLoader{
     }
 
     @DatabaseAndPluginFileSync
-    private Class getPlugin(String name, String version){
+    public Class getPlugin(String name, String version){
         List<PluginData> collect = getPluginDataList(name).stream().filter(new Predicate<PluginData>() {
             @Override
             public boolean test(PluginData pluginData) {
@@ -112,11 +133,23 @@ public class PluginManager extends ClassLoader{
     }
 
     @DatabaseAndPluginFileSync
-    private Class getPlugin(UUID uuid){
+    public Class getPlugin(UUID uuid){
         //获取class
         PluginData pluginData =  getPluginData(uuid.toString());
         Class<?> classFromJar = loadClassFromJar(pluginData.getJarFile().getAbsolutePath(), pluginData.getClassPath());
         return classFromJar;
+    }
+
+    @DatabaseAndPluginFileSync
+    public Class getPlugin(File jarFile){
+        //获取class
+        Properties properties = getPluginProperties(jarFile.getAbsolutePath(), PROPERTIES_FILE_NAME);
+        if (properties.containsKey("mainClass")){
+            String mainClass = properties.get("mainClass").toString();
+            Class<?> aClass = loadClassFromJar(jarFile.getAbsolutePath(), mainClass);
+            return aClass;
+        }
+        return null;
     }
 
     public Podcast2 getPluginInstance(String name, String version, Params params)throws Exception{
@@ -135,29 +168,66 @@ public class PluginManager extends ClassLoader{
 
     public Podcast2 getPluginInstance(String name, String version)throws Exception{
         Class plugin = getPlugin(name, version);
-        Constructor constructor = plugin.getConstructor();
-        Podcast2 o = (Podcast2)constructor.newInstance();
+        Params params = getParams();
+        Podcast2 o;
+        if (hasParamsConstructor(plugin)){
+            Constructor constructor = plugin.getConstructor(Params.class);
+            o = (Podcast2)constructor.newInstance(params);
+        }else {
+            Constructor constructor = plugin.getConstructor(String.class);
+            o = (Podcast2)constructor.newInstance(gson.toJson(params));
+        }
         return o;
     }
 
     @DatabaseAndPluginFileSync
     public Podcast2 getPluginInstance(String name) throws Exception{
         Class plugin = getPlugin(name);
-        Constructor constructor = plugin.getConstructor();
-        Podcast2 o = (Podcast2)constructor.newInstance();
+        Params params = getParams();
+        Podcast2 o;
+        if (hasParamsConstructor(plugin)){
+            Constructor constructor = plugin.getConstructor(Params.class);
+            o = (Podcast2)constructor.newInstance(params);
+        }else {
+            Constructor constructor = plugin.getConstructor(String.class);
+            o = (Podcast2)constructor.newInstance(gson.toJson(params));
+        }
         return o;
     }
 
     public Podcast2 getPluginInstance(UUID uuid) throws Exception{
         Class plugin = getPlugin(uuid);
-        Constructor constructor = plugin.getConstructor();
-        Podcast2 o = (Podcast2)constructor.newInstance();
+        Podcast2 o;
+        Params params = getParams();
+        if (hasParamsConstructor(plugin)){
+            Constructor constructor = plugin.getConstructor(Params.class);
+             o = (Podcast2)constructor.newInstance(params);
+        }else {
+            Constructor constructor = plugin.getConstructor(String.class);
+            o = (Podcast2)constructor.newInstance(gson.toJson(params));
+        }
+
+        return o;
+    }
+
+    public Podcast2 getPluginInstance(UUID uuid, Params params) throws Exception{
+        Class plugin = getPlugin(uuid);
+        Podcast2 o;
+        params = getParams(params);
+        if (hasParamsConstructor(plugin)){
+            Constructor constructor = plugin.getConstructor(Params.class);
+            o = (Podcast2)constructor.newInstance(params);
+        }else {
+            Constructor constructor = plugin.getConstructor(String.class);
+            o = (Podcast2)constructor.newInstance(gson.toJson(params));
+        }
         return o;
     }
 
     public Podcast2 getPluginInstance(String name, Params params) throws Exception{
         Class plugin = getPlugin(name);
         Podcast2 podcast2;
+        params = getParams(params);
         boolean hasParamsConstructor = hasParamsConstructor(plugin);
         if (hasParamsConstructor){
             Constructor constructor = plugin.getConstructor(Params.class);
@@ -167,6 +237,193 @@ public class PluginManager extends ClassLoader{
             podcast2 = (Podcast2) constructor.newInstance(gson.toJson(params));
         }
         return podcast2;
+    }
+
+    /**
+     * 通过jar包实例化插件
+     * @param jarFile
+     * @return
+     */
+    public Podcast2 getPluginInstance(File jarFile) throws Exception{
+        Properties properties = getPluginProperties(jarFile.getAbsolutePath(), PROPERTIES_FILE_NAME);
+        if (properties.containsKey("mainClass")){
+            String mainClass = properties.get("mainClass").toString();
+            Class<?> plugin = loadClassFromJar(jarFile.getAbsolutePath(), mainClass);
+            if (hasParamsConstructor(plugin)){
+                Constructor<?> constructor = plugin.getConstructor(Params.class);
+                return (Podcast2)constructor.newInstance(getParams());
+            }else {
+                Constructor<?> constructor = plugin.getConstructor(String.class);
+                return (Podcast2)constructor.newInstance(gson.toJson(getParams()));
+            }
+        }else {
+            throw new RuntimeException("找不到该插件属性: " + jarFile.getAbsolutePath());
+        }
+    }
+
+    /**
+     * 通过jar包实例化插件
+     * @param jarFile
+     * @return
+     */
+    public Podcast2 getPluginInstance(File jarFile, Params params) throws Exception{
+        Properties properties = getPluginProperties(jarFile.getAbsolutePath(), PROPERTIES_FILE_NAME);
+        if (properties.contains("mainClass")){
+            String mainClass = properties.get("mainClass").toString();
+            Class<?> plugin = loadClassFromJar(jarFile.getAbsolutePath(), mainClass);
+            if (hasParamsConstructor(plugin)){
+                Constructor<?> constructor = plugin.getConstructor(Params.class);
+                return (Podcast2)constructor.newInstance(getParams(params));
+            }else {
+                Constructor<?> constructor = plugin.getConstructor(String.class);
+                return (Podcast2)constructor.newInstance(gson.toJson(getParams(params)));
+            }
+        }else {
+            throw new RuntimeException("找不到该插件属性: " + jarFile.getAbsolutePath());
+        }
+    }
+
+    /**
+     * 通过域名获取podcast2实例
+     * 有些网站域名会变动
+     * @return
+     */
+    public Podcast2 getPluginInstanceByDomainName(String domainName) throws Exception{
+        //默认插件名称与网站域名一样
+        if (hasPlugin(domainName)){
+            return getPluginInstance(domainName,getParams());
+        }else {
+            List<PluginData> pluginData = allPluginData();
+            for (PluginData data : pluginData) {
+                Class plugin = getPlugin(UUID.fromString(data.getUuid()));
+                List<String> domainNames = getPluginDomainNames(plugin);
+                List<String> collect = domainNames.stream().filter(new Predicate<String>() {
+                    @Override
+                    public boolean test(String s) {
+                        return domainName.equals(s);
+                    }
+                }).collect(Collectors.toList());
+                if (!collect.isEmpty()){
+                    return getPluginInstance(UUID.fromString(data.getUuid()),getParams());
+                }
+            }
+        }
+        throw new BaseException("找不到该插件: " + domainName);
+    }
+
+    /**
+     * 通过域名获取podcast2实例
+     * 有些网站域名会变动
+     * @return
+     */
+    public Podcast2 getPluginInstanceByDomainName(String domainName,Params params) throws Exception{
+        //默认插件名称与网站域名一样
+        if (hasPlugin(domainName)){
+            return getPluginInstance(domainName,getParams(params));
+        }else {
+            List<PluginData> pluginData = allPluginData();
+            for (PluginData data : pluginData) {
+                Class plugin = getPlugin(UUID.fromString(data.getUuid()));
+                List<String> domainNames = getPluginDomainNames(plugin);
+                List<String> collect = domainNames.stream().filter(new Predicate<String>() {
+                    @Override
+                    public boolean test(String s) {
+                        return domainName.equals(s);
+                    }
+                }).collect(Collectors.toList());
+                if (!collect.isEmpty()){
+                    return getPluginInstance(UUID.fromString(data.getUuid()),getParams(params));
+                }
+            }
+        }
+        throw new BaseException("找不到该插件: " + domainName);
+    }
+
+    /**
+     * 通过域名获取插件信息
+     * 有些网站域名会变动
+     * @return
+     */
+    public PluginData getPluginDataByDomainName(String domainName) throws Exception {
+        //默认插件名称与网站域名一样
+        List<PluginData> pluginData = allPluginData();
+
+        for (PluginData data : pluginData) {
+            Class plugin = getPlugin(UUID.fromString(data.getUuid()));
+            List<String> domainNames = getPluginDomainNames(plugin);
+            List<String> collect = domainNames.stream().filter(new Predicate<String>() {
+                @Override
+                public boolean test(String s) {
+                    return domainName.equals(s);
+                }
+            }).collect(Collectors.toList());
+            if (!collect.isEmpty()){
+                return data;
+            }
+            if (data.getName().equals(domainName)){
+                return data;
+            }
+        }
+
+        throw new BaseException("找不到该插件: " + domainName);
+    }
+
+    /**
+     * 通过域名获取podcast2实例
+     * 有些网站域名会变动
+     * @return
+     */
+    public Class getPluginByDomainName(String domainName) throws Exception{
+        //默认插件名称与网站域名一样
+        if (hasPlugin(domainName)){
+            return getPlugin(domainName);
+        }else {
+            List<PluginData> pluginData = allPluginData();
+            for (PluginData data : pluginData) {
+                Class plugin = getPlugin(UUID.fromString(data.getUuid()));
+                List<String> domainNames = getPluginDomainNames(plugin);
+                List<String> collect = domainNames.stream().filter(new Predicate<String>() {
+                    @Override
+                    public boolean test(String s) {
+                        return domainName.equals(s);
+                    }
+                }).collect(Collectors.toList());
+                if (!collect.isEmpty()){
+                    return getPlugin(UUID.fromString(data.getUuid()));
+                }
+            }
+        }
+        throw new BaseException("找不到该插件: " + domainName);
+    }
+
+    /**
+     * 获取插件的域名设置
+     * @param plugin
+     * @return
+     * @throws Exception
+     */
+    private List<String> getPluginDomainNames(Class plugin) throws Exception{
+        //获取podcast2实例
+        Params params = getParams();
+        Podcast2 podcast2;
+        boolean hasParamsConstructor = hasParamsConstructor(plugin);
+        if (hasParamsConstructor){
+            Constructor constructor = plugin.getConstructor(Params.class);
+            podcast2 = (Podcast2) constructor.newInstance(params);
+        }else {
+            Constructor constructor = plugin.getConstructor(String.class);
+            podcast2 = (Podcast2) constructor.newInstance(gson.toJson(params));
+        }
+
+        //获取额外设置的域名如果有的话
+        Map info = podcast2.getInfo();
+        List<String> domainNames = new ArrayList<>();
+        if (info.containsKey("domainNames")){
+            List<String> list = Arrays.asList(info.get("domainNames").toString().split(","));
+            domainNames.addAll(list);
+            log.debug("无法获取该版本域名设置");
+        }
+        return domainNames;
     }
 
     /**
@@ -181,7 +438,7 @@ public class PluginManager extends ClassLoader{
             URL jarUrl = new File(jarPath).toURI().toURL();
             URLClassLoader classLoader = new URLClassLoader(new URL[] { jarUrl });
             clazz = classLoader.loadClass(className);
-            fileClassLoaderMap.put(clazz,classLoader);
+            fileLoaderMap.put(jarPath,classLoader);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -202,7 +459,13 @@ public class PluginManager extends ClassLoader{
             inputStream.close();
             return properties;
         } catch (Exception e) {
-            throw new RuntimeException("获取插件属性失败 : " + e.getMessage(),e);
+            log.error("获取插件属性失败: {}",e.getMessage());
+            File file = new File(jarPath);
+            if (file.exists()){
+                file.delete();
+                log.info("删除文件: {}",file.getAbsolutePath());
+            }
+            throw new BaseException("获取插件属性失败: " + e.getMessage());
         }
     }
 
@@ -211,7 +474,7 @@ public class PluginManager extends ClassLoader{
      * @param name
      * @return
      */
-    private List<PluginData> getPluginDataList(String name){
+    public List<PluginData> getPluginDataList(String name){
         List<PluginData> pluginDataList = new ArrayList<>();
         File[] files = pluginDir.listFiles();
         String jarPath;
@@ -223,7 +486,7 @@ public class PluginManager extends ClassLoader{
              if (isJar){
 
                   properties = getPluginProperties(jarPath, PROPERTIES_FILE_NAME);
-                  if (name.equals(properties.get("name"))){
+                  if (properties != null && name.equals(properties.get("name"))){
                       String mainClass = properties.get("mainClass").toString();
                       String version = properties.get("version").toString();
                       String update = properties.get("update").toString();
@@ -250,7 +513,7 @@ public class PluginManager extends ClassLoader{
      * @param uuid
      * @return
      */
-    private PluginData getPluginData(String uuid){
+    public PluginData getPluginData(String uuid){
         File[] files = pluginDir.listFiles();
         String jarPath;
         boolean isJar;
@@ -261,7 +524,7 @@ public class PluginManager extends ClassLoader{
             if (isJar){
 
                 properties = getPluginProperties(jarPath, PROPERTIES_FILE_NAME);
-                if (uuid.equals(properties.get("uuid"))){
+                if (properties != null && uuid.equals(properties.get("uuid"))){
                     String mainClass = properties.get("mainClass").toString();
                     String version = properties.get("version").toString();
                     String update = properties.get("update").toString();
@@ -300,13 +563,16 @@ public class PluginManager extends ClassLoader{
 
     /**
      * 关闭类加载器
-     * @param plugin
+     * @param
      * @return
      */
-    private boolean closeUrlClassLoader(Class plugin){
+    private boolean closeUrlClassLoader(String jarPath){
         try {
-            if (fileClassLoaderMap.containsKey(plugin)){
-                fileClassLoaderMap.get(plugin).close();
+            for (String path : fileLoaderMap.keySet()) {
+                if (jarPath.equals(path)){
+                    fileLoaderMap.get(path).close();
+                    fileLoaderMap.remove(jarPath);
+                }
             }
             return true;
         } catch (IOException e) {
@@ -318,14 +584,15 @@ public class PluginManager extends ClassLoader{
      * 关闭所有类加载器
      */
     public static void closeAllClassLoader(){
-        for (Class aClass : fileClassLoaderMap.keySet()) {
-            try {
-                fileClassLoaderMap.get(aClass).close();
-            } catch (IOException e) {
-                e.printStackTrace();
+        try {
+            for (String path : fileLoaderMap.keySet()) {
+                fileLoaderMap.get(path).close();
             }
+        } catch (IOException e) {
+            log.error("关闭全部插件失败: {}",e.getMessage());
+            e.printStackTrace();
         }
-        fileClassLoaderMap.clear();
+        fileLoaderMap.clear();
     }
 
     /**
@@ -340,6 +607,10 @@ public class PluginManager extends ClassLoader{
             for (PluginData data : getPluginDataList(name)) {
                 File jarFile = data.getJarFile();
                 if(jarFile.exists()){
+                    if (fileLoaderMap.containsKey(jarFile.getAbsolutePath())) {
+                        fileLoaderMap.get(jarFile.getAbsolutePath()).close();
+                        fileLoaderMap.remove(jarFile.getAbsolutePath());
+                    }
                     jarFile.delete();
                 }
             }
@@ -364,6 +635,10 @@ public class PluginManager extends ClassLoader{
         try {
             File jarFile = getPluginData(uuid.toString()).getJarFile();
             if (jarFile.exists()){
+                if (fileLoaderMap.containsKey(jarFile.getAbsolutePath())) {
+                    fileLoaderMap.get(jarFile.getAbsolutePath()).close();
+                    fileLoaderMap.remove(jarFile.getAbsolutePath());
+                }
                 jarFile.delete();
             }
         } catch (Exception e) {
@@ -414,6 +689,10 @@ public class PluginManager extends ClassLoader{
                         try {
                             jarFile = collect.get(i).getJarFile();
                             if (jarFile.exists()){
+                                if (fileLoaderMap.containsKey(jarFile.getAbsolutePath())) {
+                                    fileLoaderMap.get(jarFile.getAbsolutePath()).close();
+                                    fileLoaderMap.remove(jarFile.getAbsolutePath());
+                                }
                                 boolean delete = jarFile.delete();
                                 if (!delete){
                                     throw new RuntimeException("删除插件失败 : " + jarFile);
@@ -469,9 +748,13 @@ public class PluginManager extends ClassLoader{
                             if (!uuid.toString().equals(collect.get(i).getUuid())){
                                 jarFile = collect.get(i).getJarFile();
                                 if (jarFile.exists()){
+                                    if (fileLoaderMap.containsKey(jarFile.getAbsolutePath())) {
+                                        fileLoaderMap.get(jarFile.getAbsolutePath()).close();
+                                        fileLoaderMap.remove(jarFile.getAbsolutePath());
+                                    }
                                     boolean delete = jarFile.delete();
                                     if (!delete){
-                                        throw new RuntimeException("删除插件失败 : " + jarFile);
+                                        log.error("删除插件失败 : {}",jarFile.getAbsolutePath());
                                     }
                                 }
                                 //删除数据库记录
@@ -494,7 +777,7 @@ public class PluginManager extends ClassLoader{
      */
     @DatabaseAndPluginFileSync
     public boolean add(String name) throws Exception {
-        if (hasPlugin(name)){
+        if (hasPlugin(name) && pluginMapper.selectByName(name) != null){
             //去重
             deleteDuplicates();
             log.info("该插件已存在: {}",name);
@@ -533,7 +816,8 @@ public class PluginManager extends ClassLoader{
 
     @DatabaseAndPluginFileSync
     public boolean add(String name,String version) throws Exception{
-        if (hasPlugin(name,version)){
+        Plugin plugin1 = pluginMapper.selectByName(name);
+        if (hasPlugin(name,version) && plugin1 != null && plugin1.getVersion().equals(version)){
             //去重
             List<PluginData> collect = getPluginDataList(name).stream().filter(new Predicate<PluginData>() {
                 @Override
@@ -581,7 +865,7 @@ public class PluginManager extends ClassLoader{
 
     @DatabaseAndPluginFileSync
     public boolean add(UUID uuid) throws Exception{
-        if (hasPlugin(uuid)){
+        if (hasPlugin(uuid) && pluginMapper.selectByUuid(uuid.toString()) != null){
             log.info("该插件已存在: {}",uuid.toString());
             //去重
             deleteDuplicatesEx(uuid);
@@ -611,11 +895,12 @@ public class PluginManager extends ClassLoader{
     }
 
     @DatabaseAndPluginFileSync
-    public boolean add(InputStream inputStream, String fileName) throws Exception{
+    public Plugin add(InputStream inputStream, String fileName) throws Exception{
         String ext = fileName.substring(fileName.lastIndexOf(".") + 1);
+        Plugin plugin = null;
         if (!"jar".equals(ext)){
             log.error("{}不是jar包扩展名",ext);
-            return false;
+            return null;
         }
 
         List<PluginData> pluginData = allPluginData();
@@ -654,7 +939,7 @@ public class PluginManager extends ClassLoader{
             boolean duplicatesEx = deleteDuplicatesEx(uuid);
             if (!duplicatesEx){
                 log.error("去重失败");
-                return false;
+                return null;
             }
 
             //封装数据
@@ -663,7 +948,7 @@ public class PluginManager extends ClassLoader{
             String uuidStr = uuid.toString();
             String update = properties.get("update").toString();
 
-            Plugin plugin = Plugin.builder()
+            plugin = Plugin.builder()
                     .uuid(uuidStr)
                     .version(version)
                     .updateTime(update)
@@ -674,14 +959,30 @@ public class PluginManager extends ClassLoader{
             pluginMapper.deleteByName(name);
             //插入数据库
             pluginMapper.insert(plugin);
-            return true;
+            return plugin;
         } catch (Exception e) {
             log.error("无法获取该插件属性: {}",e.getMessage());
             if (fileSave.exists()){
+                if (fileLoaderMap.containsKey(fileSave.getAbsolutePath())) {
+                    fileLoaderMap.get(fileSave.getAbsolutePath()).close();
+                    fileLoaderMap.remove(fileSave.getAbsolutePath());
+                }
                 fileSave.delete();
             }
-            return false;
+            return null;
         }
+    }
+
+    /**
+     * 获取插件重要信息,如版本过低之类的
+     * @return
+     */
+    public String getPluginKeyInfo(UUID uuid) throws Exception{
+        Map info = getPluginInstance(uuid, new Params()).getInfo();
+        if (info.containsKey("keyInfo")){
+            return info.get("keyInfo").toString();
+        }
+        return "";
     }
 
     /**
@@ -779,8 +1080,17 @@ public class PluginManager extends ClassLoader{
      * 获取远程插件仓库数据
      * @return
      */
-    private List<PluginInfo> getRemotePluginRepoData(){
+    public List<PluginInfo> getRemotePluginRepoData(){
         String json = Http.get(remotePluginRepoUrl);
+        PluginMetadata pluginMetadata = new Gson().fromJson(json, PluginMetadata.class);
+        return pluginMetadata.getPluginList();
+    }
+    /**
+     * 获取远程插件仓库数据
+     * @return
+     */
+    public List<PluginInfo> getRemotePluginRepoData(String repoUrl){
+        String json = Http.get(repoUrl);
         PluginMetadata pluginMetadata = new Gson().fromJson(json, PluginMetadata.class);
         return pluginMetadata.getPluginList();
     }
@@ -896,7 +1206,7 @@ public class PluginManager extends ClassLoader{
 
 
     /**
-     * 获取所有插件信息
+     * 获取所有插件文件信息,没有查询数据库
      * @return
      */
     public List<PluginData> allPluginData(){
@@ -1015,6 +1325,163 @@ public class PluginManager extends ClassLoader{
             log.error("无法获取仓库信息: {}",repoUrl);
             return false;
         }
+    }
+
+    /**
+     * 获取订阅Params对象
+     * @param uuid
+     * @return
+     */
+    public Params getSubParams(String uuid){
+        Params params = new Params();
+        Sub sub = subMapper.selectByUuid(uuid);
+        if (sub == null){
+            throw new RuntimeException("找不到该订阅: " + uuid);
+        }
+
+        //获取podcast2信息
+        String podcast2UUID = userService.getExtendInfo().getUuid();
+        String nowVersion = infoProperties.getVersion();
+        String pluginName = sub.getPlugin();
+        params.setPodcast2Version(nowVersion);
+        params.setPodcast2Uuid(podcast2UUID);
+
+        //获取自定义剧集
+        String customEpisodes = sub.getCustomEpisodes();
+        List<Integer> es = new ArrayList<>();
+        if (customEpisodes!= null && !customEpisodes.isEmpty()){
+            String[] split = customEpisodes.split(",");
+            for (String s : split) {
+                es.add(Integer.parseInt(s));
+            }
+            if (es.isEmpty()){
+                es.get(sub.getEpisodes());
+            }
+        }
+        params.setEpisodes(es);
+        params.setUrl(sub.getLink());
+        params.setType(Type.valueOf(sub.getType()));
+
+        //获取扩展选项
+        List<InputAndSelectData> inputAndSelectDataList = new ArrayList<>();
+        List<Extend> anExtends = extendMapper.selectByUuid(uuid);
+        for (Extend ex : anExtends) {
+            String name = ex.getName();
+            String content = ex.getContent();
+            InputAndSelectData inputAndSelectData = new InputAndSelectData();
+            inputAndSelectData.setName(name);
+            inputAndSelectData.setContent(content);
+            inputAndSelectDataList.add(inputAndSelectData);
+        }
+        params.setInputAndSelectDataList(inputAndSelectDataList);
+
+        //获取插件设置
+        List<Settings> settingsFromDB = settingsMapper.selectByPluginName(pluginName);
+        List<Setting> settings = new ArrayList<>();
+        for (Settings set : settingsFromDB) {
+            Setting setting = new Setting();
+            BeanUtils.copyProperties(set,setting);
+            settings.add(setting);
+        }
+        params.setSettings(settings);
+
+        return params;
+    }
+
+    /**
+     * 默认封装了podcast2版本号和uuid信息
+     * @return
+     */
+    public Params getParams(){
+        //获取podcast2信息
+        String podcast2UUID = userService.getExtendInfo().getUuid();
+        String nowVersion = infoProperties.getVersion();
+        Params params = new Params();
+        params.setPodcast2Version(nowVersion);
+        params.setPodcast2Uuid(podcast2UUID);
+
+        return params;
+    }
+
+    /**
+     * 传入podcast2版本号和uuid信息
+     * @param  params
+     * @return
+     */
+    public Params getParams(Params params){
+        //获取podcast2信息
+        String podcast2UUID = userService.getExtendInfo().getUuid();
+        String nowVersion = infoProperties.getVersion();
+        params.setPodcast2Version(nowVersion);
+        params.setPodcast2Uuid(podcast2UUID);
+
+        return params;
+    }
+
+    /**
+     * 首次安装插件初始化设置
+     */
+    public void initSettings(String pluginName,List<Setting> init){
+        settingsMapper.deleteByPlugin(pluginName);
+        for (Setting setting : init) {
+            Settings settings1 = new Settings();
+            BeanUtils.copyProperties(setting,settings1);
+            settings1.setPlugin(pluginName);
+            settings1.setUpdateTime(System.currentTimeMillis());
+            settingsMapper.insert(settings1);
+        }
+    }
+
+    public  List<Setting> settingsToSetting(List<Settings> settings){
+        List<Setting> settingList = new ArrayList<>();
+        for (Settings set : settings) {
+            Setting setting = Setting.builder()
+                    .name(set.getName())
+                    .content(set.getContent())
+                    .tip(set.getTip())
+                    .updateTime(set.getUpdateTime())
+                    .build();
+            settingList.add(setting);
+        }
+        return settingList;
+    }
+
+    private void saveBeforeSettings(String pluginName){
+        List<Settings> bak = settingsMapper.selectByPluginName(pluginName);
+        settingsMapper.deleteByPlugin(pluginName);
+
+    }
+
+    /**
+     * 判断插件是否有getRequest方法
+     * @return
+     */
+    public boolean hasRequestMethod(UUID uuid) throws Exception{
+        URLClassLoader classLoader = null;
+        try {
+            PluginData pluginData = getPluginData(uuid.toString());
+            File jarFile = pluginData.getJarFile();
+            URL jarUrl = new File(jarFile.getAbsolutePath()).toURI().toURL();
+            classLoader = new URLClassLoader(new URL[] { jarUrl },null);
+            Class<?> aClass = classLoader.loadClass(pluginData.getClassPath());
+            aClass.getMethod("getRequest",String.class);
+            return true;
+        } catch (NoSuchMethodException e) {
+            return false;
+        }finally {
+            if (classLoader != null){
+                classLoader.close();
+            }
+        }
+    }
+
+    /**
+     * 判断插件是否有getRequest方法
+     * @return
+     */
+    public boolean hasRequestMethod(String domainName) throws Exception{
+        PluginData data = getPluginDataByDomainName(domainName);
+        return hasRequestMethod(UUID.fromString(data.getUuid()));
     }
 }
 

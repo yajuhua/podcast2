@@ -1,8 +1,12 @@
 package io.github.yajuhua.podcast2.config;
 
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
+import io.github.yajuhua.podcast2.common.properties.InfoProperties;
 import io.github.yajuhua.podcast2.common.properties.RepoProperties;
+import io.github.yajuhua.podcast2.mapper.ExtendMapper;
 import io.github.yajuhua.podcast2.mapper.PluginMapper;
+import io.github.yajuhua.podcast2.mapper.SettingsMapper;
+import io.github.yajuhua.podcast2.mapper.SubMapper;
 import io.github.yajuhua.podcast2.plugin.PluginManager;
 import io.github.yajuhua.podcast2.pojo.entity.ExtendInfo;
 import io.github.yajuhua.podcast2.service.UserService;
@@ -31,6 +35,19 @@ public class PluginManagerConfig {
 
     @Autowired
     private DataPathProperties dataPathProperties;
+
+    @Autowired
+    private ExtendMapper extendMapper;
+
+    @Autowired
+    private SubMapper subMapper;
+
+    @Autowired
+    private SettingsMapper settingsMapper;
+
+    @Autowired
+    private InfoProperties infoProperties;
+
     @Bean
     public PluginManager pluginManager(){
         String remotePluginUrl;
@@ -47,7 +64,8 @@ public class PluginManagerConfig {
             userService.updateExtendInfo(ExtendInfo.builder().pluginUrl("").build());
         }
 
-        PluginManager pluginManager = new PluginManager(pluginDir,remotePluginUrl,pluginMapper);
+        PluginManager pluginManager = new PluginManager(pluginDir,remotePluginUrl,pluginMapper,subMapper,
+                settingsMapper,extendMapper,userService,infoProperties);
         return pluginManager;
     }
 

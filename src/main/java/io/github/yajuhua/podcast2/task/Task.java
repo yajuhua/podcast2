@@ -23,6 +23,7 @@ import io.github.yajuhua.podcast2.controller.DownloadController;
 import io.github.yajuhua.podcast2.controller.PluginController;
 import io.github.yajuhua.podcast2.downloader.ytdlp.YtDlpUpdate;
 import io.github.yajuhua.podcast2.mapper.*;
+import io.github.yajuhua.podcast2.plugin.PluginManager;
 import io.github.yajuhua.podcast2.pojo.dto.GithubActionWorkflowsDTO;
 import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
@@ -83,6 +84,9 @@ public class Task {
     @Autowired
     private InfoProperties infoProperties;
 
+    @Autowired
+    private PluginManager pluginManager;
+
     /**
      * 获取进度
      * @return
@@ -111,7 +115,7 @@ public class Task {
                 timeout = downloadItemNum * TimeUnit.MINUTES.toMillis(30);
                 Future<?> future = null;
                 try {
-                    future = executor.submit(new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper, settingsMapper));
+                    future = executor.submit(new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper, settingsMapper,pluginManager));
                     future.get(timeout,TimeUnit.MILLISECONDS);
                 } catch (Exception e) {
                     future.cancel(true);
@@ -359,7 +363,7 @@ public class Task {
                                     .dir(new File(dataPathProperties.getResourcesPath()))
                                     .links(links)
                                     .build();
-                            ReDownload reDownload = new ReDownload(request,itemsMapper,subMapper,pluginMapper,dataPathProperties,settingsMapper);
+                            ReDownload reDownload = new ReDownload(request,itemsMapper,subMapper,pluginMapper,dataPathProperties,settingsMapper,pluginManager);
                             pool.execute(reDownload);
                             Thread.sleep(2000);
                         }else {

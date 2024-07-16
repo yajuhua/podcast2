@@ -1,7 +1,6 @@
 package io.github.yajuhua.podcast2.task;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import io.github.yajuhua.download.commons.Context;
 import io.github.yajuhua.download.commons.progress.DownloadProgress;
 import io.github.yajuhua.download.manager.DownloadManager;
@@ -9,11 +8,11 @@ import io.github.yajuhua.download.manager.Request;
 import io.github.yajuhua.podcast2.common.constant.*;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
-import io.github.yajuhua.podcast2.common.utils.PluginLoader;
 import io.github.yajuhua.podcast2.mapper.ExtendMapper;
 import io.github.yajuhua.podcast2.mapper.ItemsMapper;
 import io.github.yajuhua.podcast2.mapper.SettingsMapper;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
+import io.github.yajuhua.podcast2.plugin.PluginManager;
 import io.github.yajuhua.podcast2.pojo.entity.Extend;
 import io.github.yajuhua.podcast2.pojo.entity.Items;
 import io.github.yajuhua.podcast2.pojo.entity.Settings;
@@ -29,10 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 
 import java.io.File;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -50,10 +46,12 @@ public class Update implements Runnable {
     private SubMapper subMapper;
     private ItemsMapper itemsMapper;
     private SettingsMapper settingsMapper;
+    private PluginManager pluginManager;
+    private Gson gson;
 
 
     public Update(Sub sub, SubService subService, ExtendMapper extendMapper, DataPathProperties dataPathProperties
-            , SubMapper subMapper, ItemsMapper itemsMapper, SettingsMapper settingsMapper) {
+            , SubMapper subMapper, ItemsMapper itemsMapper, SettingsMapper settingsMapper, PluginManager pluginManager) {
         this.sub = sub;
         this.subService = subService;
         this.extendMapper = extendMapper;
@@ -61,6 +59,8 @@ public class Update implements Runnable {
         this.subMapper = subMapper;
         this.itemsMapper = itemsMapper;
         this.settingsMapper = settingsMapper;
+        this.pluginManager = pluginManager;
+        this.gson = new Gson();
     }
 
     @Override
@@ -122,15 +122,15 @@ public class Update implements Runnable {
             }
             params.setSettings(settings);
 
-            aClass = PluginLoader.selectByName(sub.getPlugin(), dataPathProperties).get(0);
+/*            aClass = PluginLoader.selectByName(sub.getPlugin(), dataPathProperties).get(0);
             Gson gson = new Gson();
             Constructor constructor = aClass.getConstructor(String.class);
             Object o = constructor.newInstance(gson.toJson(params));
-            Method settingsMethod = aClass.getMethod(ReflectionMethodName.SETTINGS);
+            Method settingsMethod = aClass.getMethod(ReflectionMethodName.SETTINGS);*/
+
 
             //返回插件设置用于更新
-            Type type1 = new TypeToken<List<Setting>>() {}.getType();
-            List<Setting> resultSettings = gson.fromJson(gson.toJson(settingsMethod.invoke(o)),type1);
+            List<Setting> resultSettings = pluginManager.getPluginInstanceByDomainName(sub.getPlugin(),params).settings();
 
             //避免清空之前的设置数据
             if (resultSettings != null && resultSettings.size() > 0){
@@ -149,17 +149,19 @@ public class Update implements Runnable {
             String json;
             if (isFirst == StatusCode.YES) {
                 //首次更新，获取Items
-                invoke = aClass.getMethod(ReflectionMethodName.ITEMS).invoke(o);
+               /* invoke = aClass.getMethod(ReflectionMethodName.ITEMS).invoke(o);
                 json = gson.toJson(invoke);
                 Type type = new TypeToken<List<Item>>() {
                 }.getType();
-                items = gson.fromJson(json, type);
+                items = gson.fromJson(json, type);*/
+                items = pluginManager.getPluginInstanceByDomainName(sub.getPlugin(),params).items();
             } else {
                 //次次更新，latest
-                invoke = aClass.getMethod(ReflectionMethodName.LATEST_ITEM).invoke(o);
+                /*invoke = aClass.getMethod(ReflectionMethodName.LATEST_ITEM).invoke(o);
                 json = gson.toJson(invoke);
                 Item item = gson.fromJson(json, Item.class);
-                items.add(item);
+                items.add(item);*/
+                items.add(pluginManager.getPluginInstanceByDomainName(sub.getPlugin(),params).latestItem());
             }
 
             //添加后又立即删除
@@ -177,8 +179,9 @@ public class Update implements Runnable {
             List<String> desckeyWords = Arrays.asList(sub.getDescKeywords());
 
             //检查该订阅是否继续更新
-            String channelJson = gson.toJson(aClass.getMethod(ReflectionMethodName.CHANNEL).invoke(o));
-            Channel channel = gson.fromJson(channelJson, Channel.class);
+            /*String channelJson = gson.toJson(aClass.getMethod(ReflectionMethodName.CHANNEL).invoke(o));
+            Channel channel = gson.fromJson(channelJson, Channel.class);*/
+            Channel channel = pluginManager.getPluginInstanceByDomainName(sub.getPlugin(), params).channel();
             sub.setIsUpdate(channel.getStatus());
 
             //获取节目列表
@@ -365,8 +368,6 @@ public class Update implements Runnable {
             //加入当前时间浮动，让每次检查时间不一样 往后
             sub.setCheckTime(nowTimeFloat(1,1,10,Units.Minutes));
             subMapper.update(sub);
-            PluginLoader.closeAll();
-            System.gc();
             log.info("{}:更新完成",sub.getTitle());
         }
     }
