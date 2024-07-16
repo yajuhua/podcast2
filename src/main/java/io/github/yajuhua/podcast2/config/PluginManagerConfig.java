@@ -3,10 +3,7 @@ package io.github.yajuhua.podcast2.config;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.properties.InfoProperties;
 import io.github.yajuhua.podcast2.common.properties.RepoProperties;
-import io.github.yajuhua.podcast2.mapper.ExtendMapper;
-import io.github.yajuhua.podcast2.mapper.PluginMapper;
-import io.github.yajuhua.podcast2.mapper.SettingsMapper;
-import io.github.yajuhua.podcast2.mapper.SubMapper;
+import io.github.yajuhua.podcast2.mapper.*;
 import io.github.yajuhua.podcast2.plugin.PluginManager;
 import io.github.yajuhua.podcast2.pojo.entity.ExtendInfo;
 import io.github.yajuhua.podcast2.service.UserService;
@@ -48,11 +45,18 @@ public class PluginManagerConfig {
     @Autowired
     private InfoProperties infoProperties;
 
+
+
     @Bean
     public PluginManager pluginManager(){
         String remotePluginUrl;
         String remotePluginUrlDefault = repoProperties.getPluginUrl();
-        String remotePluginUrlCustomzie = userService.getExtendInfo().getPluginUrl();
+        String remotePluginUrlCustomzie = null;
+        try {
+            remotePluginUrlCustomzie = userService.getExtendInfo().getPluginUrl();
+        } catch (Exception e) {
+            log.warn("无法获取自定义插件仓库,使用默认插件仓库: {}",e.getMessage());
+        }
         File pluginDir = new File(dataPathProperties.getLocalPluginPath());
 
         if (remotePluginUrlCustomzie == null || remotePluginUrlCustomzie.isEmpty()){
