@@ -50,7 +50,6 @@ public class LogUtils {
             if (map != null && !map.isEmpty()){
                 LocalDateTime startTime = map.get("start");
                 LocalDateTime endTime = map.get("end");
-                //TODO starTime和endTime可能存在null，需要排除
                 startTime = startTime==null?endTime:startTime;
                 endTime = endTime==null?startTime:endTime;
                 if(startTime!= null && endTime != null){
@@ -215,7 +214,6 @@ public class LogUtils {
 
     @Test
     public void testRecentLog()throws Exception{
-        //TODO VO和Controller
         String path = "C:\\Users\\Administrator\\Desktop\\fsdownload\\logs\\logs";
         List<String> info = getRecent(10L, TimeUnit.MINUTES, new File(path), "error");
         for (String s : info) {
