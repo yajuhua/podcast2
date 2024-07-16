@@ -614,6 +614,8 @@
             </el-table-column>
             <el-table-column prop="update" label="更新时间">
             </el-table-column>
+            <el-table-column prop="keyInfo" label="提醒">
+            </el-table-column>
             <el-table-column fixed="right" label="操作">
               <div slot-scope="scope">
                 <div v-if="scope.row.install === true && !scope.row.hasUpdate">
