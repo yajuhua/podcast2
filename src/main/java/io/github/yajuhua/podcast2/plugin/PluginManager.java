@@ -79,7 +79,6 @@ public class PluginManager extends ClassLoader{
         this.infoProperties = infoProperties;
     }
 
-    @DatabaseAndPluginFileSync
     public Class getPlugin(String name){
         //如果有多个，取最新版本
         List<PluginData> collect = getPluginDataList(name).stream().sorted(new Comparator<PluginData>() {
@@ -106,7 +105,6 @@ public class PluginManager extends ClassLoader{
         return classFromJar;
     }
 
-    @DatabaseAndPluginFileSync
     public Class getPlugin(String name, String version){
         List<PluginData> collect = getPluginDataList(name).stream().filter(new Predicate<PluginData>() {
             @Override
@@ -132,7 +130,6 @@ public class PluginManager extends ClassLoader{
         return classFromJar;
     }
 
-    @DatabaseAndPluginFileSync
     public Class getPlugin(UUID uuid){
         //获取class
         PluginData pluginData =  getPluginData(uuid.toString());
@@ -140,7 +137,6 @@ public class PluginManager extends ClassLoader{
         return classFromJar;
     }
 
-    @DatabaseAndPluginFileSync
     public Class getPlugin(File jarFile){
         //获取class
         Properties properties = getPluginProperties(jarFile.getAbsolutePath(), PROPERTIES_FILE_NAME);
@@ -180,7 +176,6 @@ public class PluginManager extends ClassLoader{
         return o;
     }
 
-    @DatabaseAndPluginFileSync
     public Podcast2 getPluginInstance(String name) throws Exception{
         Class plugin = getPlugin(name);
         Params params = getParams();
@@ -462,6 +457,7 @@ public class PluginManager extends ClassLoader{
             log.error("获取插件属性失败: {}",e.getMessage());
             File file = new File(jarPath);
             if (file.exists()){
+                System.gc();
                 file.delete();
                 log.info("删除文件: {}",file.getAbsolutePath());
             }
@@ -611,6 +607,7 @@ public class PluginManager extends ClassLoader{
                         fileLoaderMap.get(jarFile.getAbsolutePath()).close();
                         fileLoaderMap.remove(jarFile.getAbsolutePath());
                     }
+                    System.gc();
                     jarFile.delete();
                 }
             }
@@ -639,6 +636,7 @@ public class PluginManager extends ClassLoader{
                     fileLoaderMap.get(jarFile.getAbsolutePath()).close();
                     fileLoaderMap.remove(jarFile.getAbsolutePath());
                 }
+                System.gc();
                 jarFile.delete();
             }
         } catch (Exception e) {
@@ -693,6 +691,7 @@ public class PluginManager extends ClassLoader{
                                     fileLoaderMap.get(jarFile.getAbsolutePath()).close();
                                     fileLoaderMap.remove(jarFile.getAbsolutePath());
                                 }
+                                System.gc();
                                 boolean delete = jarFile.delete();
                                 if (!delete){
                                     throw new RuntimeException("删除插件失败 : " + jarFile);
@@ -752,6 +751,7 @@ public class PluginManager extends ClassLoader{
                                         fileLoaderMap.get(jarFile.getAbsolutePath()).close();
                                         fileLoaderMap.remove(jarFile.getAbsolutePath());
                                     }
+                                    System.gc();
                                     boolean delete = jarFile.delete();
                                     if (!delete){
                                         log.error("删除插件失败 : {}",jarFile.getAbsolutePath());
@@ -916,6 +916,7 @@ public class PluginManager extends ClassLoader{
             for (PluginData data : collect) {
                 File jarFile = data.getJarFile();
                 if (jarFile.exists()){
+                    System.gc();
                     jarFile.delete();
                 }
             }
@@ -967,6 +968,7 @@ public class PluginManager extends ClassLoader{
                     fileLoaderMap.get(fileSave.getAbsolutePath()).close();
                     fileLoaderMap.remove(fileSave.getAbsolutePath());
                 }
+                System.gc();
                 fileSave.delete();
             }
             return null;
@@ -1007,6 +1009,7 @@ public class PluginManager extends ClassLoader{
                 //删除重复的
                 for (File fd : collect) {
                     if (fd.exists()){
+                        System.gc();
                         fd.delete();
                     }
                 }
@@ -1062,6 +1065,7 @@ public class PluginManager extends ClassLoader{
         if (!getFileMD5(saveFile).equals(pluginInfo.getMd5())){
             //删除下载文件
             if (saveFile.exists()){
+                System.gc();
                 saveFile.delete();
                 log.error("MD5校验失败");
                 return false;
