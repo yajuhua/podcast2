@@ -122,25 +122,23 @@ public class StartupRunner implements ApplicationRunner{
         executor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                if (!Task.getDownloadProgressVOSet().isEmpty()){
-                    Set<DownloadProgressVO> downloadProgressVOSet = Task.getDownloadProgressVOSet();
-                    for (DownloadProgressVO vo : downloadProgressVOSet) {
-                        if (DownloaderUtils.endStatusCode().contains(vo.getStatus())){
-                            Task.getDownloadProgressVOSet().remove(vo);
-                        }
+                Set<DownloadProgressVO> downloadProgressVOSet = Task.getDownloadProgressVOSet();
+                for (DownloadProgressVO vo : downloadProgressVOSet) {
+                    if (DownloaderUtils.endStatusCode().contains(vo.getStatus())){
+                        Task.getDownloadProgressVOSet().remove(vo);
                     }
-                    //排序
-                    List<DownloadProgressVO> collect = downloadProgressVOSet.stream().sorted(new Comparator<DownloadProgressVO>() {
-                        @Override
-                        public int compare(DownloadProgressVO o1, DownloadProgressVO o2) {
-                            UUID u1 = UUID.fromString(o1.getUuid());
-                            UUID u2 = UUID.fromString(o2.getUuid());
-                            return u1.compareTo(u2);
-                        }
-                    }).collect(Collectors.toList());
-                    //清空前端
-                    downloadWebSocketServer.sendToAllClient(gson.toJson(collect));
                 }
+                //排序
+                List<DownloadProgressVO> collect = downloadProgressVOSet.stream().sorted(new Comparator<DownloadProgressVO>() {
+                    @Override
+                    public int compare(DownloadProgressVO o1, DownloadProgressVO o2) {
+                        UUID u1 = UUID.fromString(o1.getUuid());
+                        UUID u2 = UUID.fromString(o2.getUuid());
+                        return u1.compareTo(u2);
+                    }
+                }).collect(Collectors.toList());
+                //清空前端
+                downloadWebSocketServer.sendToAllClient(gson.toJson(collect));
             }
         },0,300, TimeUnit.MILLISECONDS);
     }
