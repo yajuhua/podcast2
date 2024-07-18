@@ -14,17 +14,23 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -100,7 +106,7 @@ public class SystemController {
      */
     @ApiOperation("系统概况信息")
     @GetMapping("/info")
-    public Result info(){
+    public Result info() throws Exception{
         Duration duration = Duration.between(startTime, LocalDateTime.now());
         long millis = duration.toMillis();
         long totalSecond = millis / 1000;
@@ -115,6 +121,7 @@ public class SystemController {
         keyValueList.add(new KeyValue("版本",infoProperties.getVersion()));
         keyValueList.add(new KeyValue("更新时间",infoProperties.getUpdate()));
         keyValueList.add(new KeyValue("运行时间",runningTime));
+        keyValueList.add(new KeyValue("commit",getCommitID()));
 
         return Result.success(keyValueList);
     }
@@ -143,6 +150,37 @@ public class SystemController {
     public Result<List<String>> historyLogsByLatest(@RequestParam Long minutes, @RequestParam String level) throws Exception{
         List<String> logs = LogUtils.getRecent(minutes, TimeUnit.MINUTES, new File(dataPathProperties.getLogsPath()), level);
         return Result.success(logs);
+    }
+
+    /**
+     * 获取git提交信息
+     * @return
+     * @throws Exception
+     */
+    public Properties getCommit() throws Exception{
+        Resource resource = new DefaultResourceLoader().getResource("classpath:git.properties");
+        if (resource.exists()) {
+            InputStream inputStream = resource.getInputStream();
+            Properties properties = new Properties();
+            properties.load(inputStream);
+            inputStream.close();
+            return properties;
+        } else {
+            return new Properties();
+        }
+    }
+
+    /**
+     * 获取git提交ID
+     * @return
+     * @throws Exception
+     */
+    public String getCommitID() throws Exception{
+        if (getCommit().containsKey("git.commit.id.abbrev")){
+            return getCommit().get("git.commit.id.abbrev").toString();
+        }else {
+            return "none";
+        }
     }
 
 
