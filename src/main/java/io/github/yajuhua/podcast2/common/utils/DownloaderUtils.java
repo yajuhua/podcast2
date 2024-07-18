@@ -74,6 +74,39 @@ public class DownloaderUtils {
         return version;
     }
 
+    public static boolean hasDownloader(Downloader downloader){
+        boolean has = false;
+        int waitFor;
+        try {
+            switch (downloader) {
+                case YtDlp:
+                    waitFor = Runtime.getRuntime().exec(new String[]{"yt-dlp", "--version"}).waitFor();
+                    if (waitFor != 0){
+                        log.warn("未找到yt-dlp下载器");
+                    }
+                    has = 0 == waitFor;
+                    break;
+                case Aria2:
+                    waitFor = Runtime.getRuntime().exec(new String[]{"aria2c", "--version"}).waitFor();
+                    if (waitFor != 0){
+                        log.warn("未找到yt-dlp下载器");
+                    }
+                    has = 0 == waitFor;
+                    break;
+                case Nm3u8DlRe:
+                    waitFor = Runtime.getRuntime().exec(new String[]{"N_m3u8DL-RE", "--version"}).waitFor();
+                    if (waitFor != 0){
+                        log.warn("未找到yt-dlp下载器");
+                    }
+                    has = 0 == waitFor;
+                    break;
+            }
+            return has;
+        } catch (Exception e) {
+            return has;
+        }
+    }
+
     /**
      * cmd命令行的操作(字符串类型)
      * @param command 命令
