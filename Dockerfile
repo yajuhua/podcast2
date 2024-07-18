@@ -1,9 +1,10 @@
 FROM yajuhua/podcast2-base-v2:latest
-ADD app.jar /
+COPY app.jar /
 EXPOSE 8088
 ENV LANG zh_CN.utf8
 RUN yt-dlp -U
-CMD ["start-app"]
+WORKDIR /
+CMD ["java","-jar","app.jar"]
 
 LABEL author.email="yajuhua@outlook.com"  author.name="yajuhua"
 
