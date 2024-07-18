@@ -70,6 +70,10 @@ public class PluginManagerConfig {
 
         PluginManager pluginManager = new PluginManager(pluginDir,remotePluginUrl,pluginMapper,subMapper,
                 settingsMapper,extendMapper,userService,infoProperties);
+        //同步数据库
+        pluginManager.databaseAndPluginFileSync();
+        //去重
+        pluginManager.deleteDuplicates();
         return pluginManager;
     }
 
