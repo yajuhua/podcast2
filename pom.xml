@@ -4,10 +4,12 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.github.yajuhua</groupId>
     <artifactId>podcast2</artifactId>
-    <version>v2.4.0</version>
+    <version>${podcast2Version}</version>
     <name>podcast2</name>
     <description>podcast2</description>
     <properties>
+        <podcast2Version>v2.4.0</podcast2Version>
+        <commit.id>none</commit.id>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -18,10 +20,7 @@
         <podcast2API.version>2.3.0</podcast2API.version>
         <jjwt.version>0.9.1</jjwt.version>
         <knife4j.version>2.0.2</knife4j.version>
-        <!--maven.build.timestamp保存了maven编译时间戳-->
         <timestamp>${maven.build.timestamp}</timestamp>
-        <!--指定时间格式-->
-        <maven.build.timestamp.format>yyyy-MM-dd</maven.build.timestamp.format>
     </properties>
     <dependencies>
         <dependency>
@@ -179,6 +178,51 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!--  git-commit-id-maven-plugin ：打包的时候携带git提交信息  -->
+            <plugin>
+                <groupId>io.github.git-commit-id</groupId>
+                <artifactId>git-commit-id-maven-plugin</artifactId>
+                <version>4.9.9</version>
+                <executions>
+                    <execution>
+                        <id>get-the-git-infos</id>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+                    <includeOnlyProperties>
+                        <includeOnlyProperty>^git.build.(time|version)$</includeOnlyProperty>
+                        <includeOnlyProperty>^git.commit.id.(abbrev|full)$</includeOnlyProperty>
+                    </includeOnlyProperties>
+                    <commitIdGenerationMode>full</commitIdGenerationMode>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>timestamp-property</id>
+                        <goals>
+                            <goal>timestamp-property</goal>
+                        </goals>
+                        <configuration>
+                            <name>timestamp</name>
+                            <pattern>yyyy-MM-dd HH:mm:ss</pattern>
+                            <timeZone>GMT+8</timeZone>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
 
         <resources>
