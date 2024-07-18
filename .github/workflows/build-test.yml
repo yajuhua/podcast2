@@ -47,7 +47,7 @@ jobs:
 
       - name: Build with Maven
         run: |
-          mvn -B package mvn package -Dpodcast2Version=$(date +beta-%Y-%m-%d)
+          mvn package -Dpodcast2Version=$(date +beta-%Y-%m-%d)
 
       - name: Upload jar artifact
         uses: actions/upload-artifact@v3
