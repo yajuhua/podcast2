@@ -89,6 +89,7 @@ public class PluginController {
         if (pluginUrl != null){
             try {
                 remotePluginInfoList = pluginManager.getRemotePluginRepoData(pluginUrl);
+                //TODO无法获取插件信息
                 if (remotePluginInfoList == null){
                     remotePluginInfoList = pluginManager.getRemotePluginRepoData();
                 }
@@ -283,10 +284,14 @@ public class PluginController {
         //订阅使用的插件不删除
          Map map = new HashMap();
         for (Plugin plugin : pluginList) {
-            map.put("plugin",plugin.getName());
-            List<Sub> sub = subMapper.selectListByMap(map);
-            if (sub.size() != 0){
-                throw new PluginOccupancyException(MessageConstant.PLUGIN_OCCUPANCY_FAILED);
+            //获取插件域名
+            List<String> domainNames = pluginManager.getPluginDomainNames(UUID.fromString(plugin.getUuid()));
+            for (String domainName : domainNames) {
+                map.put("plugin",domainName);
+                List<Sub> sub = subMapper.selectListByMap(map);
+                if (sub.size() != 0){
+                    throw new PluginOccupancyException(MessageConstant.PLUGIN_OCCUPANCY_FAILED);
+                }
             }
             //删除扩展选项
             extendMapper.deleteByPlugin(plugin.getName());
