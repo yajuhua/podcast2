@@ -47,7 +47,7 @@ jobs:
 
       - name: Build with Maven
         run: |
-          mvn -B package --file pom.xml
+          mvn -B package mvn package -Dpodcast2Version=$(date +beta-%Y-%m-%d)
 
       - name: Upload jar artifact
         uses: actions/upload-artifact@v3
@@ -262,16 +262,18 @@ jobs:
       - name: Build windows
         run: |
           ls
-          cp tmp/app.jar platform/windows/
+          cp tmp/app.jar .
+          unzip tmp/app.jar
           curl -L -o platform/windows/yt-dlp.exe https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
+          cp -rf BOOT-INF/classes BOOT-INF/lib platform/windows/
           zip -r podcast2-win-x64.zip platform/windows/ 
 
       - name: Build osx
         run: |
-          cp tmp/app.jar platform/osx/
           curl -L -o platform/osx/yt-dlp "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos_legacy"
           chmod a+x platform/osx/yt-dlp
-          zip -r podcast2-osx-x64.zip platform/osx/           
+          cp -rf BOOT-INF/classes BOOT-INF/lib platform/osx/
+          zip -r podcast2-osx-x64.zip platform/osx/            
 
       - name: Set Release Date
         id: release_date
