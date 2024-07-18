@@ -1,13 +1,12 @@
 package io.github.yajuhua.podcast2.common.start;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import io.github.yajuhua.podcast2.common.constant.Default;
-import io.github.yajuhua.podcast2.common.constant.StatusCode;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.properties.InfoProperties;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.controller.SystemController;
+import io.github.yajuhua.podcast2.downloader.aria2.Aria2RPC;
 import io.github.yajuhua.podcast2.mapper.DownloaderMapper;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
@@ -29,9 +28,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
 @Component
 @Slf4j
 public class StartupRunner implements ApplicationRunner{
@@ -66,6 +63,9 @@ public class StartupRunner implements ApplicationRunner{
     @Override
     public void run(ApplicationArguments args){
 
+        //项目信息
+        printProjectInfo();
+
         //记录启动时间
         SystemController.startTime = LocalDateTime.now();
 
@@ -75,44 +75,53 @@ public class StartupRunner implements ApplicationRunner{
         //初始化
         initConfig();
 
+        //启动aria2 RPC
+        Aria2RPC.start();
+
 
         List<Downloader> downloaderList = downloaderMapper.list();
         if (downloaderList.isEmpty() || downloaderList.size() != 3){
-            String osArch = System.getProperty("os.arch");
-            log.info("系统架构:{}",osArch);
             log.info("更新下载器信息");
             downloaderMapper.deleteAll();
 
             //yt-dlp
-            Downloader ytdlp = Downloader.builder()
-                    .name(DownloaderUtils.Downloader.YtDlp.name())
-                    .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.YtDlp))
-                    //只更新yt-dlp
-                    .isUpdate(1)
-                    .refreshDuration(24)
-                    .updateTime(System.currentTimeMillis())
-                    .build();
-            downloaderMapper.insert(ytdlp);
+            Downloader downloader = null;
+            if (DownloaderUtils.hasDownloader(DownloaderUtils.Downloader.YtDlp)) {
+                downloader = Downloader.builder()
+                        .name(DownloaderUtils.Downloader.YtDlp.name())
+                        .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.YtDlp))
+                        //只更新yt-dlp
+                        .isUpdate(1)
+                        .refreshDuration(24)
+                        .updateTime(System.currentTimeMillis())
+                        .build();
+                downloaderMapper.insert(downloader);
+            }
+
 
             //aria2
-            Downloader aria2 = Downloader.builder()
-                    .name(DownloaderUtils.Downloader.Aria2.name())
-                    .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.Aria2))
-                    .isUpdate(0)
-                    .refreshDuration(24)
-                    .updateTime(System.currentTimeMillis())
-                    .build();
-            downloaderMapper.insert(aria2);
+            if (DownloaderUtils.hasDownloader(DownloaderUtils.Downloader.Aria2)) {
+                downloader = Downloader.builder()
+                        .name(DownloaderUtils.Downloader.Aria2.name())
+                        .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.Aria2))
+                        .isUpdate(0)
+                        .refreshDuration(24)
+                        .updateTime(System.currentTimeMillis())
+                        .build();
+                downloaderMapper.insert(downloader);
+            }
 
             //N_m3u8DL-RE
-            Downloader nm3u8DlRe = Downloader.builder()
-                    .name(DownloaderUtils.Downloader.Nm3u8DlRe.name())
-                    .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.Nm3u8DlRe))
-                    .isUpdate(0)
-                    .refreshDuration(24)
-                    .updateTime(System.currentTimeMillis())
-                    .build();
-            downloaderMapper.insert(nm3u8DlRe);
+            if (DownloaderUtils.hasDownloader(DownloaderUtils.Downloader.Nm3u8DlRe)) {
+                downloader = Downloader.builder()
+                        .name(DownloaderUtils.Downloader.Nm3u8DlRe.name())
+                        .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.Nm3u8DlRe))
+                        .isUpdate(0)
+                        .refreshDuration(24)
+                        .updateTime(System.currentTimeMillis())
+                        .build();
+                downloaderMapper.insert(downloader);
+            }
 
             log.info("下载器信息更新完成");
         }
@@ -220,5 +229,14 @@ public class StartupRunner implements ApplicationRunner{
             }
         }
 
+    }
+
+    /**
+     * 打印项目信息
+     */
+    public void printProjectInfo(){
+        String osArch = System.getProperty("os.arch");
+        log.info("系统架构: {}",osArch);
+        log.info("项目版本: {} - 更新时间: {}",infoProperties.getVersion(),infoProperties.getUpdate());
     }
 }
