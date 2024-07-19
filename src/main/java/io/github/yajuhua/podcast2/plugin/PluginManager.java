@@ -11,6 +11,7 @@ import io.github.yajuhua.podcast2.mapper.PluginMapper;
 import io.github.yajuhua.podcast2.mapper.SettingsMapper;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
 import io.github.yajuhua.podcast2.pojo.entity.*;
+import io.github.yajuhua.podcast2.service.PluginService;
 import io.github.yajuhua.podcast2.service.UserService;
 import io.github.yajuhua.podcast2API.Params;
 import io.github.yajuhua.podcast2API.Podcast2;
@@ -54,6 +55,7 @@ public class PluginManager extends ClassLoader{
     private ExtendMapper extendMapper;
     private UserService userService;
     private InfoProperties infoProperties;
+    private PluginService pluginService;
 
     public PluginManager(File pluginDir) {
         this.pluginDir = pluginDir;
@@ -66,7 +68,7 @@ public class PluginManager extends ClassLoader{
 
     public PluginManager(File pluginDir, String remotePluginRepoUrl, PluginMapper pluginMapper,
                          SubMapper subMapper, SettingsMapper settingsMapper, ExtendMapper extendMapper,
-                         UserService userService, InfoProperties infoProperties) {
+                         UserService userService, InfoProperties infoProperties, PluginService pluginService) {
         this.pluginDir = pluginDir;
         this.remotePluginRepoUrl = remotePluginRepoUrl;
         this.pluginMapper = pluginMapper;
@@ -75,9 +77,10 @@ public class PluginManager extends ClassLoader{
         this.extendMapper = extendMapper;
         this.userService = userService;
         this.infoProperties = infoProperties;
+        this.pluginService = pluginService;
     }
 
-    public Class getPlugin(String name){
+    public Class getPlugin(String name) throws Exception{
         //如果有多个，取最新版本
         List<PluginData> collect = getPluginDataList(name).stream().sorted(new Comparator<PluginData>() {
             @Override
@@ -93,7 +96,7 @@ public class PluginManager extends ClassLoader{
 
         //排除空情况
         if (collect == null || collect.isEmpty()){
-            throw new RuntimeException("找不到该插件 : " + name);
+            throw new Exception("找不到该插件 : " + name);
         }
 
         //获取class
@@ -103,7 +106,7 @@ public class PluginManager extends ClassLoader{
         return classFromJar;
     }
 
-    public Class getPlugin(String name, String version){
+    public Class getPlugin(String name, String version) throws Exception{
         List<PluginData> collect = getPluginDataList(name).stream().filter(new Predicate<PluginData>() {
             @Override
             public boolean test(PluginData pluginData) {
@@ -118,7 +121,7 @@ public class PluginManager extends ClassLoader{
 
         //排除空情况
         if (collect == null || collect.isEmpty()){
-            throw new RuntimeException("找不到该版本插件 : " + name + "-" + version);
+            throw new Exception("找不到该版本插件 : " + name + "-" + version);
         }
 
         //获取class
@@ -128,7 +131,7 @@ public class PluginManager extends ClassLoader{
         return classFromJar;
     }
 
-    public Class getPlugin(UUID uuid){
+    public Class getPlugin(UUID uuid) throws Exception{
         //获取class
         PluginData pluginData =  getPluginData(uuid.toString());
         Class<?> classFromJar = loadClassFromJar(pluginData.getJarFile().getAbsolutePath(), pluginData.getClassPath());
@@ -492,8 +495,12 @@ public class PluginManager extends ClassLoader{
              isJar = "jar".equals(jarPath.substring(jarPath.lastIndexOf(".") + 1));
              if (isJar){
 
-                  properties = getPluginProperties(jarPath, PROPERTIES_FILE_NAME);
-                  if (properties != null && name.equals(properties.get("name"))){
+                 try {
+                     properties = getPluginProperties(jarPath, PROPERTIES_FILE_NAME);
+                 } catch (Exception e) {
+                     continue;
+                 }
+                 if (properties != null && name.equals(properties.get("name"))){
                       String mainClass = properties.get("mainClass").toString();
                       String version = properties.get("version").toString();
                       String update = properties.get("update").toString();
@@ -520,7 +527,7 @@ public class PluginManager extends ClassLoader{
      * @param uuid
      * @return
      */
-    public PluginData getPluginData(String uuid){
+    public PluginData getPluginData(String uuid) throws Exception {
         File[] files = pluginDir.listFiles();
         String jarPath;
         boolean isJar;
@@ -554,7 +561,7 @@ public class PluginManager extends ClassLoader{
                 }
             }
         }
-        throw new RuntimeException("找不到该插件 : " + uuid);
+        throw new Exception("找不到该插件 : " + uuid);
     }
 
     /**
@@ -656,6 +663,7 @@ public class PluginManager extends ClassLoader{
                     return false;
                 }
             }
+            return true;
         } catch (Exception e) {
             return false;
         }finally {
@@ -663,7 +671,6 @@ public class PluginManager extends ClassLoader{
             pluginMapper.delete(uuid.toString());
 
         }
-        return true;
     }
 
     /**
@@ -673,13 +680,13 @@ public class PluginManager extends ClassLoader{
     public boolean deleteDuplicates(){
         //获取所有插件信息
         List<PluginData> pluginDatas = allPluginData();
-        
+
         //取出名称
         Set<String> pluginNames = new HashSet<>();
         for (PluginData data : pluginDatas) {
             pluginNames.add(data.getName());
         }
-        
+
         //如果名称数量 == 插件数量 ? 没有重复 : 继续移除重复的
         if (pluginNames.size() == pluginDatas.size()){
             return true;
@@ -816,9 +823,7 @@ public class PluginManager extends ClassLoader{
             //插入数据库
             if (verifyMD5){
                 Plugin plugin = pluginInfoToPlugin(pluginInfo);
-                pluginMapper.insert(plugin);
-                //去重
-                deleteDuplicatesEx(UUID.fromString(plugin.getUuid()));
+                pluginService.insert(plugin);
                 return true;
             }
             return false;
@@ -862,9 +867,7 @@ public class PluginManager extends ClassLoader{
             //插入数据库
             if (verifyMD5){
                 Plugin plugin = pluginInfoToPlugin(pluginInfo);
-                pluginMapper.insert(plugin);
-                //去重
-                deleteDuplicatesEx(UUID.fromString(plugin.getUuid()));
+                pluginService.insert(plugin);
                 return true;
             }
             return false;
@@ -897,9 +900,7 @@ public class PluginManager extends ClassLoader{
             //插入数据库
             if (verifyMD5){
                 Plugin plugin = pluginInfoToPlugin(pluginInfo);
-                pluginMapper.insert(plugin);
-                //去重
-                deleteDuplicatesEx(UUID.fromString(plugin.getUuid()));
+                pluginService.insert(plugin);
                 return true;
             }
             return false;
@@ -921,30 +922,10 @@ public class PluginManager extends ClassLoader{
             return null;
         }
 
-        List<PluginData> pluginData = allPluginData();
-        List<PluginData> collect = pluginData.stream().filter(new Predicate<PluginData>() {
-            @Override
-            public boolean test(PluginData data) {
-                return fileName.equals(data.getName());
-            }
-        }).collect(Collectors.toList());
-
-        //删除同名的文件
-        if (!collect.isEmpty()){
-            for (PluginData data : collect) {
-                File jarFile = data.getJarFile();
-                if (jarFile.exists()){
-                    closeUrlClassLoader(jarFile.getAbsolutePath());
-                    if (jarFile.delete()){
-                        throw new BaseException(data.getName() + "插件正在使用中，请稍后再上传...");
-                    }
-                }
-            }
-        }
-
-        //拷贝
-        File fileSave = new File(pluginDir, fileName);
-        FileOutputStream fou = new FileOutputStream(fileSave);
+        //先保存在临时目录
+        File tmpDir = new File(pluginDir.getParent() + File.separator  + "tmp");
+        File saveTmp = new File(tmpDir,fileName);
+        FileOutputStream fou = new FileOutputStream(saveTmp);
         IOUtils.copyLarge(inputStream,fou);
 
         //关闭流
@@ -954,7 +935,7 @@ public class PluginManager extends ClassLoader{
         //获取插件属性
         UUID uuid;
         try {
-            Properties properties = getPluginProperties(fileSave.getAbsolutePath(), PROPERTIES_FILE_NAME);
+            Properties properties = getPluginProperties(saveTmp.getAbsolutePath(), PROPERTIES_FILE_NAME);
             uuid = UUID.fromString(properties.get("uuid").toString());
 
             //封装数据
@@ -970,22 +951,29 @@ public class PluginManager extends ClassLoader{
                     .name(name)
                     .build();
 
-            //删除之前的记录
-            pluginMapper.deleteByName(name);
-            //插入数据库
-            pluginMapper.insert(plugin);
-            //去重
-            deleteDuplicatesEx(UUID.fromString(plugin.getUuid()));
+            //删除同名的文件
+            File pluginFile = new File(pluginDir, fileName);
+            closeUrlClassLoader(pluginFile.getAbsolutePath());
+            pluginFile.delete();
+
+            //将存放在临时目录的插件复制到插件目录
+            InputStream in = new FileInputStream(saveTmp);
+            OutputStream os = new FileOutputStream(pluginFile);
+            IOUtils.copyLarge(in,os);
+
+            //关闭流
+            os.close();
+            in.close();
+
+            pluginService.insert(plugin);
             return plugin;
         } catch (Exception e) {
-            log.error("无法获取该插件属性: {}",e.getMessage());
-            if (fileSave.exists()){
-                closeUrlClassLoader(fileSave.getAbsolutePath());
-                if (fileSave.delete()){
-                    throw new BaseException(fileSave.getAbsolutePath() + "插件上传失败");
-                }
+            closeUrlClassLoader(saveTmp.getAbsolutePath());
+            throw new BaseException(saveTmp.getAbsolutePath() + "插件上传失败");
+        }finally {
+            if (saveTmp.exists()){
+                saveTmp.delete();
             }
-            return null;
         }
     }
 
@@ -1039,13 +1027,7 @@ public class PluginManager extends ClassLoader{
                     .updateTime(update)
                     .build();
 
-            //删除之前记录
-            pluginMapper.deleteByName(name);
-
-            //插入新的数据
-            pluginMapper.insert(plugin);
-            //去重
-            deleteDuplicatesEx(UUID.fromString(plugin.getUuid()));
+            pluginService.insert(plugin);
             return true;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -1193,6 +1175,7 @@ public class PluginManager extends ClassLoader{
      * @param name
      * @return
      */
+    @DatabaseAndPluginFileSync
     public boolean update(String name){
         List<PluginInfo> collect = getRemotePluginRepoData().stream().filter(new Predicate<PluginInfo>() {
             @Override
@@ -1296,39 +1279,43 @@ public class PluginManager extends ClassLoader{
      * 确保数据库记录与插件文件相对应,以少的一方为准
      */
     public void databaseAndPluginFileSync(){
-        log.info("数据库记录与插件文件同步...");
-        //取数据库记录
-        List<Plugin> pluginsFromDB = pluginMapper.list();
-        //取本地插件信息
-        List<Plugin> pluginsFromLocalFile = new ArrayList<>();
-        List<PluginData> pluginData = allPluginData();
-        for (PluginData data : pluginData) {
-            Plugin build = Plugin.builder()
-                    .name(data.getName())
-                    .version(data.getVersion())
-                    .uuid(data.uuid)
-                    .build();
-            pluginsFromLocalFile.add(build);
-        }
-        
-        //删除数据库没记录而有插件的文件
-        List<Plugin> missingFiles = new ArrayList<>(pluginsFromLocalFile);
-        missingFiles.removeAll(pluginsFromDB);
-        if (!missingFiles.isEmpty()){
-            for (Plugin plugin : missingFiles) {
-                log.warn("删除未记录的插件 : {}",plugin);
-                delete(UUID.fromString(plugin.getUuid()));
+        try {
+            log.info("数据库记录与插件文件同步...");
+            //取数据库记录
+            List<Plugin> pluginsFromDB = pluginMapper.list();
+            //取本地插件信息
+            List<Plugin> pluginsFromLocalFile = new ArrayList<>();
+            List<PluginData> pluginData = allPluginData();
+            for (PluginData data : pluginData) {
+                Plugin build = Plugin.builder()
+                        .name(data.getName())
+                        .version(data.getVersion())
+                        .uuid(data.uuid)
+                        .build();
+                pluginsFromLocalFile.add(build);
             }
-        }
 
-        //数据库有记录而没有插件文件，删除数据库记录
-        List<Plugin> missingDB = new ArrayList<>(pluginsFromDB);
-        missingDB.removeAll(pluginsFromLocalFile);
-        if (!missingDB.isEmpty()){
-            for (Plugin plugin : missingDB) {
-                log.warn("删除{}数据数据库记录,找不到插件文件",plugin);
-                delete(UUID.fromString(plugin.getUuid()));
+            //删除数据库没记录而有插件的文件
+            List<Plugin> missingFiles = new ArrayList<>(pluginsFromLocalFile);
+            missingFiles.removeAll(pluginsFromDB);
+            if (!missingFiles.isEmpty()){
+                for (Plugin plugin : missingFiles) {
+                    log.warn("删除未记录的插件 : {}",plugin);
+                    delete(UUID.fromString(plugin.getUuid()));
+                }
             }
+
+            //数据库有记录而没有插件文件，删除数据库记录
+            List<Plugin> missingDB = new ArrayList<>(pluginsFromDB);
+            missingDB.removeAll(pluginsFromLocalFile);
+            if (!missingDB.isEmpty()){
+                for (Plugin plugin : missingDB) {
+                    log.warn("删除{}数据数据库记录,找不到插件文件",plugin);
+                    delete(UUID.fromString(plugin.getUuid()));
+                }
+            }
+        } catch (Exception e) {
+            log.error("数据库记录与插件文件同步异常: {}",e.getMessage());
         }
     }
 
