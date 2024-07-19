@@ -29,6 +29,9 @@ public class PLuginManagerAOP {
         if (method.isAnnotationPresent(DatabaseAndPluginFileSync.class)){
             //调用databaseAndPluginFileSync
             pluginManager.databaseAndPluginFileSync();
+            Object proceed = joinPoint.proceed();
+            pluginManager.databaseAndPluginFileSync();
+            return proceed;
         }
         return joinPoint.proceed();
     }
