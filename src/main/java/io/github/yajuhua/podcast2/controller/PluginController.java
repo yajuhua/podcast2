@@ -285,16 +285,24 @@ public class PluginController {
          Map map = new HashMap();
         for (Plugin plugin : pluginList) {
             //获取插件域名
-            List<String> domainNames = pluginManager.getPluginDomainNames(UUID.fromString(plugin.getUuid()));
-            for (String domainName : domainNames) {
-                map.put("plugin",domainName);
-                List<Sub> sub = subMapper.selectListByMap(map);
-                if (sub.size() != 0){
-                    throw new PluginOccupancyException(MessageConstant.PLUGIN_OCCUPANCY_FAILED);
-                }
+            List<String> domainNames = null;
+            try {
+                domainNames = pluginManager.getPluginDomainNames(UUID.fromString(plugin.getUuid()));
+            } catch (Exception e) {
+                //删除扩展选项
+                extendMapper.deleteByPlugin(plugin.getName());
             }
-            //删除扩展选项
-            extendMapper.deleteByPlugin(plugin.getName());
+            if (domainNames != null){
+                for (String domainName : domainNames) {
+                    map.put("plugin",domainName);
+                    List<Sub> sub = subMapper.selectListByMap(map);
+                    if (sub.size() != 0){
+                        throw new PluginOccupancyException(MessageConstant.PLUGIN_OCCUPANCY_FAILED);
+                    }
+                }
+                //删除扩展选项
+                extendMapper.deleteByPlugin(plugin.getName());
+            }
         }
 
         //删除插件
