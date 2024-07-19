@@ -6,6 +6,7 @@ import io.github.yajuhua.podcast2.common.properties.RepoProperties;
 import io.github.yajuhua.podcast2.mapper.*;
 import io.github.yajuhua.podcast2.plugin.PluginManager;
 import io.github.yajuhua.podcast2.pojo.entity.ExtendInfo;
+import io.github.yajuhua.podcast2.service.PluginService;
 import io.github.yajuhua.podcast2.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,8 @@ public class PluginManagerConfig {
     @Autowired
     private InfoProperties infoProperties;
 
+    @Autowired
+    private PluginService pluginService;
 
 
     @Bean
@@ -69,7 +72,7 @@ public class PluginManagerConfig {
         }
 
         PluginManager pluginManager = new PluginManager(pluginDir,remotePluginUrl,pluginMapper,subMapper,
-                settingsMapper,extendMapper,userService,infoProperties);
+                settingsMapper,extendMapper,userService,infoProperties,pluginService);
         //同步数据库
         pluginManager.databaseAndPluginFileSync();
         //去重
