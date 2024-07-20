@@ -30,7 +30,6 @@ public class PLuginManagerAOP {
             //调用databaseAndPluginFileSync
             pluginManager.databaseAndPluginFileSync();
             Object proceed = joinPoint.proceed();
-            pluginManager.databaseAndPluginFileSync();
             return proceed;
         }
         return joinPoint.proceed();
