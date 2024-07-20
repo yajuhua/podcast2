@@ -954,17 +954,22 @@ public class PluginManager extends ClassLoader{
             //删除同名的文件
             File pluginFile = new File(pluginDir, fileName);
             closeUrlClassLoader(pluginFile.getAbsolutePath());
-            pluginFile.delete();
+            if (pluginFile.exists() && !pluginFile.delete()){
+                System.gc();
+                pluginFile.delete();
+            }
 
             //将存放在临时目录的插件复制到插件目录
-            InputStream in = new FileInputStream(saveTmp);
-            OutputStream os = new FileOutputStream(pluginFile);
-            IOUtils.copyLarge(in,os);
-
-            //关闭流
-            os.close();
-            in.close();
-
+            try (InputStream in = new FileInputStream(saveTmp);
+                 OutputStream os = new FileOutputStream(pluginFile)) {
+                IOUtils.copyLarge(in, os);
+            } catch (IOException e) {
+                log.error("文件复制失败, 源文件: {}, 目标文件: {}, 错误信息: {}", saveTmp, pluginFile, e.getMessage());
+                e.printStackTrace();
+                throw new RuntimeException("文件复制过程中发生错误", e);
+            }
+            Properties properties2 = getPluginProperties(pluginFile.getAbsolutePath(), PROPERTIES_FILE_NAME);
+            log.info("插件属性: {}",properties2);
             pluginService.insert(plugin);
             return plugin;
         } catch (Exception e) {
