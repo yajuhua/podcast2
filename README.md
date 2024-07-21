@@ -115,7 +115,7 @@ chmod -R a+x platform
 #### 哔哩哔哩设置
 > 风控太严，只能选择授权的方式
 ##### 参考
-- [Web端Cookie刷新](https://socialsisteryi.github.io/bilibili-API-collect/docs/login/cookie_refresh.html)
+> 风控太严，只能选择授权的方式，参考 [Web端Cookie刷新](https://socialsisteryi.github.io/bilibili-API-collect/docs/login/cookie_refresh.html)。
 ##### 打开浏览器登录哔哩哔哩，最好无痕窗口
 ![登录哔哩哔哩](./images/b-login.png)
 ##### 复制cookie
@@ -125,7 +125,9 @@ chmod -R a+x platform
 ![复制ac_time_valu](./images/ac_time_value.png)
 
 ##### 注意！这样子相当于登录了，复制后要清理哔哩哔哩浏览器记录，否则会与本插件冲突
-
+##### 在线获取ac_time_value和cookie
+> 因为是使用vercel部署的，所有显示登录位置应该是在美国。
+[在线获取](https://b-login.vercel.app)
 <br>
 
 #### 忘记密码
@@ -216,6 +218,12 @@ docker run -id --name=podcast2 \
 yajuhua/podcast2:latest
 
 ````
+## Invidious API
+yt-dlp可能会出现[Sign in to confirm you’re not a bot. This helps protect our community](https://github.com/yt-dlp/yt-dlp/issues/10128)导致无法下载的情况。
+目前只能通过设置invidious API进行下载，下面是invidious API列表，找一个能有用的设置即可。
+- https://redirect.invidious.io/
+- https://api.invidious.io/
+
 ## 插件bug或失效
 由于插件是并非使用官方接口，难免存在不稳定性。若发现插件失效，请[issues](https://github.com/yajuhua/podcast2/issues/new/choose)
 
@@ -238,6 +246,8 @@ yajuhua/podcast2:latest
 ## 鸣谢
 特别感谢 [JetBrains](https://www.jetbrains.com) 为开源项目提供免费的 [IntelliJ IDEA](https://www.jetbrains.com/idea)的授权  
 [<img src="./images/jetbrains.svg" width="200"/>](https://www.jetbrains.com)
+## 🐧交流群
+945797272
 
 
 
