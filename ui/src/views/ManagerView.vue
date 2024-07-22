@@ -1689,7 +1689,9 @@ export default {
           .then(res => {
             if (res.data.code == '1') {
               this.$alert(res.data.data, '检查更新', {
-                confirmButtonText: '确定'
+                confirmButtonText: '确定',
+                dangerouslyUseHTMLString: true, // 启用HTML渲染
+                customClass: 'custom-alert-box', // 自定义样式类名
               });
             } else {
               this.$message({
@@ -2379,5 +2381,13 @@ export default {
   opacity: 0;
   width: 0;
   height: 0;
+}
+</style>
+<!-- 全局样式 -->
+<style>
+/*检查更新弹窗*/
+.custom-alert-box .el-message-box__content {
+  max-height: 400px; /* 设置最大高度 */
+  overflow-y: auto;  /* 启用垂直滚动条 */
 }
 </style>

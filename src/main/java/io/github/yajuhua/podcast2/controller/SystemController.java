@@ -1,5 +1,7 @@
 package io.github.yajuhua.podcast2.controller;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import io.github.yajuhua.download.commons.utils.CommonUtils;
 import io.github.yajuhua.podcast2.Podcast2Application;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
@@ -12,6 +14,8 @@ import io.github.yajuhua.podcast2.pojo.vo.KeyValue;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.HtmlRenderer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -71,33 +75,40 @@ public class SystemController {
     @ApiOperation("检查更新")
     @GetMapping("/hasUpdate")
     public Result hasUpdate(){
-        String versionUrl = "https://img.shields.io/github/v/release/yajuhua/podcast2";
-        String html = Http.get(versionUrl);
-        Pattern compile = Pattern.compile("\\<title\\>(?<versionStr>.*?)\\</title\\>");
-        Matcher matcher = compile.matcher(html);
-        String versionStr = null;
-        String version = null;
-        if (matcher.find()){
-            versionStr = matcher.group("versionStr");
-        }
+       //获取latest信息
+        String json = Http.get("https://api.github.com/repos/yajuhua/podcast2/releases/latest");
+        Gson gson = new Gson();
+        JsonObject jsonObject = gson.fromJson(json, JsonObject.class);
+        String tagName = jsonObject.get("tag_name").getAsString();
+        String body = jsonObject.get("body").getAsString();
+        body = "# " + tagName + "\n\n" + body;
 
-        if (versionStr != null){
-            version = versionStr.split("v")[1];
-            int compareVersion = CommonUtils.compareVersion(version,infoProperties.getVersion().substring(1));
-            if (compareVersion == 0){
-                return Result.success("当前版本已是最新版");
-            }else if(compareVersion == 1){
-                return Result.success("目前最新版：" + version + "可拉取最新镜像进行更新。");
-            }else if (infoProperties.getVersion().contains("beta")){
-                return Result.success("当前版本为测试版");
-            }else if(infoProperties.getVersion().contains("dev")){
+        String currentVersion = infoProperties.getVersion();
+        if (tagName != null){
+            if (currentVersion.startsWith("v") && tagName.startsWith("v")){
+                String latestVersion =  tagName.split("v")[1];
+                currentVersion = currentVersion.split("v")[1];
+                int compareVersion = CommonUtils.compareVersion(latestVersion, currentVersion);
+                if (compareVersion == 0){
+                    return Result.success("当前版本已是最新版");
+                } else if (compareVersion == 1) {
+                    // 解析 Markdown
+                    Parser parser = Parser.builder().build();
+                    org.commonmark.node.Node document = parser.parse(body);
+                    HtmlRenderer renderer = HtmlRenderer.builder().build();
+                    String html = renderer.render(document);
+
+                    return Result.success(html);
+                }else {
+                    return Result.success("当前版本为待发布版本");
+                }
+            } else if (currentVersion.startsWith("beta")) {
+                return Result.success("当前版本是测试版");
+            } else if (currentVersion.startsWith("dev")) {
                 return Result.success("当前版本为开发版");
-            }else if (compareVersion == -1){
-                return Result.success("当前版本为待发布版本");
             }
         }
-
-        return Result.success("无法获取新版本信息");
+      return Result.success("无法获取新版本信息");
     }
 
     /**
