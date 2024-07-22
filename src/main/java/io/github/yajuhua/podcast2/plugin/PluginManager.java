@@ -6,6 +6,7 @@ import io.github.yajuhua.podcast2.annotation.DatabaseAndPluginFileSync;
 import io.github.yajuhua.podcast2.common.exception.BaseException;
 import io.github.yajuhua.podcast2.common.properties.InfoProperties;
 import io.github.yajuhua.podcast2.common.utils.Http;
+import io.github.yajuhua.podcast2.controller.PluginController;
 import io.github.yajuhua.podcast2.mapper.ExtendMapper;
 import io.github.yajuhua.podcast2.mapper.PluginMapper;
 import io.github.yajuhua.podcast2.mapper.SettingsMapper;
@@ -33,6 +34,7 @@ import java.net.URLClassLoader;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -46,7 +48,7 @@ public class PluginManager extends ClassLoader{
 
     private static String PROPERTIES_FILE_NAME = "plugin.properties";
 
-    private static Map<String,List<URLClassLoader>> fileLoaderMap = new HashMap<>();
+    private static Map<String,List<URLClassLoader>> fileLoaderMap = new ConcurrentHashMap();
     private Gson gson = new Gson();
     private String remotePluginRepoUrl;
     private PluginMapper pluginMapper;
@@ -264,7 +266,7 @@ public class PluginManager extends ClassLoader{
      */
     public Podcast2 getPluginInstance(File jarFile, Params params) throws Exception{
         Properties properties = getPluginProperties(jarFile.getAbsolutePath(), PROPERTIES_FILE_NAME);
-        if (properties.contains("mainClass")){
+        if (properties.containsKey("mainClass")){
             String mainClass = properties.get("mainClass").toString();
             Class<?> plugin = loadClassFromJar(jarFile.getAbsolutePath(), mainClass);
             if (hasParamsConstructor(plugin)){
@@ -590,6 +592,7 @@ public class PluginManager extends ClassLoader{
                 List<URLClassLoader> loaders = fileLoaderMap.get(jarPath);
                 for (URLClassLoader loader : loaders) {
                     loader.close();
+                    loaders= null;
                 }
                 fileLoaderMap.remove(jarPath);
             }
@@ -608,6 +611,7 @@ public class PluginManager extends ClassLoader{
                 List<URLClassLoader> loaders = fileLoaderMap.get(path);
                 for (URLClassLoader loader : loaders) {
                     loader.close();
+                    loaders = null;
                 }
                 fileLoaderMap.remove(path);
             }
@@ -915,6 +919,7 @@ public class PluginManager extends ClassLoader{
      */
     @DatabaseAndPluginFileSync
     public Plugin add(InputStream inputStream, String fileName) throws Exception{
+        long timeMillis = System.currentTimeMillis();
         String ext = fileName.substring(fileName.lastIndexOf(".") + 1);
         Plugin plugin = null;
         if (!"jar".equals(ext)){
@@ -924,13 +929,17 @@ public class PluginManager extends ClassLoader{
 
         //先保存在临时目录
         File tmpDir = new File(pluginDir.getParent() + File.separator  + "tmp");
-        File saveTmp = new File(tmpDir,fileName);
+        File saveTmp = new File(tmpDir, timeMillis+ "-" + fileName);
         FileOutputStream fou = new FileOutputStream(saveTmp);
         IOUtils.copyLarge(inputStream,fou);
 
         //关闭流
         fou.close();
         inputStream.close();
+
+        //关闭所有插件类加载器
+        closeAllClassLoader();
+        System.gc();
 
         //获取插件属性
         UUID uuid;
@@ -956,7 +965,16 @@ public class PluginManager extends ClassLoader{
             closeUrlClassLoader(pluginFile.getAbsolutePath());
             if (pluginFile.exists() && !pluginFile.delete()){
                 System.gc();
-                pluginFile.delete();
+                if(!pluginFile.delete()){
+                    throw new Exception("无法删除旧插件: " + pluginFile.getAbsolutePath());
+                }
+            }
+            pluginFile = new File(pluginDir, timeMillis + "-" + fileName);
+            //删除重复插件
+            for (File file : pluginDir.listFiles()) {
+                if (file.getName().contains(fileName)){
+                    file.delete();
+                }
             }
 
             //将存放在临时目录的插件复制到插件目录
@@ -976,8 +994,11 @@ public class PluginManager extends ClassLoader{
             closeUrlClassLoader(saveTmp.getAbsolutePath());
             throw new BaseException(saveTmp.getAbsolutePath() + "插件上传失败");
         }finally {
-            if (saveTmp.exists()){
-                saveTmp.delete();
+            if (saveTmp.exists() && saveTmp.delete()){
+                System.gc();
+                if (saveTmp.delete()){
+                    log.error("无法删除文件: {}",saveTmp.getAbsolutePath());
+                }
             }
         }
     }
