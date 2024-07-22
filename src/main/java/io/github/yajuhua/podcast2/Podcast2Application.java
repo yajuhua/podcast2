@@ -1,12 +1,11 @@
 package io.github.yajuhua.podcast2;
 
+import io.github.yajuhua.podcast2.banner.Podcast2Banner;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication
 @EnableScheduling
@@ -15,9 +14,11 @@ public class Podcast2Application {
     public static ConfigurableApplicationContext context;
 
     public static void main(String[] args) {
-        context = SpringApplication.run(Podcast2Application.class, args);
+        // 创建 SpringApplication 实例
+        SpringApplication app = new SpringApplication(Podcast2Application.class);
+        app.setBanner(new Podcast2Banner(app));
+        context = app.run(args);
     }
-
 
     /**
      * 重启项目
