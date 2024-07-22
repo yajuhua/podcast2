@@ -1,6 +1,7 @@
 package io.github.yajuhua.podcast2.common.start;
 
 import com.google.gson.Gson;
+import io.github.yajuhua.download.commons.Context;
 import io.github.yajuhua.podcast2.common.constant.Default;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.properties.InfoProperties;
@@ -8,6 +9,7 @@ import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.controller.SystemController;
 import io.github.yajuhua.podcast2.downloader.aria2.Aria2RPC;
 import io.github.yajuhua.podcast2.mapper.DownloaderMapper;
+import io.github.yajuhua.podcast2.mapper.ItemsMapper;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
 import io.github.yajuhua.podcast2.pojo.entity.*;
@@ -28,6 +30,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 @Component
 @Slf4j
@@ -41,6 +44,7 @@ public class StartupRunner implements ApplicationRunner{
     private DataPathProperties dataPathProperties;
     private DownloadWebSocketServer downloadWebSocketServer;
     private UserService userService;
+    private ItemsMapper itemsMapper;
 
     public StartupRunner() {
     }
@@ -48,7 +52,8 @@ public class StartupRunner implements ApplicationRunner{
     @Autowired
     public StartupRunner(Gson gson, SubMapper subMapper, InfoProperties infoProperties, UserMapper userMapper,
                          DownloaderMapper downloaderMapper, DataPathProperties dataPathProperties,
-                         DownloadWebSocketServer downloadWebSocketServer, UserService userService) {
+                         DownloadWebSocketServer downloadWebSocketServer, UserService userService,
+                         ItemsMapper itemsMapper) {
         this.gson = gson;
         this.subMapper = subMapper;
         this.infoProperties = infoProperties;
@@ -57,14 +62,12 @@ public class StartupRunner implements ApplicationRunner{
         this.dataPathProperties = dataPathProperties;
         this.downloadWebSocketServer = downloadWebSocketServer;
         this.userService = userService;
+        this.itemsMapper = itemsMapper;
     }
 
 
     @Override
     public void run(ApplicationArguments args){
-
-        //项目信息
-        printProjectInfo();
 
         //记录启动时间
         SystemController.startTime = LocalDateTime.now();
@@ -78,6 +81,8 @@ public class StartupRunner implements ApplicationRunner{
         //启动aria2 RPC
         Aria2RPC.start();
 
+        //检查未完成下载
+        checkForUndownload();
 
         List<Downloader> downloaderList = downloaderMapper.list();
         if (downloaderList.isEmpty() || downloaderList.size() != 3){
@@ -232,11 +237,23 @@ public class StartupRunner implements ApplicationRunner{
     }
 
     /**
-     * 打印项目信息
+     * 检查未下载完成的节目，可能是服务突然停止导致的。发现后将状态码修改成 6 下载错误
      */
-    public void printProjectInfo(){
-        String osArch = System.getProperty("os.arch");
-        log.info("系统架构: {}",osArch);
-        log.info("项目版本: {} - 更新时间: {}",infoProperties.getVersion(),infoProperties.getUpdate());
+    private void checkForUndownload(){
+        log.info("检查未下载完成的节目...");
+        List<Items> itemsList = itemsMapper.list();
+        List<Items> unsuccessfulDownloads = itemsList.stream().filter(new Predicate<Items>() {
+            @Override
+            public boolean test(Items items) {
+                //正在下载中且没有文件名为null的
+                return Context.DOWNLOADING.equals(items.getStatus());
+            }
+        }).collect(Collectors.toList());
+
+        for (Items items : unsuccessfulDownloads) {
+            //将状态码修改成 6 下载错误
+            items.setStatus(Context.DOWNLOAD_ERR);
+            itemsMapper.update(items);
+        }
     }
 }
