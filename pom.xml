@@ -127,11 +127,6 @@
             <artifactId>testng</artifactId>
             <version>6.14.3</version>
         </dependency>
-        <dependency>
-            <groupId>com.mixpanel</groupId>
-            <artifactId>mixpanel-java</artifactId>
-            <version>1.5.2</version>
-        </dependency>
         <!--解析md-->
         <dependency>
             <groupId>org.commonmark</groupId>
