@@ -130,6 +130,8 @@ public class Task {
             if(Task.downloadManagerList != null){
                 Task.downloadManagerList.clear();
             }
+            //关闭所有插件类加载器,释放资源
+            PluginManager.closeAllClassLoader();
         }
     }
 
