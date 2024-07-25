@@ -25,10 +25,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -36,8 +34,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @RestController
 @Slf4j
@@ -63,6 +59,16 @@ public class SystemController {
     @ApiOperation("重启项目")
     @GetMapping("/restart")
     public Result restart() {
+
+        //运行在docker环境中重启方式
+        String runningInDocker = System.getenv("RUNNING_IN_DOCKER");
+        if (runningInDocker != null && "true".equalsIgnoreCase(runningInDocker)){
+            Podcast2Application.context.close();
+            System.exit(0);
+            return Result.success();
+        }
+
+        //其他重启方式
         Podcast2Application.restart();
         return Result.success();
     }
