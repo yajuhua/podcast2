@@ -119,14 +119,16 @@ public class DownloadController {
             if (itemName.length() > 30){
                itemName = itemName.substring(0,30) + "...";
             }
+            String downloadTimeLeft = TimeFormat.duration(item.getDownloadTimeLeft() == null ? 0 : item.getDownloadTimeLeft().intValue());
+            String downloadSpeed = DownloaderUtils.byteToMB(item.getDownloadSpeed() == null ? 0 : item.getDownloadSpeed()) + Unit.MB_BY_SECOUND;
             DownloadCompletedVO build = DownloadCompletedVO.builder()
-                    .downloadTimeLeft(TimeFormat.duration(item.getDownloadTimeLeft().intValue()))
+                    .downloadTimeLeft(downloadTimeLeft)
                     .channelUuid(item.getChannelUuid())
                     .uuid(item.getUuid())
-                    .downloadProgress(item.getDownloadProgress())
-                    .downloadSpeed(DownloaderUtils.byteToMB(item.getDownloadSpeed()) + Unit.MB_BY_SECOUND)
+                    .downloadProgress(item.getDownloadProgress()==null?0:item.getDownloadProgress())
+                    .downloadSpeed(downloadSpeed)
                     .channelName(sub.getTitle())
-                    .status(item.getStatus())
+                    .status(item.getStatus()==null?0:item.getStatus())
                     .itemName(itemName)
                     .build();
             downloadCompletedVOList.add(build);
