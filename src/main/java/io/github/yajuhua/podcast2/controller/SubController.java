@@ -5,7 +5,6 @@ import io.github.yajuhua.download.commons.Context;
 import io.github.yajuhua.download.manager.DownloadManager;
 import io.github.yajuhua.podcast2.alist.Alist;
 import io.github.yajuhua.podcast2.common.constant.MessageConstant;
-import io.github.yajuhua.podcast2.common.constant.ReflectionMethodName;
 import io.github.yajuhua.podcast2.common.constant.StatusCode;
 import io.github.yajuhua.podcast2.common.exception.BaseException;
 import io.github.yajuhua.podcast2.common.exception.SubNotFoundException;
@@ -54,7 +53,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -245,7 +243,7 @@ public class SubController {
             String enclosureDomain = user.getHostname()==null || user.getHostname().contains(" ") || user.getHostname().length() == 0?null:user.getHostname();
             enclosureDomain = enclosureDomain==null? request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort():enclosureDomain;
 
-            //生成一个封面https://img.shields.io/badge/-组名-颜色
+            //生成一个封面https://img.shields.io/badge/-组名-颜色× 太糊了
             // 将字节数组中的每个字节转换为十六进制表示
             StringBuilder hexString = new StringBuilder();
             for (byte b : group.getBytes(StandardCharsets.UTF_8)) {
@@ -267,7 +265,9 @@ public class SubController {
                 color = hexString.substring(0,4) + hexString.substring(hexString.length()-2,hexString.length());
             }
 
-            String imageUrl = "https://img.shields.io/badge/-" + group + "-" + color + ".png";
+            // ban了 https://face-generator-six.vercel.app/api/generate?bgColor=十六进制颜色&textContent=组名
+            //目前还可以访问 face.lancarjaya.eu.org
+            String imageUrl = "https://face.lancarjaya.eu.org/api/generate?textContent=" + group + "&bgColor=" + color;
             //组频道信息
             Channel groupChannel = new Channel();
             groupChannel.setTitle(group);
