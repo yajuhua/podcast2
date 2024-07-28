@@ -608,18 +608,25 @@ public class PluginManager extends ClassLoader{
     public static void closeAllClassLoader(){
         try {
             for (String path : fileLoaderMap.keySet()) {
-                List<URLClassLoader> loaders = fileLoaderMap.get(path);
-                for (URLClassLoader loader : loaders) {
-                    loader.close();
-                    loaders = null;
+                if (path != null){
+                    List<URLClassLoader> loaders = fileLoaderMap.get(path);
+                    if (loaders != null){
+                        for (URLClassLoader loader : loaders) {
+                            if (loader != null){
+                                loader.close();
+                            }
+                        }
+                    }
                 }
-                fileLoaderMap.remove(path);
             }
         } catch (Exception e) {
             log.error("关闭全部插件失败: {}",e.getMessage());
             e.printStackTrace();
+        }finally {
+            if (fileLoaderMap != null){
+                fileLoaderMap.clear();
+            }
         }
-        fileLoaderMap.clear();
     }
 
     /**
