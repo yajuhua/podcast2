@@ -682,6 +682,27 @@
             </el-table-column>
           </el-table>
         </div>
+
+        <!-- 检查更新窗口 -->
+        <div>
+          <el-dialog
+              title="检查更新"
+              :visible.sync="system.update.windowsVisible"
+              width="50%"
+              v-loading="system.update.windowsLoading"
+              :before-close="handleCloseUpdateWindow"
+              :element-loading-text="system.update.loadingTip">
+            <div v-html="system.update.info.desc"></div>
+           <span slot="footer" class="dialog-footer">
+            <el-button @click="system.update.windowsVisible = false">关闭窗口</el-button>
+            <el-button type="primary" v-if="system.update.info.hasUpdate && !system.update.status.download && !system.update.status.downloading" @click="downloadJarFile()">下载最新Jar包</el-button>
+            <el-button type="primary" :loading="system.update.status.downloading" v-if="system.update.status.downloading">下载中 {{system.update.status.percent}}%</el-button>
+            <el-button type="primary" v-if="system.update.status.downloading" @click="cancelDownloadJarFile()">取消下载</el-button>
+            <el-button v-if="system.update.status.download" type="danger" @click="deleteDownloadLatestJarFile()">删除</el-button>
+            <el-button v-if="system.update.status.download" type="primary" @click="restart()">立即重启</el-button>
+          </span>
+          </el-dialog>
+        </div>
       </div>
     </div>
 </template>
@@ -723,7 +744,26 @@ export default {
         historyLogs: [],
         historyLogsLatest: 10,
         historyLogsLevel: 'error',
-        selectHistoryByTime: []
+        selectHistoryByTime: [],
+        //在线更新
+        update: {
+          info: {
+            hasUpdate: false,
+            version: '',
+            desc: ''
+          },
+          status:{
+            percent: 0.0,
+            completed: false,
+            error: false,
+            download: false,
+            downloading: true,
+            version: ''
+          },
+          windowsVisible: false,
+          windowsLoading: false,
+          loadingTip: ''
+        }
       },
       user: {
         domain: {
@@ -1656,7 +1696,7 @@ export default {
               if (res.data.code == '1') {
                 this.$message({
                   showClose: true,
-                  message: '正在重启中...',
+                  message: '请等待3-4分钟，正在重启中...',
                   type: 'success'
                 });
               } else {
@@ -1685,15 +1725,41 @@ export default {
     },
     //检查更新
     checkForUpdate() {
-      axios.get('/system/hasUpdate')
+      this.system.update.loadingTip = "正在获取更新信息中..."
+      this.system.update.windowsVisible = true;
+      this.system.update.windowsLoading = true;
+      this.getDownloadJarFileStatus();
+      axios.get('/system/update/has')
           .then(res => {
-            if (res.data.code == '1') {
-              this.$alert(res.data.data, '检查更新', {
-                confirmButtonText: '确定',
-                dangerouslyUseHTMLString: true, // 启用HTML渲染
-                customClass: 'custom-alert-box', // 自定义样式类名
+            if (res.data.code == 1){
+                this.system.update.info = res.data.data;
+              this.system.update.windowsLoading = false;
+            }else {
+              this.system.update.windowsLoading = false;
+              this.$message({
+                showClose: true,
+                message: res.data.msg,
+                type: 'error'
               });
-            } else {
+            }
+          }).catch(err => {
+        console.log(err)
+        this.system.update.windowsLoading = false;
+        this.$message({
+          showClose: true,
+          message: '无法获取更新信息！',
+          type: 'error'
+        });
+      })
+    },
+
+    //获取Jar包文件下载状态
+    getDownloadJarFileStatus(){
+      axios.get('/system/update/jarStatus?version=' + this.system.update.info.version)
+          .then(res => {
+            if (res.data.code == 1){
+             this.system.update.status = res.data.data;
+            }else {
               this.$message({
                 showClose: true,
                 message: res.data.msg,
@@ -1704,10 +1770,158 @@ export default {
         console.log(err)
         this.$message({
           showClose: true,
-          message: '检查更新失败！',
+          message: '无法获取Jar包下载状态！',
           type: 'error'
         });
+      })
+    },
+    //删除最新版本的Jar文件
+    deleteDownloadLatestJarFile(){
+      this.$confirm('此操作将删除该更新Jar包, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        axios.get('/system/update/delete?version=' + this.system.update.info.version)
+            .then(res => {
+              if (res.data.code == 1){
+                if (res.data.data == true){
+                  this.$message({
+                    showClose: true,
+                    message: "删除成功",
+                    type: 'success'
+                  });
+                  //刷新状态
+                  this.getDownloadJarFileStatus();
+                }else {
+                  this.$message({
+                    showClose: true,
+                    message: "删除最新版本Jar包失败!",
+                    type: 'error'
+                  });
+                }
+              }else {
+                this.$message({
+                  showClose: true,
+                  message: res.data.msg,
+                  type: 'error'
+                });
+              }
+            }).catch(err => {
+          console.log(err)
+          this.$message({
+            showClose: true,
+            message: '删除最新版本Jar包失败！',
+            type: 'error'
+          });
+        })
+      }).catch(() => {
+        this.$message({
+          showClose: true,
+          message: '已取消',
+          type: 'info'
+        });
+      })
+    },
 
+    //下载jar包
+    downloadJarFile(){
+      this.system.update.loadingTip = "正在发送下载请求中，请稍等..."
+      this.system.update.windowsLoading = true;
+      axios.get('/system/update/download?version=' + this.system.update.info.version)
+          .then(res => {
+            if (res.data.code == 1){
+              this.system.update.windowsLoading = false;
+              this.$message({
+                showClose: true,
+                message: '开始下载Jar包',
+                type: 'success'
+              });
+              //获取下载状态
+              let interval = setInterval(() => {
+                this.getDownloadJarFileStatus()
+                let status = this.system.update.status;
+                if (status.download || status.error || status.completed){
+                  clearInterval(interval);
+                  interval = null;
+                  return;
+                }
+              }, 1000); // 每1秒发送一次请求
+
+            }else {
+              this.system.update.windowsLoading = false;
+              this.$message({
+                showClose: true,
+                message: res.data.msg,
+                type: 'error'
+              });
+            }
+          }).catch(err => {
+        console.log(err)
+        this.system.update.loading = false;
+        this.$message({
+          showClose: true,
+          message: '无法下载Jar包！',
+          type: 'error'
+        });
+      })
+    },
+
+    //关闭更新窗口前清空数据
+    handleCloseUpdateWindow(done){
+      console.log(done);
+      this.system.update.info.hasUpdate = false;
+      this.system.update.info.version = '';
+      this.system.update.info.desc = '';
+      this.system.update.status.percent = 0.0;
+      this.system.update.status.completed = false;
+      this.system.update.status.error = false;
+      this.system.update.status.download = false;
+      this.system.update.status.downloading = true;
+      this.system.update.status.version = '';
+      this.system.update.windowsVisible = false;
+      this.system.update.windowsLoading = false;
+      this.system.update.loadingTip = '';
+    },
+
+    //取消Jar文件下载
+    cancelDownloadJarFile(){
+      this.$confirm('此操作将取消下载Jar文件, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        axios.get('/system/update/cancel')
+            .then(res => {
+              if (res.data.code == 1){
+                this.$message({
+                  showClose: true,
+                  message: "取消成功！",
+                  type: 'success'
+                });
+                //刷新状态
+                this.getDownloadJarFileStatus();
+              }else {
+                this.$message({
+                  showClose: true,
+                  message: res.data.msg,
+                  type: 'error'
+                });
+              }
+            }).catch(err => {
+          console.log(err)
+          this.$message({
+            showClose: true,
+            message: '取消下载Jar文件失败',
+            type: 'error'
+          });
+        })
+      }).catch(() => {
+        this.$message({
+          showClose: true,
+          message: '已取消',
+          type: 'info'
+        });
       })
     },
     //设置ssl
