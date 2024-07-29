@@ -1137,7 +1137,13 @@ public class PluginManager extends ClassLoader{
      * @return
      */
     public List<PluginInfo> getRemotePluginRepoData(String repoUrl){
-        String json = Http.get(repoUrl);
+        String json = null;
+        try {
+            json = Http.get(repoUrl);
+        } catch (Exception e) {
+            log.error("无法获取远程仓库: {},请检查网络。",e.getMessage());
+            return new ArrayList<>();
+        }
         PluginMetadata pluginMetadata = new Gson().fromJson(json, PluginMetadata.class);
         return pluginMetadata.getPluginList();
     }

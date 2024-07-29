@@ -83,10 +83,10 @@ public class PluginController {
         //1.获取本地插件列表
         List<Plugin> localPluginList = pluginMapper.list();
         //2.获取远程仓库插件列表
-        List<PluginInfo> remotePluginInfoList = pluginManager.getRemotePluginRepoData();
+        List<PluginInfo> remotePluginInfoList = new ArrayList<>();
         //获取自定义插件仓库
-        String pluginUrl = userService.getExtendInfo().getPluginUrl();
-        if (pluginUrl != null){
+        String pluginUrl = userService.getExtendInfo().getPluginUrl().trim();
+        if (pluginUrl != null && !pluginUrl.isEmpty()){
             try {
                 remotePluginInfoList = pluginManager.getRemotePluginRepoData(pluginUrl);
                 //TODO无法获取插件信息
@@ -96,6 +96,8 @@ public class PluginController {
             } catch (Exception e) {
                 remotePluginInfoList = pluginManager.getRemotePluginRepoData();
             }
+        }else {
+            remotePluginInfoList = pluginManager.getRemotePluginRepoData();
         }
 
         //取最新
