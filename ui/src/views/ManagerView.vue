@@ -490,6 +490,7 @@
             <el-button type="danger" round @click="batchDeleteDownloadDone()"
                        v-if="download.selectionDownloadDone.length > 1">批量删除
             </el-button>
+            <el-button type="primary" round @click="getDownloadDone()">刷新列表</el-button>
             <el-table :data="download.done" stripe style="width: 100%" ref="selectDownloadDone"
                       @selection-change="handleSelectionDownloadDone">
               <el-table-column
@@ -604,6 +605,9 @@
             <el-button slot="trigger" size="small" type="primary">上传本地插件</el-button>
             <el-button style="margin-left: 10px;" size="small" type="success"
                        @click="submitUpload">上传到服务器
+            </el-button>
+            <el-button style="margin-left: 10px;" size="small" type="primary"
+                       @click="getPluginList()">刷新插件列表
             </el-button>
             <div slot="tip" class="el-upload__tip">只能上传jar文件</div>
           </el-upload>
