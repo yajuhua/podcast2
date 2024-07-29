@@ -32,6 +32,7 @@ import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.IOException;
@@ -139,6 +140,7 @@ public class Task {
      * 每小时删除过期节目
      */
     @Scheduled(cron = "0 0 * * * *")
+    @Transactional
     public void clearExpired(){
         try {
             List<Sub> subList = subMapper.list();
@@ -358,6 +360,7 @@ public class Task {
      */
 
     @Scheduled(fixedRate = 1,timeUnit = TimeUnit.MINUTES)
+    @Transactional
     public void uploadResourcesToAList(){
         try {
             if (userMapper.list().isEmpty()){

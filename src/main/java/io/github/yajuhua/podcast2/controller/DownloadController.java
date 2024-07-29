@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -276,6 +277,7 @@ public class DownloadController {
      */
     @ApiOperation("删除下载节目")
     @DeleteMapping
+    @Transactional
     public Result delete(@RequestParam List<String> uuids){
         log.info("删除下载节目:{}",uuids);
         for (String uuid : uuids) {

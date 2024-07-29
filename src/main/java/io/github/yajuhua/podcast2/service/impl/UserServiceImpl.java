@@ -13,6 +13,7 @@ import io.github.yajuhua.podcast2.pojo.entity.User;
 import io.github.yajuhua.podcast2.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,6 +75,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void updateExtendInfo(ExtendInfo extendInfo) {
         ExtendInfo update = getExtendInfo();
         if (extendInfo.getAlistInfo() != null){
@@ -126,6 +128,7 @@ public class UserServiceImpl implements UserService {
      * @param extendInfo
      */
     @Override
+    @Transactional
     public void deleteExtendInfo(ExtendInfo extendInfo) {
         ExtendInfo update = getExtendInfo();
         if (extendInfo.getAlistInfo() != null){

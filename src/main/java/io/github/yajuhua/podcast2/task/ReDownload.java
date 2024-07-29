@@ -23,6 +23,7 @@ import io.github.yajuhua.podcast2API.Type;
 import io.github.yajuhua.podcast2API.setting.Setting;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -56,6 +57,7 @@ public class ReDownload implements Runnable{
     }
 
     @Override
+    @Transactional
     public void run() {
 
         DownloadManager downloadManager = new DownloadManager();

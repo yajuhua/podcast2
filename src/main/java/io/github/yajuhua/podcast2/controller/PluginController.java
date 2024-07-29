@@ -276,6 +276,7 @@ public class PluginController {
      */
     @ApiOperation("删除插件")
     @DeleteMapping
+    @Transactional
     public Result delete(@RequestParam List<String> uuids) throws Exception{
         log.info("删除插件uuids:{}",uuids);
         List<Plugin> pluginList = new ArrayList<>();
@@ -433,6 +434,7 @@ public class PluginController {
      */
     @ApiOperation("设置自动插件更新")
     @PostMapping("/autoUpdate")
+    @Transactional
     public Result setAutoUpdate(@RequestParam Boolean status){
         User user = new User();
         user.setAutoUpdatePlugin(status);
@@ -512,6 +514,7 @@ public class PluginController {
      */
     @ApiOperation("更新插件设置")
     @PutMapping("/settings")
+    @Transactional
     public Result updateSettings(@RequestBody List<Settings> settings){
         if (settings.size() != 0){
             for (Settings setting : settings) {

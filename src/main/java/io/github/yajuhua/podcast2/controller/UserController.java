@@ -112,6 +112,7 @@ public class UserController {
      */
     @ApiOperation("修改用户名和密码")
     @PostMapping("/change")
+    @Transactional
     public Result change(@RequestBody UserLoginDTO userLoginDTO){
         if (userLoginDTO == null){
             throw new UserException(MessageConstant.USERNAME_OR_PASSWORD_NULL);
@@ -131,6 +132,7 @@ public class UserController {
      */
     @ApiOperation("自定义附件域名")
     @PostMapping("/enclosureDomain")
+    @Transactional
     public Result enclosureDomain(@RequestParam String domain){
         if (domain == null || domain.contains(" ")){
             throw new UserException(MessageConstant.DOMAIN_NULL);
@@ -171,6 +173,7 @@ public class UserController {
      */
     @ApiOperation("数据导入")
     @PostMapping("/dataImport")
+    @Transactional
     public Result dataImport(@RequestBody List<DataExport> dataExportList){
         log.info("数据导入");
         List<Sub> subList = subMapper.list();
@@ -284,6 +287,7 @@ public class UserController {
      */
     @ApiOperation("删除证书或密钥")
     @DeleteMapping("/cert")
+    @Transactional
     public Result deleteCert(){
         User user = userMapper.list().get(0);
         if (user.getHasSsl()){
@@ -312,6 +316,7 @@ public class UserController {
      */
     @ApiOperation("开关ssl")
     @PostMapping("/switchSsl")
+    @Transactional
     public Result switchSsl(@RequestParam Boolean status){
         if (status != null){
             User user = userMapper.list().get(0);

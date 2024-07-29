@@ -24,6 +24,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
 import java.io.*;
@@ -1483,6 +1484,7 @@ public class PluginManager extends ClassLoader{
     /**
      * 首次安装插件初始化设置
      */
+    @Transactional
     public void initSettings(String pluginName,List<Setting> init){
         settingsMapper.deleteByPlugin(pluginName);
         for (Setting setting : init) {
@@ -1508,6 +1510,7 @@ public class PluginManager extends ClassLoader{
         return settingList;
     }
 
+    @Transactional
     private void saveBeforeSettings(String pluginName){
         List<Settings> bak = settingsMapper.selectByPluginName(pluginName);
         settingsMapper.deleteByPlugin(pluginName);

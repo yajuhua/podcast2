@@ -6,6 +6,7 @@ import io.github.yajuhua.podcast2.service.ItemsService;
 import io.swagger.annotations.Authorization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +35,7 @@ public class ItemsServiceImpI implements ItemsService {
      * 批量插入
      * @param items
      */
+    @Transactional
     public void batchInsert(List<Items> items) {
         for (Items item : items) {
             itemsMapper.insert(item);

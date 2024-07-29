@@ -48,6 +48,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -513,6 +514,7 @@ public class SubController {
      */
     @DeleteMapping
     @ApiOperation("删除订阅")
+    @Transactional
     public Result delete(@RequestParam List<String> uuids) throws Exception {
         log.info("delete uuids:{}",uuids);
         for (String uuid : uuids) {
@@ -681,6 +683,7 @@ public class SubController {
      */
     @ApiOperation("提交编辑订阅")
     @PutMapping
+    @Transactional
     public Result editSub(@RequestBody EditSubVO editSubVO) throws Exception{
         log.info("editSubVO:{}",editSubVO);
         //1.更新sub表

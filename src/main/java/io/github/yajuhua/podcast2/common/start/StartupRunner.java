@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.time.LocalDateTime;
@@ -160,6 +161,7 @@ public class StartupRunner implements ApplicationRunner{
     /**
      * 初始化配置
      */
+    @Transactional
     public void initConfig(){
         try {
             File configFile = new File(dataPathProperties.getConfigPath());
@@ -191,6 +193,7 @@ public class StartupRunner implements ApplicationRunner{
     /**
      * 首次配置user表信息
      */
+    @Transactional
     public void firstConfig(){
         List<User> list = userMapper.list();
         ExtendInfo extendInfo = ExtendInfo.builder().uuid(UUID.randomUUID().toString()).build();
@@ -239,6 +242,7 @@ public class StartupRunner implements ApplicationRunner{
     /**
      * 检查未下载完成的节目，可能是服务突然停止导致的。发现后将状态码修改成 6 下载错误
      */
+    @Transactional
     private void checkForUndownload(){
         log.info("检查未下载完成的节目...");
         List<Items> itemsList = itemsMapper.list();

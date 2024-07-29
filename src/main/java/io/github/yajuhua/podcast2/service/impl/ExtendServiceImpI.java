@@ -5,6 +5,7 @@ import io.github.yajuhua.podcast2.pojo.entity.Extend;
 import io.github.yajuhua.podcast2.service.ExtendService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,6 +28,7 @@ public class ExtendServiceImpI implements ExtendService {
      * 添加扩展信息
      * @param extend
      */
+    @Transactional
     public void addExtend(Extend extend) {
         extendMapper.addExtend(extend);
     }
@@ -35,6 +37,7 @@ public class ExtendServiceImpI implements ExtendService {
      * 批量统计扩展信息
      * @param extendList
      */
+    @Transactional
     public void batchExtend(List<Extend> extendList) {
         if (extendList != null && extendList.size() > 0){
             extendMapper.batchExtend(extendList);

@@ -13,6 +13,7 @@ import org.springframework.boot.web.server.Ssl;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
 import java.util.List;
@@ -81,7 +82,8 @@ public class TomcatConfig implements WebServerFactoryCustomizer<ConfigurableServ
      * 关闭ssl
      * @param userMapper
      */
-    public static void setSslFalse(UserMapper userMapper){
+    @Transactional
+    public void setSslFalse(UserMapper userMapper){
         User user = new User();
         user.setIsSsl(false);
         userMapper.update(user);

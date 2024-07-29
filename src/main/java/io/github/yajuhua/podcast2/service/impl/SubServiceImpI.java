@@ -5,6 +5,7 @@ import io.github.yajuhua.podcast2.pojo.entity.Sub;
 import io.github.yajuhua.podcast2.service.SubService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ public class SubServiceImpI implements SubService {
      * 添加订阅
      * @param sub
      */
+    @Transactional
     public void addSub(Sub sub){
         subMapper.addSub(sub);
     }
@@ -46,6 +48,7 @@ public class SubServiceImpI implements SubService {
      * 更新编辑后的sub
      * @param sub
      */
+    @Transactional
     public void commitEditSub(Sub sub) {
         subMapper.commitEditSub(sub);
     }
