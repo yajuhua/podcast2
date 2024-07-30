@@ -745,6 +745,35 @@ public class SubController {
         List<InputAndSelectData> inputListData = new ArrayList<>();
         List<InputAndSelectData> selectListData = new ArrayList<>();
 
+        //获取扩展选项时仅使用用户设置的,兼容旧版选项
+        //input类型
+        List<Input> filterInputDataList = editSubVO.getExtendList().getInputList().stream().filter(new Predicate<Input>() {
+            @Override
+            public boolean test(Input input) {
+                for (Extend extend : anExtends) {
+                    if (input.getName().equals(extend.getName())) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }).collect(Collectors.toList());
+        editSubVO.getExtendList().setInputList(filterInputDataList);
+
+        //select类型
+        List<Select> filterSelectDataList = editSubVO.getExtendList().getSelectList().stream().filter(new Predicate<Select>() {
+            @Override
+            public boolean test(Select select) {
+                for (Extend extend : anExtends) {
+                    if (select.getName().equals(extend.getName())) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }).collect(Collectors.toList());
+        editSubVO.getExtendList().setSelectList(filterSelectDataList);
+
         //4.将selectList和inputList封装成VO
         for (Select select : extendListVO.getExtendList().getSelectList()) {
             for (Extend extend : anExtends) {
