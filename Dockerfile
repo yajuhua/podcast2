@@ -1,5 +1,4 @@
 FROM yajuhua/podcast2-base-v2:latest
-COPY app.jar /data/package/0/
 COPY app.jar /
 COPY starter.sh /
 EXPOSE 8088
