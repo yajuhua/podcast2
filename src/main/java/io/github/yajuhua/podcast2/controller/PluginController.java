@@ -85,8 +85,9 @@ public class PluginController {
         //2.获取远程仓库插件列表
         List<PluginInfo> remotePluginInfoList = new ArrayList<>();
         //获取自定义插件仓库
-        String pluginUrl = userService.getExtendInfo().getPluginUrl().trim();
+        String pluginUrl = userService.getExtendInfo().getPluginUrl();
         if (pluginUrl != null && !pluginUrl.isEmpty()){
+            pluginUrl = pluginUrl.trim();
             try {
                 remotePluginInfoList = pluginManager.getRemotePluginRepoData(pluginUrl);
                 //TODO无法获取插件信息
