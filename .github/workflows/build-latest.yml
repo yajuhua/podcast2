@@ -330,13 +330,16 @@ jobs:
           curl -L -o platform/windows/yt-dlp.exe https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
           cp -rf BOOT-INF/classes BOOT-INF/lib platform/windows/
           zip -r podcast2-win-x64.zip platform/windows/ 
+          md5sum podcast2-win-x64.zip >> md5.txt
 
       - name: Build osx
         run: |
           curl -L -o platform/osx/yt-dlp "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos_legacy"
           chmod a+x platform/osx/yt-dlp
           cp -rf BOOT-INF/classes BOOT-INF/lib platform/osx/
-          zip -r podcast2-osx-x64.zip platform/osx/           
+          zip -r podcast2-osx-x64.zip platform/osx/   
+          md5sum podcast2-osx-x64.zip >> md5.txt
+          md5sum app.jar >> md5.txt
 
       - name: Set up JDK 8
         uses: actions/setup-java@v3
@@ -362,3 +365,4 @@ jobs:
             podcast2-win-x64.zip
             podcast2-osx-x64.zip
             app.jar
+            md5.txt
