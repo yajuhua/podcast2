@@ -159,7 +159,7 @@ public class ProjectUpdate {
             } else if (currentVersion.startsWith("beta") && tagName.startsWith("v")) {
                 if (beta != null && beta.equalsIgnoreCase("true")) {
                     updateInfo.setHasUpdate(true);
-                    updateInfo.setDesc(body);
+                    updateInfo.setDesc(html);
                     updateInfo.setVersion(tagName);
                     return updateInfo;
                 } else {
