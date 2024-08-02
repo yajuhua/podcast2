@@ -125,9 +125,6 @@ chmod -R a+x platform
 ![复制ac_time_valu](./images/ac_time_value.png)
 
 ##### 注意！这样子相当于登录了，复制后要清理哔哩哔哩浏览器记录，否则会与本插件冲突
-##### 在线获取ac_time_value和cookie
-> 因为是使用vercel部署的，所有显示登录位置应该是在美国。
-[在线获取](https://b-login.vercel.app)
 <br>
 
 #### 忘记密码
