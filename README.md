@@ -15,7 +15,7 @@
 ## 项目说明
 - 基于spring boot开发
 - 将视频网站转换成播客订阅
-
+## [文档](https://yajuhua.github.io/)
 ## 快速开始
 
 #### 使用Docker
@@ -238,6 +238,8 @@ yt-dlp可能会出现[Sign in to confirm you’re not a bot. This helps protect 
 
 ## 使用的加速站
 - [https://github.moeyy.xyz](https://github.moeyy.xyz)
+- [https://hub.gitmirror.com/](https://hub.gitmirror.com/)
+- [https://ghproxy.com/](https://ghproxy.com/)
 ## 参考
 - [https://github.com/mxpv/podsync](https://github.com/mxpv/podsync)
 ## 免责声明
