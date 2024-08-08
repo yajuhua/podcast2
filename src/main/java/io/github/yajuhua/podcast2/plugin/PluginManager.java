@@ -1484,7 +1484,6 @@ public class PluginManager extends ClassLoader{
     /**
      * 首次安装插件初始化设置
      */
-    @Transactional
     public void initSettings(String pluginName,List<Setting> init){
         settingsMapper.deleteByPlugin(pluginName);
         for (Setting setting : init) {
@@ -1510,7 +1509,6 @@ public class PluginManager extends ClassLoader{
         return settingList;
     }
 
-    @Transactional
     private void saveBeforeSettings(String pluginName){
         List<Settings> bak = settingsMapper.selectByPluginName(pluginName);
         settingsMapper.deleteByPlugin(pluginName);

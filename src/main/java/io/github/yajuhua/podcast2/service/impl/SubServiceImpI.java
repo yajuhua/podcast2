@@ -29,7 +29,6 @@ public class SubServiceImpI implements SubService {
      * 添加订阅
      * @param sub
      */
-    @Transactional
     public void addSub(Sub sub){
         subMapper.addSub(sub);
     }
@@ -48,7 +47,6 @@ public class SubServiceImpI implements SubService {
      * 更新编辑后的sub
      * @param sub
      */
-    @Transactional
     public void commitEditSub(Sub sub) {
         subMapper.commitEditSub(sub);
     }

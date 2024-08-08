@@ -75,7 +75,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
     public void updateExtendInfo(ExtendInfo extendInfo) {
         ExtendInfo update = getExtendInfo();
         if (extendInfo.getAlistInfo() != null){
@@ -128,7 +127,6 @@ public class UserServiceImpl implements UserService {
      * @param extendInfo
      */
     @Override
-    @Transactional
     public void deleteExtendInfo(ExtendInfo extendInfo) {
         ExtendInfo update = getExtendInfo();
         if (extendInfo.getAlistInfo() != null){

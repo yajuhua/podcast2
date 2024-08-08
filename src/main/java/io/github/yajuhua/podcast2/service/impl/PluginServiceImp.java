@@ -14,7 +14,6 @@ public class PluginServiceImp implements PluginService {
     private PluginMapper pluginMapper;
 
     @Override
-    @Transactional
     public void insert(Plugin plugin) {
         pluginMapper.deleteByName(plugin.getName());
         pluginMapper.insert(plugin);

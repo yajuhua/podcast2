@@ -140,7 +140,6 @@ public class Task {
      * 每小时删除过期节目
      */
     @Scheduled(cron = "0 0 * * * *")
-    @Transactional
     public void clearExpired(){
         try {
             List<Sub> subList = subMapper.list();
@@ -360,7 +359,6 @@ public class Task {
      */
 
     @Scheduled(fixedRate = 1,timeUnit = TimeUnit.MINUTES)
-    @Transactional
     public void uploadResourcesToAList(){
         try {
             if (userMapper.list().isEmpty()){

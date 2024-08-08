@@ -57,7 +57,6 @@ public class ReDownload implements Runnable{
     }
 
     @Override
-    @Transactional
     public void run() {
 
         DownloadManager downloadManager = new DownloadManager();

@@ -35,7 +35,6 @@ public class ItemsServiceImpI implements ItemsService {
      * 批量插入
      * @param items
      */
-    @Transactional
     public void batchInsert(List<Items> items) {
         for (Items item : items) {
             itemsMapper.insert(item);

@@ -243,7 +243,7 @@ public class StartupRunner implements ApplicationRunner{
      * 检查未下载完成的节目，可能是服务突然停止导致的。发现后将状态码修改成 6 下载错误
      */
     @Transactional
-    private void checkForUndownload(){
+    public void checkForUndownload(){
         log.info("检查未下载完成的节目...");
         List<Items> itemsList = itemsMapper.list();
         List<Items> unsuccessfulDownloads = itemsList.stream().filter(new Predicate<Items>() {

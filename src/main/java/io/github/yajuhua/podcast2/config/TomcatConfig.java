@@ -82,7 +82,6 @@ public class TomcatConfig implements WebServerFactoryCustomizer<ConfigurableServ
      * 关闭ssl
      * @param userMapper
      */
-    @Transactional
     public void setSslFalse(UserMapper userMapper){
         User user = new User();
         user.setIsSsl(false);
