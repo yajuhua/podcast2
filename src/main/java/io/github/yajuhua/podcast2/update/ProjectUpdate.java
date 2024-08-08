@@ -168,6 +168,18 @@ public class ProjectUpdate {
                     updateInfo.setVersion(currentVersion);
                     return updateInfo;
                 }
+            } else if (currentVersion.startsWith("v") && tagName.startsWith("beta")) {
+                if (beta != null && beta.equalsIgnoreCase("true")) {
+                    updateInfo.setHasUpdate(true);
+                    updateInfo.setDesc(html);
+                    updateInfo.setVersion(tagName);
+                    return updateInfo;
+                } else {
+                    updateInfo.setHasUpdate(false);
+                    updateInfo.setDesc("当前版本不支持在线更新至测试版");
+                    updateInfo.setVersion(currentVersion);
+                    return updateInfo;
+                }
             } else if (currentVersion.startsWith("beta") && tagName.startsWith("beta")) {
                 if (beta != null && beta.equalsIgnoreCase("true") && !currentVersion.equals(tagName)) {
                     updateInfo.setHasUpdate(true);
