@@ -7,6 +7,7 @@ import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.properties.InfoProperties;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.controller.SystemController;
+import io.github.yajuhua.podcast2.controller.UserController;
 import io.github.yajuhua.podcast2.downloader.aria2.Aria2RPC;
 import io.github.yajuhua.podcast2.mapper.DownloaderMapper;
 import io.github.yajuhua.podcast2.mapper.ItemsMapper;
@@ -84,6 +85,9 @@ public class StartupRunner implements ApplicationRunner{
 
         //检查未完成下载
         checkForUndownload();
+
+        //获取地址过滤
+        UserController.addressFilterTmp = userService.getExtendInfo().getAddressFilter();
 
         List<Downloader> downloaderList = downloaderMapper.list();
         if (downloaderList.isEmpty() || downloaderList.size() != 3){

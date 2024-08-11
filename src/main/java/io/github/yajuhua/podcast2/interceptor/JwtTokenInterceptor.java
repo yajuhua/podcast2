@@ -4,7 +4,7 @@ import io.github.yajuhua.podcast2.common.constant.JwtClaimsConstant;
 import io.github.yajuhua.podcast2.common.properties.JwtProperties;
 import io.github.yajuhua.podcast2.common.utils.JwtUtil;
 import io.github.yajuhua.podcast2.common.utils.NetWorkUtils;
-import io.github.yajuhua.podcast2.pojo.entity.AddressFilter;
+import io.github.yajuhua.podcast2.controller.UserController;
 import io.github.yajuhua.podcast2.service.UserService;
 import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
@@ -13,11 +13,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -41,12 +38,13 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         //地址过滤
         String remoteAddr = request.getRemoteAddr();
-        boolean ban = NetWorkUtils.isBan(remoteAddr, userService.getExtendInfo().getAddressFilter());
-
-        if (ban){
-            log.debug("屏蔽：{}",remoteAddr);
-            response.setStatus(403);
-            return false;
+        if (UserController.addressFilterTmp != null){
+            boolean ban = NetWorkUtils.isBan(remoteAddr, UserController.addressFilterTmp);
+            if (ban){
+                log.debug("屏蔽：{}",remoteAddr);
+                response.setStatus(403);
+                return false;
+            }
         }
 
         //判断当前拦截到的是Controller的方法还是其他资源

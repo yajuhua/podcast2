@@ -63,6 +63,7 @@ public class UserController {
     private Alist alist;
     @Autowired
     private ExtendService extendService;
+    public static AddressFilter addressFilterTmp;//临时存放区
 
     /**
      * 用户登录
@@ -547,6 +548,8 @@ public class UserController {
         }
         ExtendInfo update = ExtendInfo.builder().addressFilter(addressFilter).build();
         userService.updateExtendInfo(update);
+        //可以直接访问变量获取
+        addressFilterTmp = addressFilter;
         return Result.success();
     }
 
