@@ -1,12 +1,8 @@
 package io.github.yajuhua.podcast2.controller;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import io.github.yajuhua.download.commons.Context;
-import io.github.yajuhua.download.commons.Operation;
-import io.github.yajuhua.download.commons.Type;
 import io.github.yajuhua.download.manager.DownloadManager;
-import io.github.yajuhua.download.manager.Request;
 import io.github.yajuhua.podcast2.alist.Alist;
 import io.github.yajuhua.podcast2.common.constant.MessageConstant;
 import io.github.yajuhua.podcast2.common.constant.Unit;
@@ -23,7 +19,6 @@ import io.github.yajuhua.podcast2.pojo.entity.Sub;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadCompletedVO;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadDetailVO;
 import io.github.yajuhua.podcast2.pojo.vo.DownloaderInfoVO;
-import io.github.yajuhua.podcast2.task.ReDownload;
 import io.github.yajuhua.podcast2.task.Task;
 import io.github.yajuhua.podcast2API.utils.TimeFormat;
 import io.swagger.annotations.Api;
@@ -219,7 +214,6 @@ public class DownloadController {
     @ApiOperation("重新下载和上传")
     @GetMapping("/reDownload/{uuid}")
     public Result reDownload(@PathVariable String uuid){
-        log.info("重新下载:{}",uuid);
         Items items = itemsMapper.selectByUuid(uuid);
         if (items == null){
             throw new ItemNotFoundException(MessageConstant.ITEMS_NOT_FOUND_FAILED);
@@ -228,44 +222,14 @@ public class DownloadController {
         if (DownloaderUtils.aListErrStatusCode().contains(items.getStatus())){
             //加入上传列表任务
             reUploadItems.add(items);
-            log.info("加入重新上传列表：{}",items.getFileName());
+            log.info("加入重新上传列表: {}",items.getTitle());
             return Result.success();
         }
         //重新下载
         else {
-            //先把之前的删除掉，不然在格式转换时出现错误
-            List<File> before = Arrays.stream(new File(dataPathProperties.getResourcesPath()).listFiles())
-                    .filter(file -> file.getName().contains(items.getUuid())).collect(Collectors.toList());
-            try {
-                for (File file : before) {
-                    log.info("删除文件:{}",file.getName());
-                    FileUtils.forceDelete(file);
-                }
-            } catch (Exception e) {
-                throw new ItemNotFoundException(MessageConstant.ITEMS_RESOURCE_DELETE_FAILED);
-
-            }
-            Map args = gson.fromJson(items.getArgs(), Map.class);
-            List<String> links = gson.fromJson(items.getLinks(),new TypeToken<List<String>>() {}.getType());
-
-            //解析枚举
-            Type type = Type.valueOf(items.getType());
-            DownloadManager.Downloader downloader = DownloadManager.Downloader.valueOf(items.getDownloader());
-            Operation operation = Operation.valueOf(items.getOperation());
-
-            //构建下载请求
-            Request build = Request.builder()
-                    .links(links)
-                    .type(type)
-                    .operation(operation)
-                    .downloader(downloader)
-                    .args(args)
-                    .dir(new File(dataPathProperties.getResourcesPath()))
-                    .channelUuid(items.getChannelUuid())
-                    .uuid(items.getUuid())
-                    .build();
-            Thread thread = new Thread(new ReDownload(build,itemsMapper,subMapper,pluginMapper,dataPathProperties,settingsMapper,pluginManager));
-            thread.start();
+            //加入重新下载任务列表
+            log.info("加入重新下载列表: {}",items.getTitle());
+           Task.reDownloadItems.add(items);
         }
         return Result.success();
     }

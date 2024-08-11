@@ -11,7 +11,9 @@ import io.github.yajuhua.download.manager.Request;
 import io.github.yajuhua.podcast2.alist.Alist;
 import io.github.yajuhua.podcast2.alist.dto.fs.PutDTO;
 import io.github.yajuhua.podcast2.alist.dto.task.upload.InfoDTO;
+import io.github.yajuhua.podcast2.common.constant.MessageConstant;
 import io.github.yajuhua.podcast2.common.constant.SubStatusCode;
+import io.github.yajuhua.podcast2.common.exception.ItemNotFoundException;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.properties.InfoProperties;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
@@ -32,7 +34,6 @@ import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,6 +51,7 @@ public class Task {
     public static Boolean updateStatus = false;//避免更新订阅时更新插件之类的
     public static List<DownloadManager> downloadManagerList = new ArrayList<>();//存放下载管理
     public static Map<String,List<LogMessage>> collectUpdateLogMessagesMap = new HashMap<>();//存放订阅更新日志
+    public static List<Items> reDownloadItems = new ArrayList<>();//点击重新下载后会先存放到这
     @Autowired
     private UserMapper userMapper;
     @Autowired
@@ -480,5 +482,58 @@ public class Task {
         }
         logMessages.add(LogMessage.builder().msg(msg).level(level.toLowerCase()).build());
         sources.put(uuid,logMessages);
+    }
+
+    /**
+     * 点击重新下载后会先提交到reDownloadItems集合中，每分钟轮询一次，如果有就下载
+     */
+    @Scheduled(fixedDelay = 1,timeUnit = TimeUnit.MINUTES)
+    public void reDownloadTask(){
+        if (!reDownloadItems.isEmpty()){
+            for (Items items : reDownloadItems) {
+                try {
+                    //先把之前的删除掉，不然在格式转换时出现错误
+                    List<File> before = Arrays.stream(new File(dataPathProperties.getResourcesPath()).listFiles())
+                            .filter(file -> file.getName().contains(items.getUuid())).collect(Collectors.toList());
+                    try {
+                        for (File file : before) {
+                            log.info("删除文件:{}",file.getName());
+                            FileUtils.forceDelete(file);
+                        }
+                    } catch (Exception e) {
+                        throw new ItemNotFoundException(MessageConstant.ITEMS_RESOURCE_DELETE_FAILED);
+
+                    }
+                    Map args = gson.fromJson(items.getArgs(), Map.class);
+                    List<String> links = gson.fromJson(items.getLinks(),new TypeToken<List<String>>() {}.getType());
+
+                    //解析枚举
+                    Type type = Type.valueOf(items.getType());
+                    DownloadManager.Downloader downloader = DownloadManager.Downloader.valueOf(items.getDownloader());
+                    Operation operation = Operation.valueOf(items.getOperation());
+
+                    //构建下载请求
+                    Request build = Request.builder()
+                            .links(links)
+                            .type(type)
+                            .operation(operation)
+                            .downloader(downloader)
+                            .args(args)
+                            .dir(new File(dataPathProperties.getResourcesPath()))
+                            .channelUuid(items.getChannelUuid())
+                            .uuid(items.getUuid())
+                            .build();
+                    ReDownload reDownload = new ReDownload(build, itemsMapper, subMapper, pluginMapper, dataPathProperties,
+                            settingsMapper, pluginManager);
+                    reDownload.run();
+                } catch (Exception e) {
+                   log.error("{}重新下载移除: {}",items.getUuid(),e.getMessage());
+                }
+            }
+            //清空
+            reDownloadItems.clear();
+            //关闭所有类加载器
+            PluginManager.closeAllClassLoader();
+        }
     }
 }
