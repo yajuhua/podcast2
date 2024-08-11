@@ -21,20 +21,43 @@ public class Aria2RPC {
             cmdByArr[i] = cmd.get(i);
         }
 
-        Thread aria2RPCThread = new Thread(new Runnable() {
+        //守护进程命令不同系统
+        String name = System.getProperty("os.name");
+
+        if (name.contains("Windows")){
+            //Windows
+            cmd.add(0,"/b");
+            cmd.add(0,"start");
+            cmd.add(0,"/c");
+            cmd.add(0,"cmd.exe");
+        }else if(name.contains("Linux")){
+            //Linux
+            cmd.add("-D");
+        }else if (name.contains("Mac OS X") || name.contains("macOS")){
+            //macOS
+            cmd.add("-D");
+        }else {
+            cmd.add("-D");
+        }
+
+        Thread aria2RPC = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    log.info("aria2RPC启动...");
-                    int exitCode = Runtime.getRuntime().exec(cmdByArr).waitFor();
+                    log.info("Aria2RPC启动...");
+                    ProcessBuilder processBuilder = new ProcessBuilder(cmd);
+                    Process start = processBuilder.start();
+                    int waitFor = start.waitFor();
+                    if (waitFor != 0){
+                        log.error("Aria2RPC启动失败!");
+                    }
                 } catch (Exception e) {
-                    log.error("aria2RPC启动失败: {}",e.getMessage());
+                    log.error("Aria2RPC启动失败: {}",e.getMessage());
                     e.printStackTrace();
                 }
             }
         });
-        aria2RPCThread.setDaemon(true);
-        aria2RPCThread.start();
+        aria2RPC.start();
     }
 
     @Test
