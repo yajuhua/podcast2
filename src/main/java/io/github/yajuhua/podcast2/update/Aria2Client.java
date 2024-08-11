@@ -89,8 +89,8 @@ public class Aria2Client {
         connection.setRequestMethod("POST");
 
         // 设置超时时间、是否允许输入输出等属性
-        connection.setReadTimeout(10000);
-        connection.setConnectTimeout(10000);
+        connection.setReadTimeout(60000);//60s
+        connection.setConnectTimeout(60000);//60s
         connection.setDoInput(true);
         connection.setDoOutput(true);
 

@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.security.MessageDigest;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -178,8 +179,8 @@ public class JarFileDownloader implements Runnable, Downloader {
                 return;
             }
 
-            //等待500毫秒
-            Thread.sleep(500);
+            //等待1s
+            TimeUnit.SECONDS.sleep(1);
         }
 
         //
