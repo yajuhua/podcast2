@@ -200,7 +200,6 @@ public class SystemController {
     @ApiOperation("根据时间区间获取历史日志")
     @GetMapping("/logs/history/between")
     public Result<List<String>> historyLogsByDate(@RequestParam String start, @RequestParam String end, @RequestParam String level) throws Exception{
-        //TODO 前端超过两个小时仅提供下载查看
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime startLocalDateTime = LocalDateTime.parse(start,formatter);
         LocalDateTime endLocalDateTime = LocalDateTime.parse(end,formatter);

@@ -123,13 +123,6 @@ public class Update implements Runnable {
             }
             params.setSettings(settings);
 
-/*            aClass = PluginLoader.selectByName(sub.getPlugin(), dataPathProperties).get(0);
-            Gson gson = new Gson();
-            Constructor constructor = aClass.getConstructor(String.class);
-            Object o = constructor.newInstance(gson.toJson(params));
-            Method settingsMethod = aClass.getMethod(ReflectionMethodName.SETTINGS);*/
-
-
             //返回插件设置用于更新
             List<Setting> resultSettings = pluginManager.getPluginInstanceByDomainName(sub.getPlugin(),params).settings();
 
@@ -150,18 +143,9 @@ public class Update implements Runnable {
             String json;
             if (isFirst == StatusCode.YES) {
                 //首次更新，获取Items
-               /* invoke = aClass.getMethod(ReflectionMethodName.ITEMS).invoke(o);
-                json = gson.toJson(invoke);
-                Type type = new TypeToken<List<Item>>() {
-                }.getType();
-                items = gson.fromJson(json, type);*/
                 items = pluginManager.getPluginInstanceByDomainName(sub.getPlugin(),params).items();
             } else {
                 //次次更新，latest
-                /*invoke = aClass.getMethod(ReflectionMethodName.LATEST_ITEM).invoke(o);
-                json = gson.toJson(invoke);
-                Item item = gson.fromJson(json, Item.class);
-                items.add(item);*/
                 items.add(pluginManager.getPluginInstanceByDomainName(sub.getPlugin(),params).latestItem());
             }
 
@@ -180,8 +164,6 @@ public class Update implements Runnable {
             List<String> desckeyWords = Arrays.asList(sub.getDescKeywords());
 
             //检查该订阅是否继续更新
-            /*String channelJson = gson.toJson(aClass.getMethod(ReflectionMethodName.CHANNEL).invoke(o));
-            Channel channel = gson.fromJson(channelJson, Channel.class);*/
             Channel channel = pluginManager.getPluginInstanceByDomainName(sub.getPlugin(), params).channel();
             sub.setIsUpdate(channel.getStatus());
 
