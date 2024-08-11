@@ -14,17 +14,11 @@ import io.github.yajuhua.podcast2.mapper.SettingsMapper;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
 import io.github.yajuhua.podcast2.plugin.PluginManager;
 import io.github.yajuhua.podcast2.pojo.entity.Items;
-import io.github.yajuhua.podcast2.pojo.entity.Settings;
 import io.github.yajuhua.podcast2.pojo.entity.Sub;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
 import io.github.yajuhua.podcast2API.Params;
 import io.github.yajuhua.podcast2API.Podcast2;
-import io.github.yajuhua.podcast2API.Type;
-import io.github.yajuhua.podcast2API.setting.Setting;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.*;
 
 
@@ -71,18 +65,6 @@ public class ReDownload implements Runnable{
         String pluginName = subMapper.selectByUuid(request.getChannelUuid()).getPlugin();
 
         //构建Params
-/*        List<Settings> settingsFromDB = settingsMapper.selectByPluginName(pluginName);
-        List<Setting> settings = new ArrayList<>();
-        for (Settings settings1 : settingsFromDB) {
-            Setting setting = new Setting();
-            BeanUtils.copyProperties(settings1,setting);
-            settings.add(setting);
-        }
-        Params params = Params.builder()
-                .settings(settings)
-                .url(sub.getLink())
-                .type(Type.valueOf(sub.getType()))
-                .build();*/
         Params params = pluginManager.getSubParams(sub.getUuid());
 
 
