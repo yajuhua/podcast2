@@ -19,6 +19,7 @@ import java.util.List;
 public class EditSubVO {
     private String uuid;
     private String title;
+    private String equal;
     private String type;
     private Long survivalTime;
     private Long cron;

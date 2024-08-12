@@ -347,6 +347,9 @@
           <el-form-item label="封面">
             <el-input v-model="editSubData.image" placeholder="请输入封面链接"></el-input>
           </el-form-item>
+          <el-form-item label="比对">
+            <el-input v-model="editSubData.equal" placeholder="请输入比对字符串"></el-input>
+          </el-form-item>
           <el-form-item label="类型">
             <el-select v-model="editSubData.type" placeholder="请选择类型">
               <el-option label="视频" value="Video"></el-option>
@@ -551,6 +554,7 @@ export default {
       editSubData: {
         title: '',
         type: '',
+        equal: '',
         survivalTime: '',
         cron: '',
         isUpdate: '',
@@ -577,6 +581,7 @@ export default {
       initEditSubData: {
         title: '',
         type: '',
+        equal: '',
         survivalTime: '',
         cron: '',
         isUpdate: '',
