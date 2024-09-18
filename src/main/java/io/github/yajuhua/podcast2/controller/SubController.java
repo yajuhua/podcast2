@@ -692,7 +692,7 @@ public class SubController {
         String titleKeywords = String.join(",", editSubVO.getTitleKeywords());
         String descKeywords = String.join(",", editSubVO.getDescKeywords());
         sub.setTitleKeywords(titleKeywords);
-        sub.setDescription(descKeywords);
+        sub.setDescKeywords(descKeywords);
         log.info("sub:{}",sub);
         subMapper.update(sub);
         //2.更新extend表

@@ -21,6 +21,7 @@ public class EditSubVO {
     private String title;
     private String equal;
     private String type;
+    private String description;
     private Long survivalTime;
     private Long cron;
     private Integer isUpdate;

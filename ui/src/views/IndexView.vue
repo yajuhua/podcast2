@@ -350,6 +350,9 @@
           <el-form-item label="比对">
             <el-input v-model="editSubData.equal" placeholder="请输入比对字符串"></el-input>
           </el-form-item>
+          <el-form-item label="描述">
+            <el-input type="textarea" v-model="editSubData.description" placeholder="请输入描述字符串"></el-input>
+          </el-form-item>
           <el-form-item label="类型">
             <el-select v-model="editSubData.type" placeholder="请选择类型">
               <el-option label="视频" value="Video"></el-option>
@@ -555,6 +558,7 @@ export default {
         title: '',
         type: '',
         equal: '',
+        description: '',
         survivalTime: '',
         cron: '',
         isUpdate: '',
@@ -582,6 +586,7 @@ export default {
         title: '',
         type: '',
         equal: '',
+        description: '',
         survivalTime: '',
         cron: '',
         isUpdate: '',
