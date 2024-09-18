@@ -77,13 +77,13 @@ public class Update implements Runnable {
             Integer episodes = sub.getEpisodes();
             String customEpisodes = sub.getCustomEpisodes();
             List<Integer> es = new ArrayList<>();
-            log.info("开始检查更新:{}",sub.getTitle());
+            log.info("开始检查更新: {}",sub.getTitle());
 
             //标记更新状态
             Task.updateStatus = true;
 
             if (isFirst == StatusCode.YES) {
-                log.info("进入首次更新：{}",sub.getTitle());
+                log.info("进入首次更新: {}",sub.getTitle());
                 //进入首次更新
                 if (episodes == EpisodesStatus.LATEST) {
                     //最新一集
@@ -152,7 +152,7 @@ public class Update implements Runnable {
             //添加后又立即删除
             if (subMapper.selectByUuid(sub.getUuid()) == null){
                 //已经被删除了
-                log.info("已被删除:{}",sub.getTitle());
+                log.info("已被删除: {}",sub.getTitle());
                 return;
             }
 
@@ -171,7 +171,7 @@ public class Update implements Runnable {
             List<Item> filterItems = new ArrayList<>();
             for (Item item : items) {
                 if (item.getEqual().equals(sub.getEqual())) {
-                    log.info("{}:暂无更新",sub.getTitle());
+                    log.info("{}: 暂无更新",sub.getTitle());
                     //加入当前时间浮动，让每次检查时间不一样 往后
                     sub.setCheckTime(nowTimeFloat(1,1,10,Units.Minutes));
                     //更新sub表
@@ -216,7 +216,7 @@ public class Update implements Runnable {
 
                     //如果包含则跳过当前item
                     if (hasFilter == false) {
-                        log.info("当前节目已经过滤:{}",item.getTitle());
+                        log.info("当前节目已经过滤: {}",item.getTitle());
                         continue;
                     }
                 }
