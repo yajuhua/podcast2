@@ -2151,7 +2151,7 @@ export default {
       const urlRegex = /^https?:\/\/(?:www\.)?[\w.-]+(?:\.[a-zA-Z]{2,})+(?:\/[\w-./?%&=]*)?$/;
       const githubProxyUrl = this.user.githubProxyUrl;
       if (urlRegex.test(githubProxyUrl)) {
-        this.$confirm('此操作将修改面板访问路径, 是否继续?', '提示', {
+        this.$confirm('此操作将修改Github加速站, 是否继续?', '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
