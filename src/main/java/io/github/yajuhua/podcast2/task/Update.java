@@ -189,7 +189,7 @@ public class Update implements Runnable {
 
                     //描述过滤
                     for (String descK : desckeyWords) {
-                        if (!(Pattern.compile(descK).matcher(item.getTitle()).find() || descK == "" || descK == null)) {
+                        if (!(Pattern.compile(descK).matcher(item.getDescription()).find() || descK == "" || descK == null)) {
                             hasFilter = false;
                         }
                     }
