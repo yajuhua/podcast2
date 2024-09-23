@@ -25,4 +25,4 @@ jobs:
           yt-dlp --version         
 
       - name: ganjing
-        run: java -jar test/test-plugin-0.1-jar-with-dependencies.jar https://www.ganjingworld.com/zh-CN/channel/1fjrhcmij2n43KxCh1HPGLLjB1c10c?tab=videos
+        run: java -jar test/test-plugin-0.3-jar-with-dependencies.jar https://www.ganjingworld.com/zh-CN/channel/1fjrhcmij2n43KxCh1HPGLLjB1c10c?tab=videos

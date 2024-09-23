@@ -25,4 +25,4 @@ jobs:
           yt-dlp --version         
 
       - name: douyin
-        run: java -jar test/test-plugin-0.1-jar-with-dependencies.jar https://v.douyin.com/UdEX4jw/
+        run: java -jar test/test-plugin-0.3-jar-with-dependencies.jar https://v.douyin.com/UdEX4jw/
