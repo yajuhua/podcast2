@@ -11,6 +11,7 @@ import io.github.yajuhua.podcast2.common.exception.SubNotFoundException;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.result.Result;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
+import io.github.yajuhua.podcast2.common.utils.Episodes;
 import io.github.yajuhua.podcast2.common.utils.ExtendListUtil;
 import io.github.yajuhua.podcast2.common.utils.Http;
 import io.github.yajuhua.podcast2.mapper.*;
@@ -611,7 +612,7 @@ public class SubController {
                     .title(channel.getTitle())
                     .cron(addSubDTO.getCron())
                     .episodes(addSubDTO.getEpisodes())
-                    .customEpisodes(addSubDTO.getCustomEpisodes())
+                    .customEpisodes(Episodes.parseToStr(addSubDTO.getCustomEpisodes()))
                     .isFilter(addSubDTO.getIsFilter())
                     .link(addSubDTO.getUrl())
                     .isUpdate(addSubDTO.getIsUpdate())
