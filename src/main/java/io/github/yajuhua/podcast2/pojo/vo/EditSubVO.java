@@ -40,4 +40,5 @@ public class EditSubVO {
     private boolean descInputVisible;
     private Integer status;
     private String image;
+    private Integer keepLast;//保留最近N集节目
 }

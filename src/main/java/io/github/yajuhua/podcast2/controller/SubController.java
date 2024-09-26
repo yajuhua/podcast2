@@ -597,6 +597,18 @@ public class SubController {
             }
             params.setSettings(settings);
 
+            /*
+                处理保留最近N集节目
+                2592000秒 == 30天
+                2592000 + 1 == 保留最近一集
+            */
+            Long survivalTime = addSubDTO.getSurvivalTime();
+            if (survivalTime == 0){
+                //说明是按节目数量保留
+                survivalTime = addSubDTO.getKeepLast() + 2592000L;
+            }
+
+
             //获取插件Channel数据
             Podcast2 instance = pluginManager.getPluginInstanceByDomainName(secondLevelDomain, params);
             Channel channel = instance.channel();
@@ -623,7 +635,7 @@ public class SubController {
                     .minDuration(addSubDTO.getMinDuration())
                     .createTime(System.currentTimeMillis())
                     .status(addSubDTO.getStatus())
-                    .survivalTime(addSubDTO.getSurvivalTime())
+                    .survivalTime(survivalTime)
                     .type(addSubDTO.getType())
                     .descKeywords(descKeywords)
                     .titleKeywords(titleKeywords)
@@ -690,6 +702,16 @@ public class SubController {
         //1.更新sub表
         Sub sub = new Sub();
         BeanUtils.copyProperties(editSubVO,sub);
+
+        //处理保留n集节目
+        if (editSubVO.getSurvivalTime() == 0){
+            //说明是按节目数量保留
+            //2592000秒 == 30天
+            //2592000 + 1 == 保留最近一集
+            Long survivalTime = 2592000L + editSubVO.getKeepLast();
+            sub.setSurvivalTime(survivalTime);
+        }
+
         String titleKeywords = String.join(",", editSubVO.getTitleKeywords());
         String descKeywords = String.join(",", editSubVO.getDescKeywords());
         sub.setTitleKeywords(titleKeywords);
@@ -745,6 +767,14 @@ public class SubController {
         List<Extend> anExtends = extendMapper.selectByUuid(uuid);
         List<InputAndSelectData> inputListData = new ArrayList<>();
         List<InputAndSelectData> selectListData = new ArrayList<>();
+
+        //保留最近N集节目
+        if (sub.getSurvivalTime() > 2592000){
+            //说明是按节目数量保留
+            Long keepLast = sub.getSurvivalTime() - 2592000;
+            editSubVO.setSurvivalTime(0L);
+            editSubVO.setKeepLast(keepLast.intValue());
+        }
 
         //获取扩展选项时仅使用用户设置的,兼容旧版选项
         //input类型

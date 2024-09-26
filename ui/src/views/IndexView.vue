@@ -213,7 +213,16 @@
             <el-option label="15天" value="15"></el-option>
             <el-option label="30天" value="30"></el-option>
             <el-option label="永久" value="-1"></el-option>
+            <el-option label="按节目数量" value="0"></el-option>
           </el-select>
+        </el-form-item>
+        <el-form-item label="保留最近" v-if="addSub.survivalTime == 0">
+          <div style="margin-top: 15px">
+            <el-input v-model.number="addSub.keepLast" placeholder="请输入保留最近节目数量"
+                      :min="1" type="number" size="medium"
+                      :style="{ width: '250px' }" class="input-with-select">
+            </el-input> 集
+            </div>
         </el-form-item>
         <el-form-item label="更新频率">
           <el-select v-model="addSub.cron" placeholder="请选择更新频率">
@@ -367,8 +376,17 @@
               <el-option label="15天" value="1296000"></el-option>
               <el-option label="30天" value="2592000"></el-option>
               <el-option label="永久" value="-1"></el-option>
+              <el-option label="按节目数量" value="0"></el-option>
               <span v-show="false">{{ editSubData.survivalTime += '' }}</span>
             </el-select>
+          </el-form-item>
+          <el-form-item label="保留最近" v-if="editSubData.survivalTime == 0">
+            <div style="margin-top: 15px">
+              <el-input v-model.number="editSubData.keepLast" placeholder="请输入保留最近节目数量"
+                        :min="1" type="number" size="medium"
+                        :style="{ width: '250px' }" class="input-with-select">
+              </el-input> 集
+            </div>
           </el-form-item>
           <el-form-item label="更新频率">
             <el-select v-model="editSubData.cron" placeholder="请选择更新频率">
@@ -525,7 +543,8 @@ export default {
         selectListData: [],
         status: '21',
         cronUnit: '1',
-        customCron: '0'
+        customCron: '0',
+        keepLast: '0'//保留最近n集节目
       },
       //初始数据
       initAddSub: {
@@ -579,7 +598,8 @@ export default {
         image: '',
         cronUnit: '1',
         customCron: '0',
-        loading: false
+        loading: false,
+        keepLast: 0//保留最近n集节目
       },
       //初始数据结构
       initEditSubData: {
@@ -606,7 +626,8 @@ export default {
         status: '',
         image: '',
         cronUnit: '',
-        customCron: ''
+        customCron: '',
+        keepLast: 0//保留最近n集节目
       },
       loading: false,
       addSubStatus: '',
@@ -770,6 +791,13 @@ export default {
           return;
         }
       }
+      //处理保留节目数量
+      if (tempAddSub.survivalTime == 0){
+        if (tempAddSub.keepLast < 1){
+          this.$message.error("保留节目不能少于1");
+          return;
+        }
+      }
       //将数据发送
       axios.post('/sub/add', tempAddSub)
         .then(res => {
@@ -907,6 +935,14 @@ export default {
           return;
         }
       }
+      //处理保留节目数量
+      if (tempEditSubData.survivalTime == 0){
+        if (tempEditSubData.keepLast < 1){
+          this.$message.error("保留节目不能少于1");
+          return;
+        }
+      }
+
       axios.put('/sub', tempEditSubData)
         .then(res => {
           if (res.data.code == '1') {

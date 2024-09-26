@@ -139,15 +139,15 @@ public class Task {
     }
 
     /**
-     * 每小时删除过期节目
+     * 每小时删除过期节目，按时间来
      */
     @Scheduled(cron = "0 0 * * * *")
     public void clearExpired(){
         try {
             List<Sub> subList = subMapper.list();
             for (Sub sub : subList) {
-                //-1是永久的
-                if (sub.getSurvivalTime() != -1){
+                //-1是永久的 && 大于2592000说明是按数量来的
+                if (sub.getSurvivalTime() <= 2592000 && sub.getSurvivalTime() != -1){
                     Long survivalTime = sub.getSurvivalTime()*24*3600*1000;
                     List<Items> itemsList = itemsMapper.selectByChannelUUid(sub.getUuid());
                     itemsList =  itemsList.stream().filter(new Predicate<Items>() {
@@ -184,6 +184,64 @@ public class Task {
             }
         } catch (Exception e) {
             log.error("删除过期文件异常");
+        }
+    }
+
+    /**
+     * 保留最近n集节目,每小时
+     */
+    @Scheduled(cron = "0 0 * * * *")
+    public void keepLast(){
+        try {
+            List<Sub> subList = subMapper.list();
+            for (Sub sub : subList) {
+                //2592000秒 == 30天
+                //2592000 + 1 == 保留最近一集
+                if (sub.getSurvivalTime() > 2592000 && sub.getSurvivalTime() != -1){
+                    //获取该频道的所有节目
+                    List<Items> itemsList = itemsMapper.selectByChannelUUid(sub.getUuid());
+                    //根据发布时间降序，第一个是最新的
+                    itemsList = itemsList.stream().sorted(new Comparator<Items>() {
+                        @Override
+                        public int compare(Items o1, Items o2) {
+                            return Long.compare(o1.getCreateTime(),o2.getCreateTime());
+                        }
+                    }).collect(Collectors.toList());
+                    //保留最近
+                    Long keepLastCount = sub.getSurvivalTime() - 2592000;
+                    if (keepLastCount >= itemsList.size() || itemsList.isEmpty()){
+                        //无需删除
+                        continue;
+                    }
+                    itemsList = itemsList.subList(keepLastCount.intValue(),itemsList.size());
+
+                    for (Items items : itemsList) {
+                        Integer status = items.getStatus();
+                        //删除本地文件
+                        if (Context.COMPLETED == status){
+                            File[] list = new File(dataPathProperties.getResourcesPath()).listFiles();
+                            for (File file : list) {
+                                if (file.getName().contains(items.getUuid())){
+                                    log.info("删除超出保留数节目:{}",file.getName());
+                                    try {
+                                        FileUtils.forceDelete(file);
+                                        itemsMapper.deleteByUuid(items.getUuid());
+                                    } catch (IOException e) {
+                                        log.error("删除超出保留数节目失败：{}",e.getMessage());
+                                    }
+                                }
+                            }
+                        }else if (Context.ALIST_UPLOAD_SUCCESS == status){
+                            //删除AList的资源
+                            log.info("删除超出保留数文件：{}",items.getFileName());
+                            alist.deleteFile(items.getFileName());
+                            itemsMapper.deleteByUuid(items.getUuid());
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("删除超出保留数文件异常");
         }
     }
 

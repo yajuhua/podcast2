@@ -23,4 +23,5 @@ public class AddSubDTO {
     private Integer isExtend;
     private List<InputAndSelectData> inputAndSelectDataList;
     private Integer status;
+    private Integer keepLast;//保留最近n节目
 }
