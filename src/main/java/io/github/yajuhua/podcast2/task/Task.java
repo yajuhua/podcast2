@@ -204,7 +204,7 @@ public class Task {
                     itemsList = itemsList.stream().sorted(new Comparator<Items>() {
                         @Override
                         public int compare(Items o1, Items o2) {
-                            return Long.compare(o1.getCreateTime(),o2.getCreateTime());
+                            return Long.compare(o2.getCreateTime(),o1.getCreateTime());
                         }
                     }).collect(Collectors.toList());
                     //保留最近
