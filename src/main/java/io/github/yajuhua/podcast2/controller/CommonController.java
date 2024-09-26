@@ -53,25 +53,30 @@ public class CommonController {
             //项目zip传
             log.info("上传项目core文件:{}",file.getOriginalFilename());
         }else if ("plugin".equals(desc)){
-            //插件上传
-            Plugin plugin = pluginManager.add(file.getInputStream(), file.getOriginalFilename());
-            if (plugin == null){
-                return Result.error(MessageConstant.UPLOAD_FAILED);
+            try {
+                //插件上传
+                Plugin plugin = pluginManager.add(file.getInputStream(), file.getOriginalFilename());
+                if (plugin == null){
+                    return Result.error(MessageConstant.UPLOAD_FAILED);
+                }
+                //保留配置
+                List<Settings> settingsFromDB = settingsMapper.selectByPluginName(plugin.getName());
+                settingsMapper.deleteByPlugin(plugin.getName());
+
+
+                //获取之前设置
+                List<Setting> settings = pluginManager.settingsToSetting(settingsFromDB);
+                Params params = new Params();
+                params.setSettings(settings);
+                Podcast2 instance = pluginManager.getPluginInstance(UUID.fromString(plugin.getUuid()),params);
+
+                //更新到最新设置
+                pluginManager.initSettings(plugin.getName(),instance.settings());
+                log.info("插件上传完成:{}",file.getOriginalFilename());
+            } catch (Exception e) {
+                log.error("上传插件失败",e);
+                return Result.error("上传插件失败，请稍后再试。");
             }
-            //保留配置
-            List<Settings> settingsFromDB = settingsMapper.selectByPluginName(plugin.getName());
-            settingsMapper.deleteByPlugin(plugin.getName());
-
-
-            //获取之前设置
-            List<Setting> settings = pluginManager.settingsToSetting(settingsFromDB);
-            Params params = new Params();
-            params.setSettings(settings);
-            Podcast2 instance = pluginManager.getPluginInstance(UUID.fromString(plugin.getUuid()),params);
-
-            //更新到最新设置
-            pluginManager.initSettings(plugin.getName(),instance.settings());
-            log.info("插件上传完成:{}",file.getOriginalFilename());
         }else {
            return Result.error(MessageConstant.UPLOAD_FAILED);
         }
