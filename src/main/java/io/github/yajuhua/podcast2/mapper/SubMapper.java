@@ -23,10 +23,10 @@ public interface SubMapper {
      */
     @Insert("INSERT INTO sub(uuid, equal, title, link, status, description, image, create_time, check_time, update_time, type," +
             " survival_time, cron, plugin, episodes, custom_episodes, is_update, is_first, plugin_uuid, is_filter, min_duration, " +
-            "max_duration, title_keywords, desc_keywords, is_extend) VALUES(#{uuid}, #{equal}, #{title}, #{link}, " +
+            "max_duration, title_keywords, desc_keywords, is_extend, keep_last, survival_way) VALUES(#{uuid}, #{equal}, #{title}, #{link}, " +
             "#{status}, #{description}, #{image}, #{createTime}, #{checkTime}, #{updateTime}, #{type}, #{survivalTime}, #{cron}," +
             " #{plugin}, #{episodes}, #{customEpisodes}, #{isUpdate}, #{isFirst}, #{pluginUuid}, #{isFilter}, #{minDuration}, " +
-            "#{maxDuration}, #{titleKeywords}, #{descKeywords}, #{isExtend})")
+            "#{maxDuration}, #{titleKeywords}, #{descKeywords}, #{isExtend}, #{keepLast}, #{survivalWay})")
     void addSub(Sub sub);
 
     /**
@@ -44,7 +44,7 @@ public interface SubMapper {
     @Update("update sub set type = #{type}, survival_time = #{survivalTime}, cron = #{cron}, is_update = #{isUpdate}," +
             " is_filter = #{isFilter}, max_duration = #{maxDuration}, min_duration = #{minDuration}, " +
             "title_keywords = #{titleKeywords}, desc_keywords = #{descKeywords}, " +
-            "is_extend = #{isExtend} where uuid = #{uuid}")
+            "is_extend = #{isExtend}, keep_last = #{keepLast}, survival_way = #{survivalWay} where uuid = #{uuid}")
     void commitEditSub(Sub sub);
 
     /**

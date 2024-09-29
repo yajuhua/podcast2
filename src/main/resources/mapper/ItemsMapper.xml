@@ -26,6 +26,7 @@
             <if test="type != null">type = #{type},</if>
             <if test="args != null">args = #{args},</if>
             <if test="links != null">links = #{links},</if>
+            <if test="publicTime != null">public_time = #{publicTime},</if>
         </set>
             where uuid = #{uuid}
     </update>

@@ -624,6 +624,8 @@ public class SubController {
                     .createTime(System.currentTimeMillis())
                     .status(addSubDTO.getStatus())
                     .survivalTime(addSubDTO.getSurvivalTime())
+                    .keepLast(addSubDTO.getKeepLast())
+                    .survivalWay(addSubDTO.getSurvivalWay())
                     .type(addSubDTO.getType())
                     .descKeywords(descKeywords)
                     .titleKeywords(titleKeywords)

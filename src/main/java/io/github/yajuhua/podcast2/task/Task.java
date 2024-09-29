@@ -148,16 +148,39 @@ public class Task {
             for (Sub sub : subList) {
                 //-1是永久的
                 if (sub.getSurvivalTime() != -1){
-                    Long survivalTime = sub.getSurvivalTime()*24*3600*1000;
+                    List<Items> itemsDeleteList = new ArrayList<>();
                     List<Items> itemsList = itemsMapper.selectByChannelUUid(sub.getUuid());
-                    itemsList =  itemsList.stream().filter(new Predicate<Items>() {
-                        @Override
-                        public boolean test(Items items) {
-                            return items.getCreateTime() + survivalTime < System.currentTimeMillis();
+                    if (sub.getSurvivalWay().equalsIgnoreCase("keepTime")){
+                        //保留时间
+                        Long survivalTime = sub.getSurvivalTime()*24*3600*1000;
+                        itemsDeleteList =  itemsList.stream().filter(new Predicate<Items>() {
+                            @Override
+                            public boolean test(Items items) {
+                                return items.getCreateTime() + survivalTime < System.currentTimeMillis();
+                            }
+                        }).collect(Collectors.toList());
+                    }else if (sub.getSurvivalWay().equalsIgnoreCase("keepLast")){
+                        //保留最近N集
+                        //只有item中publicTime不为Null时支持；排序
+                        itemsList = itemsList.stream().filter(new Predicate<Items>() {
+                            @Override
+                            public boolean test(Items items) {
+                                return items.getPublicTime() != null;
+                            }
+                        }).sorted(new Comparator<Items>() {
+                            @Override
+                            public int compare(Items o1, Items o2) {
+                                return Long.compare(o2.getPublicTime(),o1.getPublicTime());
+                            }
+                        }).collect(Collectors.toList());
+                        //排除信息不完整
+                        if ((sub.getKeepLast() != null) && (itemsList.size() > sub.getKeepLast())){
+                             itemsDeleteList = itemsList.subList(sub.getKeepLast(),itemsList.size());
                         }
-                    }).collect(Collectors.toList());
+                    }
 
-                    for (Items items : itemsList) {
+                    //执行删除操作
+                    for (Items items : itemsDeleteList) {
                         Integer status = items.getStatus();
                         //删除本地文件
                         if (Context.COMPLETED == status){

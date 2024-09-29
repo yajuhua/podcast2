@@ -37,4 +37,6 @@ public class Sub implements Serializable {
     private String titleKeywords;
     private String descKeywords;
     private Integer isExtend;
+    private Integer keepLast;
+    private String survivalWay;//节目存活方式
 }

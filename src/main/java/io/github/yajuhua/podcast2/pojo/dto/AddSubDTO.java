@@ -23,4 +23,6 @@ public class AddSubDTO {
     private Integer isExtend;
     private List<InputAndSelectData> inputAndSelectDataList;
     private Integer status;
+    private Integer keepLast;
+    private String survivalWay;//节目存活方式
 }

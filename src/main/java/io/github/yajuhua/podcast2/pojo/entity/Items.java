@@ -33,4 +33,5 @@ public class Items implements Serializable {
     private String type;
     private String links;
     private String args;
+    private Long publicTime;//原视频发布数据
 }

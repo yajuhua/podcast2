@@ -126,6 +126,16 @@
             <el-input v-model="subDetail.detail.isExtend"></el-input>
           </div>
         </el-form-item>
+        <el-form-item label="存活方式">
+          <div @click="copy(subDetail.detail.survivalWay)">
+            <el-input v-model="subDetail.detail.survivalWay"></el-input>
+          </div>
+        </el-form-item>
+        <el-form-item label="保留最近">
+          <div @click="copy(subDetail.detail.keepLast)">
+            <el-input v-model="subDetail.detail.keepLast"></el-input>
+          </div>
+        </el-form-item>
       </el-form>
     </el-dialog>
 
@@ -205,16 +215,70 @@
             <el-option label="音频" value="Audio"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="存活时间">
-          <el-select v-model="addSub.survivalTime" placeholder="请选择存活时间">
-            <el-option label="1天" value="1"></el-option>
-            <el-option label="3天" value="3"></el-option>
-            <el-option label="7天" value="7"></el-option>
-            <el-option label="15天" value="15"></el-option>
-            <el-option label="30天" value="30"></el-option>
-            <el-option label="永久" value="-1"></el-option>
+
+        <el-form-item label="节目存活">
+          <el-select v-model="addSub.survivalWay" placeholder="请选择节目存活方式">
+            <el-option label="保留时间" value="keepTime"></el-option>
+            <el-option label="保留最近" value="keepLast"></el-option>
           </el-select>
         </el-form-item>
+
+        <!--  保留时间   -->
+        <span v-if="addSub.survivalWay == 'keepTime'">
+         <el-form-item label="保留时间">
+          <el-select v-model="addSub.survivalTime" placeholder="请选择存活时间">
+            <el-option label="1天" value="86400"></el-option>
+            <el-option label="3天" value="259200"></el-option>
+            <el-option label="7天" value="604800"></el-option>
+            <el-option label="15天" value="1296000"></el-option>
+            <el-option label="30天" value="2592000"></el-option>
+            <el-option label="永久" value="-1"></el-option>
+            <el-option label="自定义" value="-2"></el-option>
+          </el-select>
+        </el-form-item>
+
+          <!--    自定义保留时间    -->
+          <el-form-item label="自定义" v-if="addSub.survivalTime == '-2'">
+          <div style="margin-top: 15px">
+            <el-input v-model.number="addSub.customSurvivalTime" placeholder="请输入自定义保留时间"
+                      :min="1" type="number" size="medium"
+                      :style="{ width: '250px' }" class="input-with-select">
+              <el-select v-model="addSub.survivalTimeUnit" placeholder="时间单位" slot="append"
+                         :style="{ width: '100px' }">
+                <el-option label="秒钟" value="1"></el-option>
+                <el-option label="分钟" value="60"></el-option>
+                <el-option label="小时" value="3600"></el-option>
+                <el-option label="天" value="86400"></el-option>
+                <el-option label="月" value="2592000"></el-option>
+                <el-option label="年" value="31104000"></el-option>
+              </el-select>
+            </el-input>
+          </div>
+        </el-form-item>
+        </span>
+
+        <!--  保留最近 -->
+        <span v-if="addSub.survivalWay == 'keepLast'">
+        <el-form-item label="保留最近">
+          <el-select v-model="addSub.keepLast" placeholder="请选择保留最近">
+            <el-option label="最近10期" value="10"></el-option>
+            <el-option label="最近15期" value="15"></el-option>
+            <el-option label="最近30期" value="30"></el-option>
+            <el-option label="自定义" value="-1"></el-option>
+          </el-select>
+        </el-form-item>
+
+          <!--    自定义保留最近    -->
+        <el-form-item label="自定义" v-if="addSub.keepLast == -1">
+          <div style="margin-top: 15px">
+            <el-input v-model.number="addSub.customKeepLast" placeholder="请输入保留最近"
+                      :min="1" type="number" size="medium"
+                      :style="{ width: '250px' }" class="input-with-select">
+            </el-input> 集
+          </div>
+        </el-form-item>
+        </span>
+
         <el-form-item label="更新频率">
           <el-select v-model="addSub.cron" placeholder="请选择更新频率">
             <el-option label="20分钟" value="1200"></el-option>
@@ -359,7 +423,18 @@
               <el-option label="音频" value="Audio"></el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="存活时间">
+
+          <el-form-item label="节目存活">
+            <!--  解决无法选中: https://blog.csdn.net/weixin_40538702/article/details/115093732  -->
+            <el-select v-model="editSubData.survivalWay" placeholder="请选择节目存活方式" @change="execForceUpdate()">
+              <el-option label="保留时间" value="keepTime"></el-option>
+              <el-option label="保留最近" value="keepLast"></el-option>
+            </el-select>
+          </el-form-item>
+
+          <!-- 存活时间 -->
+          <span v-if="editSubData.survivalWay === 'keepTime'">
+          <el-form-item label="保留时间">
             <el-select v-model="editSubData.survivalTime" placeholder="请选择存活时间">
               <el-option label="1天" value="86400"></el-option>
               <el-option label="3天" value="259200"></el-option>
@@ -367,9 +442,52 @@
               <el-option label="15天" value="1296000"></el-option>
               <el-option label="30天" value="2592000"></el-option>
               <el-option label="永久" value="-1"></el-option>
-              <span v-show="false">{{ editSubData.survivalTime += '' }}</span>
+              <el-option label="自定义" value="-2"></el-option>
             </el-select>
           </el-form-item>
+
+            <!-- 自定义保留时间 -->
+          <el-form-item label="自定义" v-if="editSubData.survivalTime == '-2'">
+            <div style="margin-top: 15px">
+              <el-input v-model.number="editSubData.customSurvivalTime" placeholder="请输入自定义保留时间"
+                        :min="1" type="number" size="medium"
+                        :style="{ width: '250px' }" class="input-with-select">
+                <el-select v-model="editSubData.survivalTimeUnit" placeholder="时间单位" slot="append"
+                           :style="{ width: '100px' }">
+                  <el-option label="秒钟" value="1"></el-option>
+                  <el-option label="分钟" value="60"></el-option>
+                  <el-option label="小时" value="3600"></el-option>
+                  <el-option label="天" value="86400"></el-option>
+                  <el-option label="月" value="2592000"></el-option>
+                  <el-option label="年" value="31104000"></el-option>
+                </el-select>
+              </el-input>
+            </div>
+          </el-form-item>
+          </span>
+
+          <!--  保留最近  -->
+          <span v-if="editSubData.survivalWay === 'keepLast'">
+          <el-form-item label="保留最近">
+            <el-select v-model="editSubData.keepLast" placeholder="请选择保留最近">
+              <el-option label="最近10期" value="10"></el-option>
+              <el-option label="最近15期" value="15"></el-option>
+              <el-option label="最近30期" value="30"></el-option>
+              <el-option label="自定义" value="-1"></el-option>
+            </el-select>
+          </el-form-item>
+
+            <!--    自定义保留最近    -->
+          <el-form-item label="自定义" v-if="editSubData.keepLast == -1">
+            <div style="margin-top: 15px">
+              <el-input v-model.number="editSubData.customKeepLast" placeholder="请输入保留最近"
+                        :min="1" type="number" size="medium"
+                        :style="{ width: '250px' }" class="input-with-select">
+              </el-input> 集
+            </div>
+          </el-form-item>
+          </span>
+
           <el-form-item label="更新频率">
             <el-select v-model="editSubData.cron" placeholder="请选择更新频率">
               <el-option label="20分钟" value="1200"></el-option>
@@ -525,7 +643,12 @@ export default {
         selectListData: [],
         status: '21',
         cronUnit: '1',
-        customCron: '0'
+        customCron: '0',
+        survivalWay: 'keepTime',//默认
+        keepLast: '',
+        customKeepLast: '',//自定义保留最近N期节目
+        customSurvivalTime: '',//自定义设置存活时间
+        survivalTimeUnit: '1',//存活时间单位
       },
       //初始数据
       initAddSub: {
@@ -552,6 +675,8 @@ export default {
         inputListData: [],
         selectListData: [],
         status: '21',
+        survivalWay: 'keepTime',//默认
+        keepLast: '',
       },
       //编辑订阅
       editSubData: {
@@ -579,7 +704,12 @@ export default {
         image: '',
         cronUnit: '1',
         customCron: '0',
-        loading: false
+        loading: false,
+        survivalWay: '',//默认
+        keepLast: '',
+        customKeepLast: '',//自定义保留最近N期节目
+        customSurvivalTime: '',//自定义设置存活时间
+        survivalTimeUnit: '1',//存活时间单位
       },
       //初始数据结构
       initEditSubData: {
@@ -606,7 +736,12 @@ export default {
         status: '',
         image: '',
         cronUnit: '',
-        customCron: ''
+        customCron: '',
+        survivalWay: '',//默认
+        keepLast: '',
+        customKeepLast: '',//自定义保留最近N期节目
+        customSurvivalTime: '',//自定义设置存活时间
+        survivalTimeUnit: '1',//存活时间单位
       },
       loading: false,
       addSubStatus: '',
@@ -770,6 +905,27 @@ export default {
           return;
         }
       }
+
+      //处理自定义存活时间
+      if (tempAddSub.survivalTime == -2){
+        tempAddSub.survivalTime = tempAddSub.survivalTimeUnit*tempAddSub.customSurvivalTime;
+        if (tempAddSub.survivalTime <= 0){
+          this.$message.error("存活时间需要大于0s");
+          this.addSubStatus = ''
+          return;
+        }
+      }
+
+      //处理自定义保留最近N期节目
+      if (tempAddSub.keepLast == -1){
+        tempAddSub.keepLast = tempAddSub.customKeepLast;
+        if (tempAddSub.keepLast <= 0){
+          this.$message.error("保留最近节目需要大于0");
+          this.addSubStatus = ''
+          return;
+        }
+      }
+
       //将数据发送
       axios.post('/sub/add', tempAddSub)
         .then(res => {
@@ -880,7 +1036,13 @@ export default {
             this.editSubData = res.data.data
             console.log(this.editSubData)
             //无法识别数字,得转成字符串
-            this.editSubData.survivalTime = '' + res.data.data.survivalTime
+            this.editSubData.survivalTime = '' + res.data.data.survivalTime;
+            if (this.editSubData.keepLast == null){
+              this.editSubData.keepLast = '';
+            }else {
+              this.editSubData.keepLast = '' + res.data.data.keepLast;
+            }
+            this.editSubData.survivalWay = res.data.data.survivalWay;
             this.editSubData.cron = '' + res.data.data.cron
             this.editSubData.isUpdate = '' + res.data.data.isUpdate
             this.editSubData.isFilter = '' + res.data.data.isFilter
@@ -907,6 +1069,27 @@ export default {
           return;
         }
       }
+
+      //处理自定义存活时间
+      if (tempEditSubData.survivalTime == -2){
+        tempEditSubData.survivalTime = tempEditSubData.survivalTimeUnit*tempEditSubData.customSurvivalTime;
+        if (tempEditSubData.survivalTime <= 0){
+          this.$message.error("存活时间需要大于0s");
+          this.addSubStatus = ''
+          return;
+        }
+      }
+
+      //处理自定义保留最近N期节目
+      if (tempEditSubData.keepLast == -1){
+        tempEditSubData.keepLast = tempEditSubData.customKeepLast;
+        if (tempEditSubData.keepLast <= 0){
+          this.$message.error("保留最近节目需要大于0");
+          this.addSubStatus = ''
+          return;
+        }
+      }
+
       axios.put('/sub', tempEditSubData)
         .then(res => {
           if (res.data.code == '1') {
@@ -1042,6 +1225,10 @@ export default {
         this.subGroupData.url = window.location.protocol + '//' + window.location.host + '/sub/xml?uuids=' + this.subGroupData.uuids + '&group=';
         this.subGroupData.qrcodeVisible = true;
       }
+    },
+    //强制更新
+    execForceUpdate(){
+      this.$forceUpdate();
     }
   }
 }

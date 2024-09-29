@@ -267,6 +267,7 @@ public class Update implements Runnable {
                 items1.setLinks(gson.toJson(item.getRequest().getLinks()));
                 items1.setArgs(gson.toJson(item.getRequest().getArgs()));
                 items1.setOperation(item.getRequest().getOperation().name());
+                items1.setPublicTime(item.getPublicTime());
                 sub.setEqual(item.getEqual());
                 itemsMapper.insert(items1);
             }

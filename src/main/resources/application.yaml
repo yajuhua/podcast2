@@ -15,6 +15,9 @@ spring:
     multipart:
       max-file-size: 20MB
       max-request-size: 10MB
+  flyway:
+    #如果数据库中没有任何迁移记录，Flyway 将会把当前数据库的状态标记为基线版本
+    baseline-on-migrate: true
 logging:
   config: classpath:logback-spring.xml
 
