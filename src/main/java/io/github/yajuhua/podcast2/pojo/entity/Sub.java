@@ -39,4 +39,5 @@ public class Sub implements Serializable {
     private Integer isExtend;
     private Integer keepLast;
     private String survivalWay;//节目存活方式
+    private String subType;
 }

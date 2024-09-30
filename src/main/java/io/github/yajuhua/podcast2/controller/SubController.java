@@ -584,62 +584,79 @@ public class SubController {
     @PostMapping("/add")
     public Result add(@RequestBody AddSubDTO addSubDTO){
         try {
-            //构建插件参数
-            Params params = new Params();
-            params.setUrl(addSubDTO.getUrl());
-            String secondLevelDomain = Http.getSecondLevelDomain(addSubDTO.getPlugin());
-            List<Settings> settingsFromDB = settingsMapper.selectByPluginName(secondLevelDomain);
-            List<Setting> settings = new ArrayList<>();
-            for (Settings dbSetting : settingsFromDB) {
-                Setting setting = new Setting();
-                BeanUtils.copyProperties(dbSetting,setting);
-                settings.add(setting);
+            if (addSubDTO.getSubType().equalsIgnoreCase("plugin")){
+                //构建插件参数
+                Params params = new Params();
+                params.setUrl(addSubDTO.getUrl());
+                String secondLevelDomain = Http.getSecondLevelDomain(addSubDTO.getPlugin());
+                List<Settings> settingsFromDB = settingsMapper.selectByPluginName(secondLevelDomain);
+                List<Setting> settings = new ArrayList<>();
+                for (Settings dbSetting : settingsFromDB) {
+                    Setting setting = new Setting();
+                    BeanUtils.copyProperties(dbSetting,setting);
+                    settings.add(setting);
+                }
+                params.setSettings(settings);
+
+                //获取插件Channel数据
+                Podcast2 instance = pluginManager.getPluginInstanceByDomainName(secondLevelDomain, params);
+                Channel channel = instance.channel();
+
+                log.info("addSubDTO:{}",addSubDTO);
+                String descKeywords = String.join(",", addSubDTO.getDescKeywords());
+                String titleKeywords = String.join(",", addSubDTO.getTitleKeywords());
+                String uuid = UUID.randomUUID().toString();
+                Sub sub =  Sub.builder()
+                        .description(channel.getDescription())
+                        .equal("none")
+                        .image(channel.getImage())
+                        .title(channel.getTitle())
+                        .cron(addSubDTO.getCron())
+                        .episodes(addSubDTO.getEpisodes())
+                        .customEpisodes(Episodes.parseToStr(addSubDTO.getCustomEpisodes()))
+                        .isFilter(addSubDTO.getIsFilter())
+                        .link(addSubDTO.getUrl())
+                        .isUpdate(addSubDTO.getIsUpdate())
+                        .isFirst(StatusCode.YES)
+                        .isExtend(addSubDTO.getIsExtend())
+                        .plugin(secondLevelDomain)
+                        .maxDuration(addSubDTO.getMaxDuration())
+                        .minDuration(addSubDTO.getMinDuration())
+                        .createTime(System.currentTimeMillis())
+                        .status(addSubDTO.getStatus())
+                        .survivalTime(addSubDTO.getSurvivalTime())
+                        .keepLast(addSubDTO.getKeepLast())
+                        .survivalWay(addSubDTO.getSurvivalWay())
+                        .type(addSubDTO.getType())
+                        .descKeywords(descKeywords)
+                        .titleKeywords(titleKeywords)
+                        .uuid(uuid)
+                        .updateTime(System.currentTimeMillis())
+                        .checkTime(0L)
+                        .subType("plugin")
+                        .build();
+
+                subService.addSub(sub);
+                List<Extend> extendList = extendList(addSubDTO.getInputAndSelectDataList(), Http.getSecondLevelDomain(addSubDTO.getPlugin())
+                        , uuid, addSubDTO.getIsExtend(),addSubDTO.getUrl(),addSubDTO.getType());
+                //将扩展选项写入数据库
+                extendService.batchExtend(extendList);
             }
-            params.setSettings(settings);
-
-            //获取插件Channel数据
-            Podcast2 instance = pluginManager.getPluginInstanceByDomainName(secondLevelDomain, params);
-            Channel channel = instance.channel();
-
-            log.info("addSubDTO:{}",addSubDTO);
-            String descKeywords = String.join(",", addSubDTO.getDescKeywords());
-            String titleKeywords = String.join(",", addSubDTO.getTitleKeywords());
-            String uuid = UUID.randomUUID().toString();
-            Sub sub =  Sub.builder()
-                    .description(channel.getDescription())
-                    .equal("none")
-                    .image(channel.getImage())
-                    .title(channel.getTitle())
-                    .cron(addSubDTO.getCron())
-                    .episodes(addSubDTO.getEpisodes())
-                    .customEpisodes(Episodes.parseToStr(addSubDTO.getCustomEpisodes()))
-                    .isFilter(addSubDTO.getIsFilter())
-                    .link(addSubDTO.getUrl())
-                    .isUpdate(addSubDTO.getIsUpdate())
-                    .isFirst(StatusCode.YES)
-                    .isExtend(addSubDTO.getIsExtend())
-                    .plugin(Http.getSecondLevelDomain(addSubDTO.getPlugin()))
-                    .maxDuration(addSubDTO.getMaxDuration())
-                    .minDuration(addSubDTO.getMinDuration())
-                    .createTime(System.currentTimeMillis())
-                    .status(addSubDTO.getStatus())
-                    .survivalTime(addSubDTO.getSurvivalTime())
-                    .keepLast(addSubDTO.getKeepLast())
-                    .survivalWay(addSubDTO.getSurvivalWay())
-                    .type(addSubDTO.getType())
-                    .descKeywords(descKeywords)
-                    .titleKeywords(titleKeywords)
-                    .uuid(uuid)
-                    .updateTime(System.currentTimeMillis())
-                    .checkTime(0L)
-                    .build();
-
-            subService.addSub(sub);
-            List<Extend> extendList = extendList(addSubDTO.getInputAndSelectDataList(), Http.getSecondLevelDomain(addSubDTO.getPlugin())
-                    , uuid, addSubDTO.getIsExtend(),addSubDTO.getUrl(),addSubDTO.getType());
-            //将扩展选项写入数据库
-            extendService.batchExtend(extendList);
-
+            else if (addSubDTO.getSubType().equalsIgnoreCase("empty")){
+                //创建空的订阅
+                Sub sub = new Sub();
+                BeanUtils.copyProperties(addSubDTO,sub);
+                sub.setUpdateTime(System.currentTimeMillis());
+                sub.setCreateTime(System.currentTimeMillis());
+                sub.setIsUpdate(0);
+                sub.setIsFirst(0);
+                sub.setCheckTime(System.currentTimeMillis());
+                sub.setUuid(UUID.randomUUID().toString());
+                sub.setType(null);
+                subService.addSub(sub);
+            }else {
+                return Result.error("创建失败");
+            }
             //添加插件信息
             return Result.success();
         }catch (InvocationTargetException e){
@@ -692,23 +709,29 @@ public class SubController {
         //1.更新sub表
         Sub sub = new Sub();
         BeanUtils.copyProperties(editSubVO,sub);
-        String titleKeywords = String.join(",", editSubVO.getTitleKeywords());
-        String descKeywords = String.join(",", editSubVO.getDescKeywords());
-        sub.setTitleKeywords(titleKeywords);
-        sub.setDescKeywords(descKeywords);
-        log.info("sub:{}",sub);
-        subMapper.update(sub);
-        //2.更新extend表
-        //清空之前的扩展
-        extendMapper.deleteByUuid(sub.getUuid());
-        //添加新的的扩展选项
-        List<InputAndSelectData> inputAndSelectDataList = new ArrayList<>();
-        inputAndSelectDataList.addAll(editSubVO.getInputListData());
-        inputAndSelectDataList.addAll(editSubVO.getSelectListData());
-        //获取sub表的plugin
-        Sub beforeSub = subService.selectByUuid(editSubVO.getUuid());
-        extendService.batchExtend(extendList(inputAndSelectDataList,beforeSub.getPlugin(),sub.getUuid(),
-                sub.getIsExtend(),sub.getLink(),sub.getType()));
+        if (editSubVO.getSubType().equalsIgnoreCase("plugin")){
+            String titleKeywords = String.join(",", editSubVO.getTitleKeywords());
+            String descKeywords = String.join(",", editSubVO.getDescKeywords());
+            sub.setTitleKeywords(titleKeywords);
+            sub.setDescKeywords(descKeywords);
+            log.info("sub:{}",sub);
+            subMapper.update(sub);
+            //2.更新extend表
+            //清空之前的扩展
+            extendMapper.deleteByUuid(sub.getUuid());
+            //添加新的的扩展选项
+            List<InputAndSelectData> inputAndSelectDataList = new ArrayList<>();
+            inputAndSelectDataList.addAll(editSubVO.getInputListData());
+            inputAndSelectDataList.addAll(editSubVO.getSelectListData());
+            //获取sub表的plugin
+            Sub beforeSub = subService.selectByUuid(editSubVO.getUuid());
+            extendService.batchExtend(extendList(inputAndSelectDataList,beforeSub.getPlugin(),sub.getUuid(),
+                    sub.getIsExtend(),sub.getLink(),sub.getType()));
+        }else if (editSubVO.getSubType().equalsIgnoreCase("empty")){
+            subMapper.update(sub);
+        }else {
+            return Result.error("无法获取订阅类型");
+        }
         return Result.success();
     }
 
@@ -721,101 +744,110 @@ public class SubController {
     public Result<EditSubVO> getEditSubInfo(@PathVariable String uuid)throws Exception{
         //1.获取sub
         Sub sub = subService.selectByUuid(uuid);
-        EditSubVO editSubVO = new EditSubVO();
-        BeanUtils.copyProperties(sub,editSubVO);
+        if (sub.getSubType().equalsIgnoreCase("plugin")){
+            EditSubVO editSubVO = new EditSubVO();
+            BeanUtils.copyProperties(sub,editSubVO);
 
-        //2.将titleKeywords和descKeywords字符串转换成List集合
-        List<String> titleKeywords = new ArrayList<>();
-        if (sub.getTitleKeywords() != null){
-            titleKeywords = Arrays.asList(sub.getTitleKeywords().split(","));
-        }
-        List<String> descKeywords = new ArrayList<>();
-        if (sub.getDescKeywords() != null){
-           titleKeywords = Arrays.asList(sub.getDescKeywords().split(","));
-        }
+            //2.将titleKeywords和descKeywords字符串转换成List集合
+            List<String> titleKeywords = new ArrayList<>();
+            if (sub.getTitleKeywords() != null){
+                titleKeywords = Arrays.asList(sub.getTitleKeywords().split(","));
+            }
+            List<String> descKeywords = new ArrayList<>();
+            if (sub.getDescKeywords() != null){
+                titleKeywords = Arrays.asList(sub.getDescKeywords().split(","));
+            }
 
-        //3.获取插件的扩展选项
-        GetExtendListDTO getExtendListDTO = new GetExtendListDTO();
-        BeanUtils.copyProperties(sub,getExtendListDTO);
-        getExtendListDTO.setUrl(sub.getLink());
-        ExtendListVO extendListVO = extendList(getExtendListDTO).getData();
-        editSubVO.setExtendList(extendListVO.getExtendList());
-        editSubVO.setInputListData(extendListVO.getInputListData());
-        editSubVO.setSelectListData(extendListVO.getSelectListData());
+            //3.获取插件的扩展选项
+            GetExtendListDTO getExtendListDTO = new GetExtendListDTO();
+            BeanUtils.copyProperties(sub,getExtendListDTO);
+            getExtendListDTO.setUrl(sub.getLink());
+            ExtendListVO extendListVO = extendList(getExtendListDTO).getData();
+            editSubVO.setExtendList(extendListVO.getExtendList());
+            editSubVO.setInputListData(extendListVO.getInputListData());
+            editSubVO.setSelectListData(extendListVO.getSelectListData());
 
-        //4.获取用户插件扩展选项数据
-        List<Extend> anExtends = extendMapper.selectByUuid(uuid);
-        List<InputAndSelectData> inputListData = new ArrayList<>();
-        List<InputAndSelectData> selectListData = new ArrayList<>();
+            //4.获取用户插件扩展选项数据
+            List<Extend> anExtends = extendMapper.selectByUuid(uuid);
+            List<InputAndSelectData> inputListData = new ArrayList<>();
+            List<InputAndSelectData> selectListData = new ArrayList<>();
 
-        //获取扩展选项时仅使用用户设置的,兼容旧版选项
-        //input类型
-        List<Input> filterInputDataList = editSubVO.getExtendList().getInputList().stream().filter(new Predicate<Input>() {
-            @Override
-            public boolean test(Input input) {
+            //获取扩展选项时仅使用用户设置的,兼容旧版选项
+            //input类型
+            List<Input> filterInputDataList = editSubVO.getExtendList().getInputList().stream().filter(new Predicate<Input>() {
+                @Override
+                public boolean test(Input input) {
+                    for (Extend extend : anExtends) {
+                        if (input.getName().equals(extend.getName())) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            }).collect(Collectors.toList());
+            editSubVO.getExtendList().setInputList(filterInputDataList);
+
+            //select类型
+            List<Select> filterSelectDataList = editSubVO.getExtendList().getSelectList().stream().filter(new Predicate<Select>() {
+                @Override
+                public boolean test(Select select) {
+                    for (Extend extend : anExtends) {
+                        if (select.getName().equals(extend.getName())) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            }).collect(Collectors.toList());
+            editSubVO.getExtendList().setSelectList(filterSelectDataList);
+
+            //4.将selectList和inputList封装成VO
+            for (Select select : extendListVO.getExtendList().getSelectList()) {
                 for (Extend extend : anExtends) {
-                    if (input.getName().equals(extend.getName())) {
-                        return true;
+                    if (extend.getName().equals(select.getName())){
+                        selectListData.add(new InputAndSelectData(extend.getName(),extend.getContent()));
+                        break;
                     }
                 }
-                return false;
             }
-        }).collect(Collectors.toList());
-        editSubVO.getExtendList().setInputList(filterInputDataList);
 
-        //select类型
-        List<Select> filterSelectDataList = editSubVO.getExtendList().getSelectList().stream().filter(new Predicate<Select>() {
-            @Override
-            public boolean test(Select select) {
+            //避免传入null
+            if (extendListVO.getExtendList().getInputList() == null){
+                List<Input> inputList = new ArrayList<>();
+                extendListVO.getExtendList().setInputList(inputList);
+            }
+
+            if (extendListVO.getExtendList().getSelectList() == null){
+                List<Select> selectList = new ArrayList<>();
+                extendListVO.getExtendList().setSelectList(selectList);
+            }
+
+            for (Input input : extendListVO.getExtendList().getInputList()) {
                 for (Extend extend : anExtends) {
-                    if (select.getName().equals(extend.getName())) {
-                        return true;
+                    if (extend.getName().equals(input.getName())){
+                        inputListData.add(new InputAndSelectData(extend.getName(),extend.getContent()));
+                        break;
                     }
                 }
-                return false;
             }
-        }).collect(Collectors.toList());
-        editSubVO.getExtendList().setSelectList(filterSelectDataList);
 
-        //4.将selectList和inputList封装成VO
-        for (Select select : extendListVO.getExtendList().getSelectList()) {
-            for (Extend extend : anExtends) {
-                if (extend.getName().equals(select.getName())){
-                    selectListData.add(new InputAndSelectData(extend.getName(),extend.getContent()));
-                    break;
-                }
-            }
+            //设置属性
+            editSubVO.setTitleKeywords(titleKeywords);
+            editSubVO.setDescKeywords(descKeywords);
+            editSubVO.setSelectListData(selectListData);
+            editSubVO.setInputListData(inputListData);
+            editSubVO.setUuid(uuid);
+
+            //返回VO
+            return Result.success(editSubVO);
         }
-
-        //避免传入null
-        if (extendListVO.getExtendList().getInputList() == null){
-            List<Input> inputList = new ArrayList<>();
-            extendListVO.getExtendList().setInputList(inputList);
+        else if (sub.getSubType().equals("empty")) {
+            EditSubVO editSubVO = new EditSubVO();
+            BeanUtils.copyProperties(sub,editSubVO);
+            return Result.success(editSubVO);
+        }else {
+            return Result.error("未找到订阅类型");
         }
-
-        if (extendListVO.getExtendList().getSelectList() == null){
-            List<Select> selectList = new ArrayList<>();
-            extendListVO.getExtendList().setSelectList(selectList);
-        }
-
-        for (Input input : extendListVO.getExtendList().getInputList()) {
-            for (Extend extend : anExtends) {
-                if (extend.getName().equals(input.getName())){
-                    inputListData.add(new InputAndSelectData(extend.getName(),extend.getContent()));
-                    break;
-                }
-            }
-        }
-
-        //设置属性
-        editSubVO.setTitleKeywords(titleKeywords);
-        editSubVO.setDescKeywords(descKeywords);
-        editSubVO.setSelectListData(selectListData);
-        editSubVO.setInputListData(inputListData);
-        editSubVO.setUuid(uuid);
-
-        //返回VO
-        return Result.success(editSubVO);
     }
 
     /**

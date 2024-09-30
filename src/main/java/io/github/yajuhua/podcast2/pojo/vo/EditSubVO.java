@@ -42,4 +42,5 @@ public class EditSubVO {
     private String image;
     private Integer keepLast;
     private String survivalWay;//节目存活方式
+    private String subType;
 }

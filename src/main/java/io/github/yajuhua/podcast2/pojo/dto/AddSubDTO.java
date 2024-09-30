@@ -25,4 +25,8 @@ public class AddSubDTO {
     private Integer status;
     private Integer keepLast;
     private String survivalWay;//节目存活方式
+    private String subType;
+    private String title;
+    private String image;
+    private String description;
 }

@@ -78,7 +78,10 @@
                 keep_last = #{keepLast},
             </if>
             <if test="survivalWay != null">
-                survival_way = #{survivalWay}
+                survival_way = #{survivalWay},
+            </if>
+            <if test="subType != null">
+                sub_type = #{subType}
             </if>
         </set>
         WHERE uuid = #{uuid}
