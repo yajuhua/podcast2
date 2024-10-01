@@ -27,6 +27,8 @@
             <if test="args != null">args = #{args},</if>
             <if test="links != null">links = #{links},</if>
             <if test="publicTime != null">public_time = #{publicTime},</if>
+            <if test="inputAndSelectDataList != null">input_and_select_data_list = #{inputAndSelectDataList},</if>
+            <if test="plugin != null">plugin = #{plugin}</if>
         </set>
             where uuid = #{uuid}
     </update>

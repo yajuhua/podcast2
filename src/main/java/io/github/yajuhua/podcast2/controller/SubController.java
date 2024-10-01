@@ -17,6 +17,7 @@ import io.github.yajuhua.podcast2.common.utils.Http;
 import io.github.yajuhua.podcast2.mapper.*;
 import io.github.yajuhua.podcast2.plugin.PluginManager;
 import io.github.yajuhua.podcast2.pojo.dto.AddSubDTO;
+import io.github.yajuhua.podcast2.pojo.dto.AppendItemDTO;
 import io.github.yajuhua.podcast2.pojo.dto.GetExtendListDTO;
 import io.github.yajuhua.podcast2.pojo.dto.GithubActionWorkflowsDTO;
 import io.github.yajuhua.podcast2.pojo.entity.*;
@@ -921,5 +922,17 @@ public class SubController {
             return Result.success(subDetailVO);
         }
         return Result.error("找不到该订阅");
+    }
+
+    /**
+     * 订阅追加节目
+     * @return
+     */
+    @ApiOperation("订阅追加节目")
+    @PostMapping("/appendItem")
+    public Result appendItem(@RequestBody AppendItemDTO appendItemDTO){
+        Task.appendItemList.add(appendItemDTO);
+        log.info("追加节目已加入列表: {}",appendItemDTO.getUrl());
+        return Result.success();
     }
 }

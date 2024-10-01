@@ -34,4 +34,6 @@ public class Items implements Serializable {
     private String links;
     private String args;
     private Long publicTime;//原视频发布数据
+    private String inputAndSelectDataList;//单集节目的扩展配置
+    private String plugin;//单集节目使用的插件名称
 }

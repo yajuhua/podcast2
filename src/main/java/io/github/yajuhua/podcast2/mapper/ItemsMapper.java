@@ -26,11 +26,12 @@ public interface ItemsMapper {
      */
     @Insert("INSERT INTO items(channel_uuid, uuid, title, image, description, link, enclosure, create_time, status" +
             ", duration, downloader, file_name, format, type, download_progress, download_time_left, total_size, " +
-            "download_speed, operation, args, links, public_time) " +
+            "download_speed, operation, args, links, public_time, input_and_select_data_list, plugin) " +
             "VALUES " +
             "(#{channelUuid}, #{uuid}, #{title}, #{image}, #{description}, #{link}, #{enclosure}, #{createTime}" +
             ", #{status}, #{duration}, #{downloader}, #{fileName}, #{format}, #{type}, #{downloadProgress}, #{downloadTimeLeft}" +
-            ", #{totalSize}, #{downloadSpeed}, #{operation}, #{args}, #{links}, #{publicTime})")
+            ", #{totalSize}, #{downloadSpeed}, #{operation}, #{args}, #{links}, #{publicTime}, #{inputAndSelectDataList}" +
+            ", #{plugin})")
     void insert(Items items);
 
     /**
