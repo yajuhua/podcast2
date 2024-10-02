@@ -21,4 +21,5 @@ public class User implements Serializable {
     private Boolean autoUpdatePlugin;
     private Boolean isSsl;
     private Boolean hasSsl;
+    private String apiToken;
 }

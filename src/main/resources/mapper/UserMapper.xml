@@ -30,7 +30,10 @@
                 is_ssl = #{isSsl},
             </if>
             <if test="hasSsl != null">
-                has_ssl = #{hasSsl}
+                has_ssl = #{hasSsl},
+            </if>
+            <if test="apiToken != null">
+                api_token = #{apiToken}
             </if>
         </set>
     </update>
