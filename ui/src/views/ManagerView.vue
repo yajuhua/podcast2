@@ -20,6 +20,7 @@
           <el-menu-item index="path">设置访问路径</el-menu-item>
           <el-menu-item index="alist">alist</el-menu-item>
           <el-menu-item index="ipAddressFilter">地址过滤</el-menu-item>
+          <el-menu-item index="apiToken">apiToken</el-menu-item>
           <el-menu-item index="other">其他</el-menu-item>
         </el-submenu>
 
@@ -376,6 +377,19 @@
               <el-button @click="clearWhiteBlacklist()" type="warning">重置</el-button>
             </el-form-item>
           </el-form>
+        </div>
+
+        <!--apiToken-->
+        <div v-show="activeMenu === 'apiToken'">
+          <div>
+            <el-input v-model="user.apiToken.apiToken" @click.native="copy(user.apiToken.apiToken)">
+              <template slot="prepend">apiToken</template>
+            </el-input>
+            <el-row style="margin-top: 15px;">
+              <el-button type="primary" v-if="user.apiToken.hasApiToken == false" @click="createApiToken()">点击生成</el-button>
+              <el-button type="danger" v-if="user.apiToken.hasApiToken == true" @click="removeApiToken()">点击删除</el-button>
+            </el-row>
+          </div>
         </div>
 
         <!--其他设置-->
@@ -811,6 +825,10 @@ export default {
         ipAddressFilter: {
           whitelist: [],
           blacklist: []
+        },
+        apiToken:{
+          hasApiToken: false,
+          apiToken: ''
         }
       },
       system1: {
@@ -2489,7 +2507,54 @@ export default {
         this.$message.error('获取黑白名单错误！')
       })
 
+    },
+    //获取apiToken数据
+    getApiTokenInfo(){
+      axios.get('/user/apiTokenInfo')
+          .then(res => {
+            if (res.data.code == '1') {
+              this.user.apiToken = res.data.data;
+            } else {
+              this.$message.error(res.data.msg);
+            }
+          }).catch(err => {
+        console.log(err);
+        this.$message.error('获取apiToken信息失败！')
+      })
+    },
+    //创建apiToken
+    createApiToken(){
+      axios.get('/user/createApiToken')
+          .then(res => {
+            if (res.data.code == '1') {
+              this.user.apiToken.apiToken = res.data.data;
+              this.user.apiToken.hasApiToken = true;
+              this.$message.success("创建apiToken成功！")
+            } else {
+              this.$message.error(res.data.msg);
+            }
+          }).catch(err => {
+        console.log(err);
+        this.$message.error('创建apiToken失败！')
+      })
+    },
+    //移除apiToken
+    removeApiToken(){
+      axios.delete('/user/apiToken')
+          .then(res => {
+            if (res.data.code == '1') {
+              this.user.apiToken.apiToken = '';
+              this.user.apiToken.hasApiToken = false;
+              this.$message.success("移除apiToken成功！")
+            } else {
+              this.$message.error(res.data.msg);
+            }
+          }).catch(err => {
+        console.log(err);
+        this.$message.error('移除apiToken失败！')
+      })
     }
+
   }
 }
 </script>
