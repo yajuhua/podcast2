@@ -18,6 +18,7 @@ import io.github.yajuhua.podcast2.mapper.SubMapper;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
 import io.github.yajuhua.podcast2.pojo.dto.UserLoginDTO;
 import io.github.yajuhua.podcast2.pojo.entity.*;
+import io.github.yajuhua.podcast2.pojo.vo.ApiTokenVO;
 import io.github.yajuhua.podcast2.pojo.vo.UserLoginVO;
 import io.github.yajuhua.podcast2.service.ExtendService;
 import io.github.yajuhua.podcast2.service.UserService;
@@ -625,6 +626,20 @@ public class UserController {
             return Result.error("apiToken删除失败");
         }
         return Result.success();
+    }
+
+    /**
+     * 获取apiToken信息
+     * @return
+     */
+    @ApiOperation("获取apiToken信息")
+    @GetMapping("/apiTokenInfo")
+    public Result<ApiTokenVO> getApiTokenInfo(){
+        ApiTokenVO apiTokenVO = ApiTokenVO.builder()
+                .hasApiToken(hasApiToken().getData())
+                .apiToken(getApiToken().getData())
+                .build();
+        return Result.success(apiTokenVO);
     }
 
 
