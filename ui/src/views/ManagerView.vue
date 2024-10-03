@@ -20,7 +20,8 @@
           <el-menu-item index="path">设置访问路径</el-menu-item>
           <el-menu-item index="alist">alist</el-menu-item>
           <el-menu-item index="ipAddressFilter">地址过滤</el-menu-item>
-          <el-menu-item index="apiToken">apiToken</el-menu-item>
+          <el-menu-item index="api">api</el-menu-item>
+          <el-menu-item index="telegramBot">telegramBot</el-menu-item>
           <el-menu-item index="other">其他</el-menu-item>
         </el-submenu>
 
@@ -341,6 +342,48 @@
             </el-form-item>
           </el-form>
         </div>
+
+        <!--设置telegramBot-->
+        <div v-show="activeMenu === 'telegramBot'">
+          <el-form :inline="true" class="demo-form-inline" label-width="auto">
+
+            <el-form-item label="username">
+              <el-tooltip class="item" effect="dark" content="如：xxx_bot"
+                          placement="top-start">
+                <el-input v-model="user.botInfo.username" size="medium"
+                          :style="{ width: '300px' }" clearable></el-input>
+              </el-tooltip>
+            </el-form-item>
+            <br/>
+
+            <el-form-item label="token">
+              <el-input v-model="user.botInfo.token" size="medium"
+                        :style="{ width: '300px' }" clearable></el-input>
+            </el-form-item>
+            <br/>
+
+            <el-form-item label="代理">
+              <el-tooltip class="item" effect="dark" content="如：http://127.0.0.1:10809"
+                          placement="top-start">
+                <el-input v-model="user.botInfo.proxy" size="medium"
+                          :style="{ width: '300px' }" clearable></el-input>
+              </el-tooltip>
+            </el-form-item>
+            <br/>
+            <el-form-item label="开关">
+              <el-select v-model="user.botInfo.isOpen">
+                <el-option label="开启" value="true"></el-option>
+                <el-option label="关闭" value="false"></el-option>
+              </el-select>
+            </el-form-item>
+            <br/>
+
+            <el-form-item>
+              <el-button type="primary" @click="updateBotInfo()">修改</el-button>
+            </el-form-item>
+          </el-form>
+        </div>
+
         <!--设置地址过滤-->
         <div v-show="activeMenu === 'ipAddressFilter'">
           <el-form ref="blacklistForm" label-width="100px" class="demo-dynamic">
@@ -379,8 +422,8 @@
           </el-form>
         </div>
 
-        <!--apiToken-->
-        <div v-show="activeMenu === 'apiToken'">
+        <!--api-->
+        <div v-show="activeMenu === 'api'">
           <div>
             <el-input v-model="user.apiToken.apiToken" @click.native="copy(user.apiToken.apiToken)">
               <template slot="prepend">apiToken</template>
@@ -829,6 +872,12 @@ export default {
         apiToken:{
           hasApiToken: false,
           apiToken: ''
+        },
+        botInfo: {
+          username: null,
+          isOpen: 'false',
+          token: null,
+          proxy: null
         }
       },
       system1: {
@@ -872,6 +921,10 @@ export default {
     this.getAlistInfo();
     //获取黑白名单
     this.getAddressFilter();
+    //获取botInfo
+    this.getBotInfo();
+    //获取apiToken
+    this.getApiTokenInfo()
   },
   methods: {
     toSubList() {
@@ -2553,6 +2606,41 @@ export default {
         console.log(err);
         this.$message.error('移除apiToken失败！')
       })
+    },
+    //获取botInfo
+    getBotInfo(){
+      axios.get('/user/botInfo')
+          .then(res => {
+            if (res.data.code == '1') {
+              this.user.botInfo = res.data.data;
+            } else {
+              this.$message.error(res.data.msg);
+            }
+          }).catch(err => {
+        console.log(err);
+        this.$message.error('获取botInfo失败！')
+      })
+    },
+    //更新botInfo
+    updateBotInfo(){
+      if (this.user.botInfo.isOpen){
+        if (this.user.botInfo.username == '' || this.user.botInfo.token == ''){
+          this.$message.error("username和token不能为空");
+          return;
+        }
+      }
+      axios.put('/user/botInfo', this.user.botInfo)
+          .then(res => {
+            if (res.data.code == '1') {
+              this.$message.success('更新botInfo成功！重启后失效');
+              this.getBotInfo();
+            } else {
+              this.$message.error(res.data.mgs);
+            }
+          }).catch(err => {
+        console.log(err);
+        this.$message.error('更新botInfo错误！');
+      });
     }
 
   }

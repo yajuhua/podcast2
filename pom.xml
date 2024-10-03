@@ -141,6 +141,14 @@
             <artifactId>flyway-core</artifactId>
         </dependency>
 
+        <!-- telegrambots -->
+        <dependency>
+            <groupId>org.telegram</groupId>
+            <artifactId>telegrambots</artifactId>
+            <version>6.1.0</version>
+        </dependency>
+
+
     </dependencies>
     <dependencyManagement>
         <dependencies>
