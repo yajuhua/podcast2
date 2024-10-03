@@ -23,4 +23,5 @@ public class User implements Serializable {
     private Boolean hasSsl;
     private String apiToken;
     private String botInfo;//存放机器人json信息
+    private Boolean apiDoc;//是否开放api文档
 }

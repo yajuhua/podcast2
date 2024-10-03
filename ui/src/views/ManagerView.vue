@@ -433,6 +433,22 @@
               <el-button type="danger" v-if="user.apiToken.hasApiToken == true" @click="removeApiToken()">点击删除</el-button>
             </el-row>
           </div>
+          <div style="margin-top: 15px;">
+            <el-form>
+              <el-form-item label="api文档">
+                  <a :href="user.currentHost + '/doc.html'" target="_blank">{{ user.currentHost + '/doc.html' }}</a>
+              </el-form-item>
+              <el-form-item label="开关">
+                <el-select v-model="user.apiDoc.status">
+                  <el-option label="开启" value="true"></el-option>
+                  <el-option label="关闭" value="false"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item>
+                  <el-button type="primary" @click="updateApiDocStatus()">修改</el-button>
+              </el-form-item>
+            </el-form>
+          </div>
         </div>
 
         <!--其他设置-->
@@ -878,7 +894,11 @@ export default {
           isOpen: 'false',
           token: null,
           proxy: null
-        }
+        },
+        apiDoc: {
+          status: false
+        },
+        currentHost: window.location.origin
       },
       system1: {
         info: []
@@ -924,7 +944,9 @@ export default {
     //获取botInfo
     this.getBotInfo();
     //获取apiToken
-    this.getApiTokenInfo()
+    this.getApiTokenInfo();
+    //获取api文档状态
+    this.getApiDocStatus();
   },
   methods: {
     toSubList() {
@@ -2641,6 +2663,35 @@ export default {
         console.log(err);
         this.$message.error('更新botInfo错误！');
       });
+    },
+    //更新api文档状态
+    updateApiDocStatus(){
+      axios.post('/user/apiDocStatus',this.user.apiDoc)
+          .then(res => {
+            if (res.data.code == '1') {
+              this.$message.success("修改成功！重启后失效")
+              this.getAddressFilter();
+            } else {
+              this.$message.error(res.data.msg);
+            }
+          }).catch(err => {
+        console.log(err);
+        this.$message.error(err.toString());
+      })
+    },
+    //获取api文档状态
+    getApiDocStatus(){
+      axios.get('/user/apiDocStatus')
+          .then(res => {
+            if (res.data.code == '1') {
+              this.user.apiDoc.status = res.data.data;
+            } else {
+              this.$message.error(res.data.msg);
+            }
+          }).catch(err => {
+        console.log(err);
+        this.$message.error(err.toString())
+      })
     }
 
   }

@@ -36,7 +36,10 @@
                 api_token = #{apiToken},
             </if>
             <if test="botInfo != null">
-                bot_info = #{botInfo}
+                bot_info = #{botInfo},
+            </if>
+            <if test="apiDoc != null">
+                api_doc = #{apiDoc}
             </if>
         </set>
     </update>

@@ -16,6 +16,7 @@ import io.github.yajuhua.podcast2.common.utils.NetWorkUtils;
 import io.github.yajuhua.podcast2.mapper.ExtendMapper;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
+import io.github.yajuhua.podcast2.pojo.dto.ApiDocStatusDTO;
 import io.github.yajuhua.podcast2.pojo.dto.UserLoginDTO;
 import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.ApiTokenVO;
@@ -662,6 +663,29 @@ public class UserController {
     @PutMapping("/botInfo")
     public Result updateBotInfo(@RequestBody BotInfo botInfo){
         userService.updateBotInfo(botInfo);
+        return Result.success();
+    }
+
+    /**
+     * 获取api文档状态
+     * @return
+     */
+    @ApiOperation("获取api文档状态")
+    @GetMapping("/apiDocStatus")
+    public Result<Boolean> getApiDocStatus(){
+        Boolean apiDoc = userMapper.list().get(0).getApiDoc();
+        return Result.success(apiDoc);
+    }
+
+    /**
+     * 更新api文档开启和关闭状态
+     * @param apiDocStatus
+     * @return
+     */
+    @ApiOperation("更新api文档状态")
+    @PostMapping("/apiDocStatus")
+    public Result updateApiDocStatus(@RequestBody ApiDocStatusDTO apiDocStatus){
+        userMapper.update(User.builder().apiDoc(apiDocStatus.getStatus()).build());
         return Result.success();
     }
 

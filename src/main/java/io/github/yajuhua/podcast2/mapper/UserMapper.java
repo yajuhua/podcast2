@@ -16,6 +16,7 @@ public interface UserMapper {
      * @return
      */
     @Select("select * from user where username = #{username}")
+    @Result(property = "apiDoc", column = "apiDoc", javaType = boolean.class, jdbcType = JdbcType.INTEGER, typeHandler = BooleanTypeHandler.class)
     User getByUsername(String username);
 
     /**
@@ -23,6 +24,7 @@ public interface UserMapper {
      * @param user
      */
     @Result(property = "autoUpdatePlugin", column = "auto_update_plugin", javaType = boolean.class, jdbcType = JdbcType.INTEGER, typeHandler = BooleanTypeHandler.class)
+    @Result(property = "apiDoc", column = "api_doc", javaType = boolean.class, jdbcType = JdbcType.INTEGER, typeHandler = BooleanTypeHandler.class)
     void update(User user);
 
     /**
@@ -32,6 +34,7 @@ public interface UserMapper {
     @Result(property = "isSsl", column = "is_ssl", javaType = boolean.class, jdbcType = JdbcType.INTEGER, typeHandler = BooleanTypeHandler.class)
     @Result(property = "hasSsl", column = "has_ssl", javaType = boolean.class, jdbcType = JdbcType.INTEGER, typeHandler = BooleanTypeHandler.class)
     @Result(property = "autoUpdatePlugin", column = "auto_update_plugin", javaType = boolean.class, jdbcType = JdbcType.INTEGER, typeHandler = BooleanTypeHandler.class)
+    @Result(property = "apiDoc", column = "api_doc", javaType = boolean.class, jdbcType = JdbcType.INTEGER, typeHandler = BooleanTypeHandler.class)
     @Select("select * from user")
     List<User> list();
 
@@ -40,8 +43,8 @@ public interface UserMapper {
      * 插入
      * @param user
      */
-    @Insert("INSERT INTO user (username, password, create_time, uuid, first_version, hostname, auto_update_plugin, is_ssl, has_ssl, api_token, bot_info) " +
-            "VALUES (#{username}, #{password}, #{createTime}, #{uuid}, #{firstVersion}, #{hostname}, #{autoUpdatePlugin}, #{isSsl}, #{hasSsl}, #{apiToken}, #{botInfo})")
+    @Insert("INSERT INTO user (username, password, create_time, uuid, first_version, hostname, auto_update_plugin, is_ssl, has_ssl, api_token, bot_info, api_doc) " +
+            "VALUES (#{username}, #{password}, #{createTime}, #{uuid}, #{firstVersion}, #{hostname}, #{autoUpdatePlugin}, #{isSsl}, #{hasSsl}, #{apiToken}, #{botInfo}, #{apiDoc})")
     void insert(User user);
 
     /**
