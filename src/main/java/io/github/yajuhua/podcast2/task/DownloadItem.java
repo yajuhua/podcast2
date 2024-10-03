@@ -5,6 +5,7 @@ import io.github.yajuhua.download.commons.Context;
 import io.github.yajuhua.download.commons.progress.DownloadProgress;
 import io.github.yajuhua.download.manager.DownloadManager;
 import io.github.yajuhua.download.manager.Request;
+import io.github.yajuhua.podcast2.bot.telegram.TGBot;
 import io.github.yajuhua.podcast2.common.constant.Unit;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
@@ -176,6 +177,7 @@ public class DownloadItem implements Runnable{
                     items.setDownloadTimeLeft((double) progress.getDownloadTimeLeft());
                     items.setDownloadSpeed(progress.getDownloadSpeed());
                     itemsMapper.update(items);
+                    TGBot.downloadCompletedItems.add(items);
                     log.info("追加节目下载完成: {}",items.getTitle());
                     //结束下载
                     return;

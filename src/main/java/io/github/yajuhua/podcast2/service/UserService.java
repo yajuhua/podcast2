@@ -1,10 +1,9 @@
 package io.github.yajuhua.podcast2.service;
 
 import io.github.yajuhua.podcast2.pojo.dto.UserLoginDTO;
+import io.github.yajuhua.podcast2.pojo.entity.BotInfo;
 import io.github.yajuhua.podcast2.pojo.entity.ExtendInfo;
 import io.github.yajuhua.podcast2.pojo.entity.User;
-import org.apache.ibatis.annotations.Mapper;
-import org.springframework.stereotype.Service;
 public interface UserService {
 
     /**
@@ -31,4 +30,16 @@ public interface UserService {
      * @param extendInfo
      */
     void deleteExtendInfo(ExtendInfo extendInfo);
+
+    /**
+     * 更新bot信息
+     * @param botInfo
+     */
+    void updateBotInfo(BotInfo botInfo);
+
+    /**
+     * 获取bot信息
+     * @return
+     */
+    BotInfo getBotInfo();
 }

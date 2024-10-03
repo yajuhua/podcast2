@@ -40,8 +40,8 @@ public interface UserMapper {
      * 插入
      * @param user
      */
-    @Insert("INSERT INTO user (username, password, create_time, uuid, first_version, hostname, auto_update_plugin, is_ssl, has_ssl, api_token) " +
-            "VALUES (#{username}, #{password}, #{createTime}, #{uuid}, #{firstVersion}, #{hostname}, #{autoUpdatePlugin}, #{isSsl}, #{hasSsl}, #{apiToken})")
+    @Insert("INSERT INTO user (username, password, create_time, uuid, first_version, hostname, auto_update_plugin, is_ssl, has_ssl, api_token, bot_info) " +
+            "VALUES (#{username}, #{password}, #{createTime}, #{uuid}, #{firstVersion}, #{hostname}, #{autoUpdatePlugin}, #{isSsl}, #{hasSsl}, #{apiToken}, #{botInfo})")
     void insert(User user);
 
     /**
