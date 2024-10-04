@@ -634,7 +634,8 @@ public class SubController {
                         .uuid(uuid)
                         .updateTime(System.currentTimeMillis())
                         .checkTime(0L)
-                        .subType("plugin")
+                        .subType(addSubDTO.getSubType())
+                        .syncWay(addSubDTO.getSyncWay())
                         .build();
 
                 subService.addSub(sub);

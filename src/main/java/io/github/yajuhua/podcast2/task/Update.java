@@ -26,7 +26,6 @@ import io.github.yajuhua.podcast2API.extension.reception.InputAndSelectData;
 import io.github.yajuhua.podcast2API.setting.Setting;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
@@ -144,6 +143,9 @@ public class Update implements Runnable {
             if (isFirst == StatusCode.YES) {
                 //首次更新，获取Items
                 items = pluginManager.getPluginInstanceByDomainName(sub.getPlugin(),params).items();
+            }else if (sub.getSyncWay().equalsIgnoreCase("recent")){
+                //同步最近
+                items.addAll(recentItems(sub.getUuid(),params));
             } else {
                 //次次更新，latest
                 items.add(pluginManager.getPluginInstanceByDomainName(sub.getPlugin(),params).latestItem());
@@ -399,6 +401,40 @@ public class Update implements Runnable {
         }else {
             //默认是当前时间
             return currentTimeMillis;
+        }
+    }
+
+    /**
+     * 获取最近的节目
+     * 应对收藏夹可能短时间内添加多个视频
+     * @param channelUuid
+     * @return
+     */
+    private List<Item> recentItems(String channelUuid,Params params) throws Exception {
+        //1.获取本地最新的equal
+        String localLatestEqual = subMapper.selectByUuid(channelUuid).getEqual();
+        //2.获取最近30集节目并按发布时间升序
+        params.setEpisodes(Arrays.asList(-1));
+        List<Item> recentItems = pluginManager.getPluginInstanceByDomainName(sub.getPlugin(),params).items()
+                .stream().sorted(new Comparator<Item>() {
+            @Override
+            public int compare(Item o1, Item o2) {
+                return Long.compare(o1.getPublicTime(),o2.getPublicTime());
+            }
+        }).collect(Collectors.toList());
+
+        //比较equal
+        List<String> equalList = recentItems.stream().map(Item::getEqual).collect(Collectors.toList());
+        if (localLatestEqual != null
+                && !localLatestEqual.equalsIgnoreCase("none")
+                && equalList.contains(localLatestEqual)){
+            int index = equalList.indexOf(localLatestEqual);
+            //0 1 2 3 4 5
+            //TODO 待测试
+            return recentItems.subList(index + 1,recentItems.size());
+        }else {
+            //该订阅在本地还没节目
+            return recentItems;
         }
     }
 }

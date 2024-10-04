@@ -29,4 +29,5 @@ public class AddSubDTO {
     private String title;
     private String image;
     private String description;
+    private String syncWay;
 }

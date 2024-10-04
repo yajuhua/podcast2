@@ -81,7 +81,10 @@
                 survival_way = #{survivalWay},
             </if>
             <if test="subType != null">
-                sub_type = #{subType}
+                sub_type = #{subType},
+            </if>
+            <if test="syncWay != null">
+                sync_way = #{syncWay}
             </if>
         </set>
         WHERE uuid = #{uuid}
