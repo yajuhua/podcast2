@@ -2646,7 +2646,10 @@ export default {
     //更新botInfo
     updateBotInfo(){
       if (this.user.botInfo.isOpen){
-        if (this.user.botInfo.username == '' || this.user.botInfo.token == ''){
+        if (this.user.botInfo.username == ''
+            || this.user.botInfo.token == ''
+            || this.user.botInfo.username == null
+            || this.user.botInfo.token == null){
           this.$message.error("username和token不能为空");
           return;
         }
