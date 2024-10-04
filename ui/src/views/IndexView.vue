@@ -228,6 +228,14 @@
           </el-select>
         </el-form-item>
 
+          <!-- 订阅同步 -->
+        <el-form-item label="同步方式">
+          <el-select v-model="addSub.syncWay" placeholder="请选择订阅同步方式">
+            <el-option label="最新" value="latest"></el-option>
+            <el-option label="最近" value="recent"></el-option>
+          </el-select>
+        </el-form-item>
+
         <el-form-item label="节目存活">
           <el-select v-model="addSub.survivalWay" placeholder="请选择节目存活方式">
             <el-option label="保留时间" value="keepTime"></el-option>
@@ -565,6 +573,14 @@
             </el-select>
           </el-form-item>
 
+            <!-- 订阅同步 -->
+        <el-form-item label="同步方式">
+          <el-select v-model="editSubData.syncWay" placeholder="请选择订阅同步方式">
+            <el-option label="最新" value="latest"></el-option>
+            <el-option label="最近" value="recent"></el-option>
+          </el-select>
+        </el-form-item>
+
           <el-form-item label="节目存活">
             <!--  解决无法选中: https://blog.csdn.net/weixin_40538702/article/details/115093732  -->
             <el-select v-model="editSubData.survivalWay" placeholder="请选择节目存活方式" @change="execForceUpdate()">
@@ -846,7 +862,7 @@ export default {
       addSub: {
         url: '',
         type: 'Audio',
-        survivalTime: '7',
+        survivalTime: '604800',
         cron: '1200',
         plugin: '',
         episodes: '0',
@@ -878,12 +894,13 @@ export default {
         title: '',
         image: '',
         description: '',
+        syncWay: 'latest',//同步方式
       },
       //初始数据
       initAddSub: {
         url: '',
         type: 'Audio',
-        survivalTime: '7',
+        survivalTime: '604800',
         cron: '1200',
         plugin: '',
         episodes: '0',
@@ -907,6 +924,7 @@ export default {
         survivalWay: 'keepTime',//默认
         keepLast: '',
         subType: 'plugin',//创建订阅方式，默认是plugin
+        syncWay: '',//同步方式
       },
       //编辑订阅
       editSubData: {
@@ -941,6 +959,7 @@ export default {
         customSurvivalTime: '',//自定义设置存活时间
         survivalTimeUnit: '1',//存活时间单位
         subType: '',//创建订阅方式
+        syncWay: '',//同步方式
       },
       //初始数据结构
       initEditSubData: {
@@ -974,6 +993,7 @@ export default {
         customSurvivalTime: '',//自定义设置存活时间
         survivalTimeUnit: '1',//存活时间单位
         subType: '',//创建订阅方式
+        syncWay: '',//同步方式
       },
       loading: false,
       addSubStatus: '',
