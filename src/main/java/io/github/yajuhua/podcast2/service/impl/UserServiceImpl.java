@@ -163,6 +163,8 @@ public class UserServiceImpl implements UserService {
             }
             //更新
             userMapper.update(User.builder().botInfo(gson.toJson(cBotInfo)).build());
+        }else {
+            userMapper.update(User.builder().botInfo(gson.toJson(botInfoAfter)).build());
         }
 
     }
@@ -172,9 +174,13 @@ public class UserServiceImpl implements UserService {
         try {
             String botInfoJsonStr = userMapper.list().get(0).getBotInfo();
             BotInfo botInfo = gson.fromJson(botInfoJsonStr, BotInfo.class);
+            if (botInfo == null){
+                botInfo = new BotInfo();
+                botInfo.setIsOpen(false);
+            }
             return botInfo;
         } catch (JsonSyntaxException e) {
-            return null;
+            return new BotInfo();
         }
     }
 }
