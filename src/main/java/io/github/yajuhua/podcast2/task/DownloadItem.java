@@ -96,7 +96,7 @@ public class DownloadItem implements Runnable{
             params.setSettings(settings);
 
             //获取插件实例
-            Podcast2 instance = pluginManager.getPluginInstance(secondLevelDomain, params);
+            Podcast2 instance = pluginManager.getPluginInstanceByDomainName(secondLevelDomain,params);
 
             //获取节目信息
             item = instance.getItem(appendItemDTO.getUrl());
