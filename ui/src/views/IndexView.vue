@@ -294,7 +294,7 @@
         <div v-show="addSub.episodes == '1'">
           <el-form-item label="自定义">
             <el-input v-model="addSub.customEpisodes"></el-input>
-            <el-tooltip class="item" effect="dark" content="在英文状态下输入1,2,3,4,5将下载列表中序号1-5的节目"
+            <el-tooltip class="item" effect="dark" content="在英文状态下输入1,2-5将下载列表中序号1到5集的节目"
                         placement="top-start">
               <i class="el-icon-question"></i>
             </el-tooltip>
