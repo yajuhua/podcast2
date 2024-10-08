@@ -23,10 +23,10 @@ public interface SubMapper {
      */
     @Insert("INSERT INTO sub(uuid, equal, title, link, status, description, image, create_time, check_time, update_time, type," +
             " survival_time, cron, plugin, episodes, custom_episodes, is_update, is_first, plugin_uuid, is_filter, min_duration, " +
-            "max_duration, title_keywords, desc_keywords, is_extend) VALUES(#{uuid}, #{equal}, #{title}, #{link}, " +
+            "max_duration, title_keywords, desc_keywords, is_extend, keep_last, survival_way, sub_type, sync_way) VALUES(#{uuid}, #{equal}, #{title}, #{link}, " +
             "#{status}, #{description}, #{image}, #{createTime}, #{checkTime}, #{updateTime}, #{type}, #{survivalTime}, #{cron}," +
             " #{plugin}, #{episodes}, #{customEpisodes}, #{isUpdate}, #{isFirst}, #{pluginUuid}, #{isFilter}, #{minDuration}, " +
-            "#{maxDuration}, #{titleKeywords}, #{descKeywords}, #{isExtend})")
+            "#{maxDuration}, #{titleKeywords}, #{descKeywords}, #{isExtend}, #{keepLast}, #{survivalWay}, #{subType}, #{syncWay})")
     void addSub(Sub sub);
 
     /**
@@ -44,16 +44,19 @@ public interface SubMapper {
     @Update("update sub set type = #{type}, survival_time = #{survivalTime}, cron = #{cron}, is_update = #{isUpdate}," +
             " is_filter = #{isFilter}, max_duration = #{maxDuration}, min_duration = #{minDuration}, " +
             "title_keywords = #{titleKeywords}, desc_keywords = #{descKeywords}, " +
-            "is_extend = #{isExtend} where uuid = #{uuid}")
+            "is_extend = #{isExtend}, keep_last = #{keepLast}, survival_way = #{survivalWay}, sub_type = #{subType}," +
+            " sync_way = #{syncWay} where uuid = #{uuid}")
     void commitEditSub(Sub sub);
 
     /**
-     * 查询条件：首次更新、更新状态=1 、到更新时间了、且 无操作
+     * 查询条件：首次更新、更新状态=1 、到更新时间了、且 无操作。sub_type  == ’plugin‘
+     * 满足条件：is_first = 1 且 sub_type = 'plugin' 或者 is_update = 1 且 (#{nowTimeMillisecond} - check_time) > (cron*1000)) 且 sub_type = 'plugin'
      * 查询需要更新的订阅
      * @return
      */
-    @Select("select * from sub where is_first = 1 or is_update = 1 and (#{nowTimeMillisecond} - check_time) > (cron*1000)")
+    @Select("select * from sub where (is_first = 1 and sub_type = 'plugin') or (is_update = 1 and (#{nowTimeMillisecond} - check_time) > (cron*1000) and sub_type = 'plugin')")
     List<Sub> selectUpdateList(Long nowTimeMillisecond);
+
 
 
     /**

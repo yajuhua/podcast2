@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -148,5 +149,19 @@ public class Http {
             throw new GetSecondLevelDomainException(MessageConstant.GET_SECOND_LEVEL_DOMAIN_FAILED);
         }
         return Arrays.stream(split).skip(split.length -2).collect(Collectors.joining("."));
+    }
+
+    /**
+     * 获取url中的主机名称
+     * @param url
+     * @return
+     * @throws Exception
+     */
+    public static String getHost(String url){
+        try {
+            return new URL(url).getHost();
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -17,11 +17,12 @@
         <mybatis.spring>2.2.0</mybatis.spring>
         <gson.version>2.8.9</gson.version>
         <sqlite.version>3.42.0.0</sqlite.version>
-        <podcast2API.version>2.3.0</podcast2API.version>
+        <podcast2API.version>2.5.0</podcast2API.version>
         <jjwt.version>0.9.1</jjwt.version>
         <knife4j.version>2.0.2</knife4j.version>
         <timestamp>${maven.build.timestamp}</timestamp>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -134,6 +135,20 @@
             <version>0.21.0</version>
         </dependency>
 
+        <!-- 数据库迁移 -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+
+        <!-- telegrambots -->
+        <dependency>
+            <groupId>org.telegram</groupId>
+            <artifactId>telegrambots</artifactId>
+            <version>6.1.0</version>
+        </dependency>
+
+
     </dependencies>
     <dependencyManagement>
         <dependencies>
@@ -236,6 +251,7 @@
                     <exclude>static/**/*.ttf</exclude>
                     <exclude>static/**/*.db</exclude>
                     <exclude>static/**/*.ico</exclude>
+                    <exclude>db/migration/*.sql</exclude>
                 </excludes>
             </resource>
             <resource>
@@ -247,6 +263,7 @@
                     <include>static/**/*.ttf</include>
                     <include>static/**/*.db</include>
                     <include>static/**/*.ico</include>
+                    <include>db/migration/*.sql</include>
                 </includes>
             </resource>
         </resources>

@@ -1,5 +1,12 @@
 name: Build test
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'version'
+        required: true
+        type: string
+
 
 jobs:
   build-UI:
@@ -47,8 +54,9 @@ jobs:
 
       - name: Build with Maven
         run: |
-          mvn package -Dpodcast2Version=$(date +beta-%Y-%m-%d)
-
+          mvn package -Dpodcast2Version=$version
+        env:
+          version: ${{ inputs.version }}
       - name: Upload jar artifact
         uses: actions/upload-artifact@v3
         with:
@@ -99,9 +107,10 @@ jobs:
       # 构建 amd64 Docker镜像
       - name: Build the amd64 Docker image
         run: |
-          docker build . --file Dockerfile --tag yajuhua/podcast2:amd64-$(date +test-%Y-%m-%d) --platform linux/amd64
-          docker push yajuhua/podcast2:amd64-$(date +test-%Y-%m-%d)
-
+          docker build . --file Dockerfile --tag yajuhua/podcast2:amd64-$version --platform linux/amd64
+          docker push yajuhua/podcast2:amd64-$version
+        env:
+          version: ${{ inputs.version }}
   build-arm64:
     permissions: write-all
     runs-on: ubuntu-latest
@@ -152,9 +161,10 @@ jobs:
       # 构建 arm64 Docker镜像
       - name: Build the arm64 Docker image
         run: |
-          docker build . --file Dockerfile --tag yajuhua/podcast2:arm64-$(date +test-%Y-%m-%d) --platform linux/arm64
-          docker push yajuhua/podcast2:arm64-$(date +test-%Y-%m-%d)
-
+          docker build . --file Dockerfile --tag yajuhua/podcast2:arm64-$version --platform linux/arm64
+          docker push yajuhua/podcast2:arm64-$version
+        env:
+          version: ${{ inputs.version }}
   build-arm32v7:
     permissions: write-all
     runs-on: ubuntu-latest
@@ -205,9 +215,10 @@ jobs:
       # 构建 arm32v7 Docker镜像
       - name: Build the arm32v7 Docker image
         run: |
-          docker build . --file Dockerfile --tag yajuhua/podcast2:arm32v7-$(date +test-%Y-%m-%d) --platform linux/arm/v7
-          docker push yajuhua/podcast2:arm32v7-$(date +test-%Y-%m-%d)          
-
+          docker build . --file Dockerfile --tag yajuhua/podcast2:arm32v7-$version --platform linux/arm/v7
+          docker push yajuhua/podcast2:arm32v7-$version
+        env:
+          version: ${{ inputs.version }}
   push-docker-hub:
     permissions: write-all
     runs-on: ubuntu-latest
@@ -222,10 +233,11 @@ jobs:
         uses: docker/setup-buildx-action@v1
       - name: pull amd4 and arm64 docker images
         run: |
-          docker pull yajuhua/podcast2:arm64-$(date +test-%Y-%m-%d)
-          docker pull yajuhua/podcast2:amd64-$(date +test-%Y-%m-%d)
-          docker pull yajuhua/podcast2:arm32v7-$(date +test-%Y-%m-%d)
-
+          docker pull yajuhua/podcast2:arm64-$version
+          docker pull yajuhua/podcast2:amd64-$version
+          docker pull yajuhua/podcast2:arm32v7-$version
+        env:
+          version: ${{ inputs.version }}
       # 登录 docker hub
       - name: Login to DockerHub
         uses: docker/login-action@v1
@@ -238,11 +250,14 @@ jobs:
 
       - name: create manifest
         run: |
-          docker manifest create yajuhua/podcast2:beta-$(date +%Y-%m-%d) yajuhua/podcast2:arm64-$(date +test-%Y-%m-%d) yajuhua/podcast2:amd64-$(date +test-%Y-%m-%d) yajuhua/podcast2:arm32v7-$(date +test-%Y-%m-%d)
+          docker manifest create yajuhua/podcast2:beta-$version yajuhua/podcast2:arm64-$version yajuhua/podcast2:amd64-$version yajuhua/podcast2:arm32v7-$version
+        env:
+          version: ${{ inputs.version }}
       - name: push manifest
         run: |
-          docker manifest push yajuhua/podcast2:beta-$(date +%Y-%m-%d)
-
+          docker manifest push yajuhua/podcast2:beta-$version
+        env:
+          version: ${{ inputs.version }}
   build-installation-package:
     permissions: write-all
     runs-on: ubuntu-latest
@@ -280,15 +295,17 @@ jobs:
 
       - name: Set Release Date
         id: release_date
-        run: echo "::set-output name=date::$(date +beta-%Y-%m-%d)"
+        run: echo "::set-output name=date::$version"
+        env:
+          version: ${{ inputs.version }}
 
       # 上传文件并发布 Release
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "${{ steps.release_date.outputs.date }}"
+          automatic_release_tag: "${{ inputs.version }}"
           prerelease: true
-          title: "${{ steps.release_date.outputs.date }}"
+          title: "${{ inputs.version }}"
           files: |
             podcast2-win-x64.zip
             podcast2-osx-x64.zip

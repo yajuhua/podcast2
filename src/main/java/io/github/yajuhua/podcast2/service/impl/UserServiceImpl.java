@@ -6,10 +6,7 @@ import io.github.yajuhua.podcast2.common.constant.MessageConstant;
 import io.github.yajuhua.podcast2.common.exception.AccountNotFoundException;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
 import io.github.yajuhua.podcast2.pojo.dto.UserLoginDTO;
-import io.github.yajuhua.podcast2.pojo.entity.AddressFilter;
-import io.github.yajuhua.podcast2.pojo.entity.AlistInfo;
-import io.github.yajuhua.podcast2.pojo.entity.ExtendInfo;
-import io.github.yajuhua.podcast2.pojo.entity.User;
+import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -146,5 +143,44 @@ public class UserServiceImpl implements UserService {
         }
         String extendInfoJson = gson.toJson(update);
         userMapper.update(User.builder().uuid(extendInfoJson).build());
+    }
+
+    @Override
+    public void updateBotInfo(BotInfo botInfoAfter) {
+        BotInfo cBotInfo = getBotInfo();
+        if (cBotInfo != null){
+            if (botInfoAfter.getIsOpen() != null){
+                cBotInfo.setIsOpen(botInfoAfter.getIsOpen());
+            }
+            if (botInfoAfter.getToken() != null){
+                cBotInfo.setToken(botInfoAfter.getToken());
+            }
+            if (botInfoAfter.getUsername() != null){
+                cBotInfo.setUsername(botInfoAfter.getUsername());
+            }
+            if (botInfoAfter.getProxy() != null){
+                cBotInfo.setProxy(botInfoAfter.getProxy());
+            }
+            //更新
+            userMapper.update(User.builder().botInfo(gson.toJson(cBotInfo)).build());
+        }else {
+            userMapper.update(User.builder().botInfo(gson.toJson(botInfoAfter)).build());
+        }
+
+    }
+
+    @Override
+    public BotInfo getBotInfo() {
+        try {
+            String botInfoJsonStr = userMapper.list().get(0).getBotInfo();
+            BotInfo botInfo = gson.fromJson(botInfoJsonStr, BotInfo.class);
+            if (botInfo == null){
+                botInfo = new BotInfo();
+                botInfo.setIsOpen(false);
+            }
+            return botInfo;
+        } catch (JsonSyntaxException e) {
+            return new BotInfo();
+        }
     }
 }

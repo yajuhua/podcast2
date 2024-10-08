@@ -16,8 +16,10 @@ import io.github.yajuhua.podcast2.common.utils.NetWorkUtils;
 import io.github.yajuhua.podcast2.mapper.ExtendMapper;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
+import io.github.yajuhua.podcast2.pojo.dto.ApiDocStatusDTO;
 import io.github.yajuhua.podcast2.pojo.dto.UserLoginDTO;
 import io.github.yajuhua.podcast2.pojo.entity.*;
+import io.github.yajuhua.podcast2.pojo.vo.ApiTokenVO;
 import io.github.yajuhua.podcast2.pojo.vo.UserLoginVO;
 import io.github.yajuhua.podcast2.service.ExtendService;
 import io.github.yajuhua.podcast2.service.UserService;
@@ -33,10 +35,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -561,6 +560,133 @@ public class UserController {
     @GetMapping("/addressFilter")
     public Result<AddressFilter> getAddressFilter(){
         return Result.success(userService.getExtendInfo().getAddressFilter());
+    }
+
+    /**
+     * 获取apiToken
+     * @return
+     */
+    @ApiOperation("获取apiToken")
+    @GetMapping("/apiToken")
+    public Result<String> getApiToken(){
+        try {
+            List<User> users = userMapper.list();
+            return Result.success(users.get(0).getApiToken());
+        } catch (Exception e) {
+            log.error("无法获取apiToken: {}",e.getMessage());
+            return Result.error("无法获取apiToken");
+        }
+    }
+
+    /**
+     * 是否有apiToken
+     * @return
+     */
+    @ApiOperation("是否有apiToken")
+    @GetMapping("/hasApiToken")
+    public Result<Boolean> hasApiToken(){
+     if (getApiToken().getCode() == 1 && !getApiToken().getData().equalsIgnoreCase("none") && !getApiToken().getData().isEmpty()){
+           return Result.success(true);
+       }else {
+         return Result.success(false);
+     }
+    }
+
+    /**
+     * 创建apiToken
+     * @return
+     */
+    @ApiOperation("创建apiToken")
+    @GetMapping("/createApiToken")
+    public Result<String> createApiToken(){
+        String uuid = UUID.randomUUID().toString();
+        try {
+            User user = userMapper.list().get(0);
+            user.setApiToken(uuid);
+            userMapper.update(user);
+        } catch (Exception e) {
+            log.error("apiToken创建失败: {}",e.getMessage());
+            return Result.error("apiToken创建失败");
+        }
+        return Result.success(uuid);
+    }
+
+    /**
+     * 删除apiToken
+     * @return
+     */
+    @ApiOperation("删除apiToken")
+    @DeleteMapping("/apiToken")
+    public Result deleteApiToken(){
+        try {
+            User user = userMapper.list().get(0);
+            user.setApiToken("none");
+            userMapper.update(user);
+        } catch (Exception e) {
+            log.error("apiToken删除失败: {}",e.getMessage());
+            return Result.error("apiToken删除失败");
+        }
+        return Result.success();
+    }
+
+    /**
+     * 获取apiToken信息
+     * @return
+     */
+    @ApiOperation("获取apiToken信息")
+    @GetMapping("/apiTokenInfo")
+    public Result<ApiTokenVO> getApiTokenInfo(){
+        ApiTokenVO apiTokenVO = ApiTokenVO.builder()
+                .hasApiToken(hasApiToken().getData())
+                .apiToken(getApiToken().getData())
+                .build();
+        return Result.success(apiTokenVO);
+    }
+
+    /**
+     * 获取机器人消息
+     * @return
+     */
+    @ApiOperation("获取机器人信息")
+    @GetMapping("/botInfo")
+    public Result<BotInfo> getBotInfo(){
+        BotInfo botInfo = userService.getBotInfo();
+        return Result.success(botInfo);
+    }
+
+    /**
+     * 更新机器人信息
+     * @param botInfo
+     * @return
+     */
+    @ApiOperation("更新机器人信息")
+    @PutMapping("/botInfo")
+    public Result updateBotInfo(@RequestBody BotInfo botInfo){
+        userService.updateBotInfo(botInfo);
+        return Result.success();
+    }
+
+    /**
+     * 获取api文档状态
+     * @return
+     */
+    @ApiOperation("获取api文档状态")
+    @GetMapping("/apiDocStatus")
+    public Result<Boolean> getApiDocStatus(){
+        Boolean apiDoc = userMapper.list().get(0).getApiDoc();
+        return Result.success(apiDoc);
+    }
+
+    /**
+     * 更新api文档开启和关闭状态
+     * @param apiDocStatus
+     * @return
+     */
+    @ApiOperation("更新api文档状态")
+    @PostMapping("/apiDocStatus")
+    public Result updateApiDocStatus(@RequestBody ApiDocStatusDTO apiDocStatus){
+        userMapper.update(User.builder().apiDoc(apiDocStatus.getStatus()).build());
+        return Result.success();
     }
 
 

@@ -23,6 +23,7 @@ import io.github.yajuhua.podcast2.controller.PluginController;
 import io.github.yajuhua.podcast2.downloader.ytdlp.YtDlpUpdate;
 import io.github.yajuhua.podcast2.mapper.*;
 import io.github.yajuhua.podcast2.plugin.PluginManager;
+import io.github.yajuhua.podcast2.pojo.dto.AppendItemDTO;
 import io.github.yajuhua.podcast2.pojo.dto.GithubActionWorkflowsDTO;
 import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
@@ -52,6 +53,7 @@ public class Task {
     public static List<DownloadManager> downloadManagerList = new ArrayList<>();//存放下载管理
     public static Map<String,List<LogMessage>> collectUpdateLogMessagesMap = new HashMap<>();//存放订阅更新日志
     public static List<Items> reDownloadItems = new ArrayList<>();//点击重新下载后会先存放到这
+    public static List<AppendItemDTO> appendItemList = new ArrayList<>();//订阅追加节目
     @Autowired
     private UserMapper userMapper;
     @Autowired
@@ -148,16 +150,39 @@ public class Task {
             for (Sub sub : subList) {
                 //-1是永久的
                 if (sub.getSurvivalTime() != -1){
-                    Long survivalTime = sub.getSurvivalTime()*24*3600*1000;
+                    List<Items> itemsDeleteList = new ArrayList<>();
                     List<Items> itemsList = itemsMapper.selectByChannelUUid(sub.getUuid());
-                    itemsList =  itemsList.stream().filter(new Predicate<Items>() {
-                        @Override
-                        public boolean test(Items items) {
-                            return items.getCreateTime() + survivalTime < System.currentTimeMillis();
+                    if (sub.getSurvivalWay().equalsIgnoreCase("keepTime")){
+                        //保留时间
+                        Long survivalTime = sub.getSurvivalTime()*24*3600*1000;
+                        itemsDeleteList =  itemsList.stream().filter(new Predicate<Items>() {
+                            @Override
+                            public boolean test(Items items) {
+                                return items.getCreateTime() + survivalTime < System.currentTimeMillis();
+                            }
+                        }).collect(Collectors.toList());
+                    }else if (sub.getSurvivalWay().equalsIgnoreCase("keepLast")){
+                        //保留最近N集
+                        //只有item中publicTime不为Null时支持；排序
+                        itemsList = itemsList.stream().filter(new Predicate<Items>() {
+                            @Override
+                            public boolean test(Items items) {
+                                return items.getPublicTime() != null;
+                            }
+                        }).sorted(new Comparator<Items>() {
+                            @Override
+                            public int compare(Items o1, Items o2) {
+                                return Long.compare(o2.getPublicTime(),o1.getPublicTime());
+                            }
+                        }).collect(Collectors.toList());
+                        //排除信息不完整
+                        if ((sub.getKeepLast() != null) && (itemsList.size() > sub.getKeepLast())){
+                             itemsDeleteList = itemsList.subList(sub.getKeepLast(),itemsList.size());
                         }
-                    }).collect(Collectors.toList());
+                    }
 
-                    for (Items items : itemsList) {
+                    //执行删除操作
+                    for (Items items : itemsDeleteList) {
                         Integer status = items.getStatus();
                         //删除本地文件
                         if (Context.COMPLETED == status){
@@ -535,5 +560,25 @@ public class Task {
             //关闭所有类加载器
             PluginManager.closeAllClassLoader();
         }
+    }
+
+    /**
+     * 下载订阅追加节目
+     */
+    @Scheduled(fixedDelay = 1,timeUnit = TimeUnit.MINUTES)
+    public void downloadAppendItemList(){
+        for (AppendItemDTO appendItem : appendItemList) {
+            try {
+                DownloadItem downloadItem = new DownloadItem(appendItem,itemsMapper,subMapper
+                        ,pluginManager,dataPathProperties,settingsMapper);
+                downloadItem.run();
+            } catch (Exception e) {
+                log.error("{}追加节目下载失败: {}",appendItem.getUrl(),e.getMessage());
+            }
+        }
+        //清空列表
+        appendItemList.clear();
+        //关闭所有插件资源
+        PluginManager.closeAllClassLoader();
     }
 }

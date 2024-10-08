@@ -1,15 +1,11 @@
 package io.github.yajuhua.podcast2.config;
 
 
-import com.github.xiaoymin.knife4j.spring.annotations.EnableKnife4j;
-import io.github.yajuhua.podcast2.common.json.JacksonObjectMapper;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.interceptor.JwtTokenInterceptor;
+import io.github.yajuhua.podcast2.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
-import org.springframework.boot.web.server.Ssl;
-import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -26,7 +22,6 @@ import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -42,6 +37,8 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
     private JwtTokenInterceptor jwtTokenInterceptor;
     @Autowired
     private DataPathProperties dataPathProperties;
+    @Autowired
+    private UserMapper userMapper;
 
     /**
      * 注册自定义拦截器
@@ -90,9 +87,13 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
      */
     protected void addResourceHandlers(ResourceHandlerRegistry registry) {
 
-        //TODO 关闭接口文档
-//        registry.addResourceHandler("/doc.html").addResourceLocations("classpath:/META-INF/resources/");
-//        registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
+        if (userMapper.list().get(0).getApiDoc() != null
+                && userMapper.list().get(0).getApiDoc()){
+            //开启api文档
+            log.info("开启api文档...");
+            registry.addResourceHandler("/doc.html").addResourceLocations("classpath:/META-INF/resources/");
+            registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
+        }
         registry.addResourceHandler("/js/**").addResourceLocations("classpath:/static/js/");
         registry.addResourceHandler("/css/**").addResourceLocations("classpath:/static/css/");
         registry.addResourceHandler("/fonts/**").addResourceLocations("classpath:/static/fonts/");

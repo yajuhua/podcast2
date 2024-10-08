@@ -74,6 +74,18 @@
             <if test="isExtend != null">
                 is_extend = #{isExtend},
             </if>
+            <if test="keepLast != null">
+                keep_last = #{keepLast},
+            </if>
+            <if test="survivalWay != null">
+                survival_way = #{survivalWay},
+            </if>
+            <if test="subType != null">
+                sub_type = #{subType},
+            </if>
+            <if test="syncWay != null">
+                sync_way = #{syncWay}
+            </if>
         </set>
         WHERE uuid = #{uuid}
     </update>
