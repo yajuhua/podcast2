@@ -153,11 +153,15 @@ public class Task {
                     List<Items> itemsDeleteList = new ArrayList<>();
                     List<Items> itemsList = itemsMapper.selectByChannelUUid(sub.getUuid());
                     if (sub.getSurvivalWay().equalsIgnoreCase("keepTime")){
-                        //保留时间
-                        Long survivalTime = sub.getSurvivalTime()*24*3600*1000;
                         itemsDeleteList =  itemsList.stream().filter(new Predicate<Items>() {
                             @Override
                             public boolean test(Items items) {
+                                //保留时间,旧版(2.5.0之前)数据库存放的是天数
+                                Long survivalTime = sub.getSurvivalTime()*24*3600*1000;
+                                if (sub.getSurvivalTime() > 30){
+                                    //说明是以秒数为存活时间
+                                    survivalTime = sub.getSurvivalTime()*1000;//转换成毫秒值
+                                }
                                 return items.getCreateTime() + survivalTime < System.currentTimeMillis();
                             }
                         }).collect(Collectors.toList());
