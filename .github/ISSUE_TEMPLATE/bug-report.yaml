@@ -1,0 +1,75 @@
+name: 错误回报
+description: 在使用 Podcast2 的过程中遇到了错误
+labels: [ "bug" ]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 请补全标题并认真填写下方内容
+
+        请清晰描述问题。
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: 你必须先同意以下内容
+      options:
+        - label: 我已在 [Release](https://github.com/yajuhua/podcast2/releases) 检阅最新版本并尝试，且问题依旧
+          required: true
+        - label: 我清楚知道，反馈非最新 Release 版的错误是无意义的
+          required: true
+        - label: 我已查看 [文档](https://yajuhua.github.io/) ,但问题依旧。
+          required: true
+        - label: 我清楚知道如何查看日志。
+          required: true
+        - label: 我清楚知道不是我自己网络问题。
+          required: true
+
+  - type: input
+    id: podcast2_version
+    attributes:
+      label: Podcast2版本
+      placeholder: 如v2.5.0
+    validations:
+      required: true
+
+  - type: input
+    id: plugin_name
+    attributes:
+      label: 插件名称
+      description: 可在插件列表中查看
+      placeholder: ganjingworld.com
+    validations:
+      required: true
+
+  - type: input
+    id: plugin_version
+    attributes:
+      label: 插件版本
+      description: 可在插件列表中查看
+      placeholder: 2.0.1
+    validations:
+      required: true
+
+  - type: input
+    id: url
+    attributes:
+      label: 主页链接
+      description: 添加订阅时的链接
+    validations:
+      required: true
+
+  - type: textarea
+    id: bug_info
+    attributes:
+      label: 错误描述
+      description: 描述你遇到的问题，需要怎么复现？期望的结果是什么？
+    validations:
+      required: true
+
+  - type: textarea
+    id: log
+    attributes:
+      label: 报错日志以及其他描述（如果有）
+      description: 将日志内容复制到下面
