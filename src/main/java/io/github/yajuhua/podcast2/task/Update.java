@@ -65,10 +65,7 @@ public class Update implements Runnable {
 
     @Override
     public void run() {
-        Class aClass = null;
         try {
-            //修改订阅状态
-            //sub.setStatus(StatusCode.ACTION_ING);
             subMapper.update(sub);
             List<Extend> anExtends = extendMapper.selectByUuid(sub.getUuid());
             List<InputAndSelectData> inputAndSelectDataList = new ArrayList<>();
@@ -347,7 +344,7 @@ public class Update implements Runnable {
                 log.error("{}:更新异常:{}",sub.getTitle(),e.getTargetException().getMessage());
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("{}:更新异常",sub.getTitle(),e);
         }finally {
             //更新sub表
             sub.setIsFirst(StatusCode.NO);
