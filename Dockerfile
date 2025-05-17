@@ -12,7 +12,7 @@ ENV WORKDIR=/tmp/setup_tools
 
 RUN set -eux; \
     apt update && \
-    apt install -y libicu \
+    apt install -y libicu-dev && \
     apt install -y --no-install-recommends gnupg ca-certificates curl wget tar && \
     curl -s https://repos.azul.com/azul-repo.key | gpg --dearmor -o /usr/share/keyrings/azul.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/azul.gpg] https://repos.azul.com/zulu/deb stable main" > /etc/apt/sources.list.d/zulu.list && \
