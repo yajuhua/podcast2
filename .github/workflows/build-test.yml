@@ -27,7 +27,7 @@ jobs:
           ls 
 
       - name: Upload UI artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: UI
           path: ui/dist/  # 上传 dist 目录
@@ -58,7 +58,7 @@ jobs:
         env:
           version: ${{ inputs.version }}
       - name: Upload jar artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: jar
           path: target/  # 上传 target 目录
