@@ -6,14 +6,18 @@ COPY starter.sh /
 EXPOSE 8088
 EXPOSE 5005
 
-ENV LANG=zh_CN.utf8
+ENV LANG=zh_CN.UTF-8
+ENV LANGUAGE=zh_CN:zh
+ENV LC_ALL=zh_CN.UTF-8
 ENV RUNNING_IN_DOCKER=true
 ENV BIN_DIR=/usr/local/bin
 ENV WORKDIR=/tmp/setup_tools
 
 RUN set -eux; \
     apt update && \
-    apt install -y --no-install-recommends libicu-dev gnupg ca-certificates curl wget tar && \
+    apt install -y --no-install-recommends gnupg ca-certificates curl wget tar fonts-wqy-microhei locales && \
+    sed -i '/zh_CN.UTF-8/s/^# //g' /etc/locale.gen && \
+    locale-gen zh_CN.UTF-8 && \
     curl -s https://repos.azul.com/azul-repo.key | gpg --dearmor -o /usr/share/keyrings/azul.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/azul.gpg] https://repos.azul.com/zulu/deb stable main" > /etc/apt/sources.list.d/zulu.list && \
     apt update && \
@@ -27,7 +31,7 @@ RUN set -eux; \
         ln -sf /usr/local/zulu8.76.0.17-ca-jre8.0.402-linux_aarch32hf/bin/java /usr/local/bin/java; \
         rm -f zulu8.76.0.17-ca-jre8.0.402-linux_aarch32hf.tar.gz; \
     else \
-        apt install -y --no-install-recommends zulu8-ca-jre-headless; \
+        apt install -y --no-install-recommends zulu8-ca-jre-headless libicu-dev; \
     fi && \
     if [ "$ARCH" = "armv7l" ]; then \
         wget -q https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux_armv7l -O yt-dlp && \
