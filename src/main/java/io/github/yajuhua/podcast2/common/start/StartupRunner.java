@@ -1,5 +1,6 @@
 package io.github.yajuhua.podcast2.common.start;
 
+import com.github.markusbernhardt.proxy.ProxySearch;
 import com.google.gson.Gson;
 import io.github.yajuhua.download.commons.Context;
 import io.github.yajuhua.podcast2.common.constant.Default;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
+import java.net.ProxySelector;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -73,6 +75,9 @@ public class StartupRunner implements ApplicationRunner{
 
         //记录启动时间
         SystemController.startTime = LocalDateTime.now();
+
+        //设置JVM代理
+        setJVMProxyByReadSystemProxy();
 
         //首次
         firstConfig();
@@ -263,5 +268,16 @@ public class StartupRunner implements ApplicationRunner{
             items.setStatus(Context.DOWNLOAD_ERR);
             itemsMapper.update(items);
         }
+    }
+
+    /**
+     * 使用proxy-vole读取系统代理信息并设置到JVM中
+     * https://github.com/akuhtz/proxy-vole
+     */
+    public void setJVMProxyByReadSystemProxy(){
+        log.info("设置JVM网络代理...");
+        ProxySearch proxySearch = ProxySearch.getDefaultProxySearch();
+        ProxySelector proxySelector = proxySearch.getProxySelector();
+        ProxySelector.setDefault(proxySelector);
     }
 }
