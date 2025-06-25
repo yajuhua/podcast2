@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Node.js
         uses: actions/setup-node@v3
@@ -27,7 +27,7 @@ jobs:
           ls 
 
       - name: Upload UI artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: UI
           path: ui/dist/  # 上传 dist 目录
@@ -37,10 +37,10 @@ jobs:
     needs: build-UI
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Download artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: UI
           path: src/main/resources/static/
@@ -58,7 +58,7 @@ jobs:
         env:
           version: ${{ inputs.version }}
       - name: Upload jar artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: jar
           path: target/  # 上传 target 目录
@@ -69,9 +69,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-jar
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Download jar artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: jar
           path: .
@@ -116,12 +116,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-jar
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           arch: aarch64
 
       - name: Download jar artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: jar
           path: .
@@ -170,12 +170,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-jar
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           arch: armv7
 
       - name: Download jar artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: jar
           path: .
@@ -263,13 +263,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-jar
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Create tmp directory
         run: |
           mkdir tmp
       - name: Download jar artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: jar
           path: tmp/
