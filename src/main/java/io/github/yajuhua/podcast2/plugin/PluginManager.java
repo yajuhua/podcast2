@@ -1392,7 +1392,7 @@ public class PluginManager extends ClassLoader{
     public static boolean remoteRepoIsOK(String repoUrl){
         try {
             Gson gson = new Gson();
-            String json = Http.get(repoUrl);
+            String json = Http.get(getFinalRepoUrl(repoUrl));
             PluginMetadata pluginMetadata = gson.fromJson(json, PluginMetadata.class);
             return true;
         } catch (Exception e) {
@@ -1563,7 +1563,7 @@ public class PluginManager extends ClassLoader{
      * @param githubRepoRef 格式 owner/repo@branch
      * @return https://raw.githubusercontent.com/{owner}/{repo}/refs/heads/{branch}/metadata.json
      */
-    public String getRepoUrlByGithubRepoAndBranch(String githubRepoRef) throws Exception {
+    public static String getRepoUrlByGithubRepoAndBranch(String githubRepoRef) throws Exception {
 
         String pattern = "^([a-zA-Z0-9_.-]+)/([a-zA-Z0-9_.-]+)@([a-zA-Z0-9_.\\-/]+)$";
         Pattern r = Pattern.compile(pattern);
@@ -1602,7 +1602,7 @@ public class PluginManager extends ClassLoader{
      * @param repoUrl
      * @return
      */
-    public String getFinalRepoUrl(String repoUrl){
+    public static String getFinalRepoUrl(String repoUrl){
         if (!isValidUrl(repoUrl) || !repoUrl.endsWith("/metadata.json")) {
             try {
                 return getRepoUrlByGithubRepoAndBranch(repoUrl);
