@@ -148,6 +148,13 @@
             <version>6.1.0</version>
         </dependency>
 
+        <!--  读取系统代理信息 https://github.com/akuhtz/proxy-vole -->
+        <dependency>
+            <groupId>org.bidib.com.github.markusbernhardt</groupId>
+            <artifactId>proxy-vole</artifactId>
+            <version>1.1.6</version>
+        </dependency>
+
 
     </dependencies>
     <dependencyManagement>
