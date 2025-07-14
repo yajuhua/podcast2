@@ -2345,7 +2345,7 @@ export default {
 
     //更新插件仓库链接
     updatePluginUrl() {
-      const urlRegex = /^(https?:\/\/[a-zA-Z0-9.-]+(?:\/[-\w./?%&=]*)?)$|^([a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+@[a-zA-Z0-9_.\-\/]+)$/;
+      const urlRegex = /^(https?:\/\/[\w.-]+(?:\/[\w\-./?%&=]*)?)$|^([\w.-]+\/[\w.-]+@[\w.\-/]+)$/;
       const pluginUrl = this.user.pluginUrl;
       if (urlRegex.test(pluginUrl)) {
         this.$confirm('此操作将修改插件仓库链接, 是否继续?', '提示', {
@@ -2366,7 +2366,7 @@ export default {
           this.$message.info('已取消')
         })
       } else {
-        this.$message.error('请输入格式正确的URL！')
+        this.$message.error('请输入正确格式!')
       }
     },
     //删除自定义插件仓库链接
