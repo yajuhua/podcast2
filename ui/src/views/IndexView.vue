@@ -1045,7 +1045,7 @@ export default {
       var _this = this;
       axios({
         method: "get",
-        url: "/sub/list"
+        url: "/api/sub/list"
       }).then(function (resp) {
         _this.subData = resp.data.data;
       })
@@ -1124,7 +1124,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        axios.delete('/sub?uuids=' + this.delele).then(res => {
+        axios.delete('/api/sub?uuids=' + this.delele).then(res => {
           if (res.data.code == '1') {
             this.$message.success("删除成功")
             this.getSubList();
@@ -1223,7 +1223,7 @@ export default {
       }
 
       //将数据发送
-      axios.post('/sub/add', tempAddSub)
+      axios.post('/api/sub/add', tempAddSub)
         .then(res => {
           if (res.data.code == '1') {
             this.$message.success('添加成功')
@@ -1257,7 +1257,7 @@ export default {
           return
         }
         let plugin = new URL(url).hostname
-        axios.get('/sub/extendList', {
+        axios.get('/api/sub/extendList', {
           params: {
             plugin: plugin,
             url: url,
@@ -1326,7 +1326,7 @@ export default {
       this.editSubData.loading = true;
       console.log(uuid)
       this.editSubVisible = true
-      axios.get('/sub/edit/' + uuid)
+      axios.get('/api/sub/edit/' + uuid)
         .then(res => {
           if (res.data.code == '1') {
             this.editSubData = res.data.data
@@ -1386,7 +1386,7 @@ export default {
         }
       }
 
-      axios.put('/sub', tempEditSubData)
+      axios.put('/api/sub', tempEditSubData)
         .then(res => {
           if (res.data.code == '1') {
             this.$message.success('编辑成功！')
@@ -1449,7 +1449,7 @@ export default {
     //搜索订阅
     subSearch() {
       this.searchIng = 'el-icon-loading';
-      axios.get('/sub/search?keywords=' + this.searchKeyword)
+      axios.get('/api/sub/search?keywords=' + this.searchKeyword)
         .then(res => {
           if (res.data.code == '1') {
             this.subData = res.data.data;
@@ -1468,7 +1468,7 @@ export default {
     subDetailShow(uuid) {
       this.subDetail.detail = {}
       this.subDetail.visible = true
-      axios.get('/sub/detail/' + uuid)
+      axios.get('/api/sub/detail/' + uuid)
         .then(res => {
           if (res.data.code == '1') {
             this.subDetail.detail = res.data.data;
@@ -1538,7 +1538,7 @@ export default {
         return
       }
       let plugin = new URL(url).hostname
-      axios.get('/sub/extendList', {
+      axios.get('/api/sub/extendList', {
         params: {
           plugin: plugin,
           url: url,
@@ -1595,7 +1595,7 @@ export default {
       }
 
       //将数据发送
-      axios.post('/sub/appendItem', tempAppendItem)
+      axios.post('/api/sub/appendItem', tempAppendItem)
           .then(res => {
             if (res.data.code == '1') {
               this.$message.success('追加成功')

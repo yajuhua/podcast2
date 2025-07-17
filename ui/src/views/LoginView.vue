@@ -39,7 +39,7 @@ export default {
         this.$message.error('请输入用户名和密码！');
       } else {
         axios
-          .post('/user/login', this.login)
+          .post('/api/user/login', this.login)
           .then(response => {
             console.log(response.data); // 打印响应数据
             if (response.data.code == '1') {

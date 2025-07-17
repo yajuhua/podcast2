@@ -959,7 +959,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        axios.delete('/plugin?uuids=' + uuid)
+        axios.delete('/api/plugin?uuids=' + uuid)
             .then(res => {
               if (res.data.code == '1') {
                 this.$message.success("插件删除成功！");
@@ -981,7 +981,7 @@ export default {
     },
     //获取插件列表
     getPluginList() {
-      axios.get('/plugin/list')
+      axios.get('/api/plugin/list')
           .then(res => {
             if (res.data.code == '1') {
               this.plugin.list = res.data.data;
@@ -1006,7 +1006,7 @@ export default {
         type: 'warning'
       }).then(() => {
         butRef.icon = 'el-icon-loading';
-        axios.get('/plugin/install?uuids=' + uuid)
+        axios.get('/api/plugin/install?uuids=' + uuid)
             .then(res => {
               if (res.data.code == '1') {
                 this.$message.success('插件安装成功！');
@@ -1023,7 +1023,7 @@ export default {
 
         // 定时查询安装状态
         const intervalId = setInterval(() => {
-          axios.get('/plugin/install/status/' + uuid)
+          axios.get('/api/plugin/install/status/' + uuid)
               .then(res => {
                 if (res.data.data.install === true) {
                   this.plugin.installStatus = ''; // 清除安装状态
@@ -1051,7 +1051,7 @@ export default {
         return;
       }
       this.plugin.searchIng = 'el-icon-loading'
-      axios.get('/plugin/search?keyword=' + this.plugin.search)
+      axios.get('/api/plugin/search?keyword=' + this.plugin.search)
           .then(res => {
             if (res.data.code == '1') {
               this.plugin.list = res.data.data;
@@ -1072,7 +1072,7 @@ export default {
       if (this.plugin.autoUpdate) {
         status = 1;
       }
-      axios.post('/plugin/autoUpdate?status=' + status)
+      axios.post('/api/plugin/autoUpdate?status=' + status)
           .then(res => {
             if (res.data.code == '1') {
               if (status == '1') {
@@ -1090,7 +1090,7 @@ export default {
       })
     },
     getAutoUpdateStatus() {
-      axios.get('/plugin/autoUpdate')
+      axios.get('/api/plugin/autoUpdate')
           .then(res => {
             if (res.data.code == '1') {
               if (res.data.data == '1') {
@@ -1116,7 +1116,7 @@ export default {
         //构建一个表单把文件传进去
         let param = new FormData()
         param.append("files", this.$refs.upload.uploadFiles[0].raw)
-        axios.post('/common/upload/plugin', param, {
+        axios.post('/api/common/upload/plugin', param, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -1140,7 +1140,7 @@ export default {
     },
     //获取插件详细信息
     pluginDetail(uuid) {
-      axios.get('/plugin/detail/' + uuid)
+      axios.get('/api/plugin/detail/' + uuid)
           .then(res => {
             if (res.data.code == '1') {
               this.plugin.detail = res.data.data;
@@ -1166,7 +1166,7 @@ export default {
         type: 'warning'
       }).then(() => {
         butRef.icon = 'el-icon-loading';
-        axios.post('/plugin/update', 'names=' + name)
+        axios.post('/api/plugin/update', 'names=' + name)
             .then(res => {
               if (res.data.code == '1') {
                 //重新获取插件更新列表
@@ -1185,7 +1185,7 @@ export default {
 
         // 定时查询更新状态
         const intervalId = setInterval(() => {
-          axios.get('/plugin/update/status/' + name)
+          axios.get('/api/plugin/update/status/' + name)
               .then(res => {
                 if (res.data.data.hasUpdate === false) {
                   clearInterval(intervalId); // 停止定时查询
@@ -1216,7 +1216,7 @@ export default {
         for (let index = 0; index < this.plugin.updateNames.length; index++) {
           names.push(this.plugin.updateNames[index].name)
         }
-        axios.post('/plugin/update', 'names=' + names)
+        axios.post('/api/plugin/update', 'names=' + names)
             .then(res => {
               if (res.data.code == '1') {
                 //重新获取插件更新列表
@@ -1240,7 +1240,7 @@ export default {
     },
     //获取插件更新列表
     pluginUpdateList() {
-      axios.get('/plugin/updateList')
+      axios.get('/api/plugin/updateList')
           .then(res => {
             if (res.data.code == '1') {
               this.plugin.updateList = res.data.data;
@@ -1267,7 +1267,7 @@ export default {
     },
     //获取下载器信息
     getDownloaderInfo() {
-      axios.get('/download/info')
+      axios.get('/api/download/info')
           .then(res => {
             if (res.data.code == '1') {
               this.download.info = res.data.data;
@@ -1382,7 +1382,7 @@ export default {
     },
     //获取下载完成的信息
     getDownloadDone() {
-      axios.get('/download/completed')
+      axios.get('/api/download/completed')
           .then(res => {
             if (res.data.code == '1') {
               this.download.done = res.data.data;
@@ -1396,7 +1396,7 @@ export default {
     },
     //获取下载错误的信息
     getDownloadError() {
-      axios.get('/download/error')
+      axios.get('/api/download/error')
           .then(res => {
             if (res.data.code == '1') {
               this.download.error = res.data.data;
@@ -1412,7 +1412,7 @@ export default {
     downloadDetail(uuid) {
       this.download.detail = {}
       this.download.downloadDetailVisible = true
-      axios.get('/download/detail/' + uuid)
+      axios.get('/api/download/detail/' + uuid)
           .then(res => {
             if (res.data.code == '1') {
               this.download.detail = res.data.data;
@@ -1456,7 +1456,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        axios.get('/download/reDownload/' + uuid)
+        axios.get('/api/download/reDownload/' + uuid)
             .then(res => {
               if (res.data.code == '1') {
                 this.$message.success('正在重新处理中');
@@ -1492,7 +1492,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        axios.delete('/download?uuids=' + uuid)
+        axios.delete('/api/download?uuids=' + uuid)
             .then(res => {
               if (res.data.code == '1') {
                 this.$message.success('删除成功！')
@@ -1518,7 +1518,7 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-          axios.post('/user/enclosureDomain?domain=' + domain)
+          axios.post('/api/user/enclosureDomain?domain=' + domain)
               .then(res => {
                 if (res.data.code == '1') {
                   this.$message.success('修改成功！');
@@ -1544,7 +1544,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        axios.delete('/user/enclosureDomain')
+        axios.delete('/api/user/enclosureDomain')
             .then(res => {
               if (res.data.code == '1') {
                 this.$message.success('删除成功！');
@@ -1563,7 +1563,7 @@ export default {
 
     //获取附件自定义域名
     getEnclosureDomain(){
-      axios.get('/user/enclosureDomain')
+      axios.get('/api/user/enclosureDomain')
           .then(res => {
             this.user.domain.value = res.data.data;
           }).catch(err => {
@@ -1610,7 +1610,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        axios.post('/user/change', {
+        axios.post('/api/user/change', {
           'username': username,
           'password': password
         })
@@ -1666,7 +1666,7 @@ export default {
           uuids.push(dataExport[i].uuid);
         }
 
-        axios.get('/user/dataExport?uuids=' + uuids.join(','))
+        axios.get('/api/user/dataExport?uuids=' + uuids.join(','))
             .then(res => {
               if (res.data.code == '1') {
                 // 导出数据
@@ -1697,7 +1697,7 @@ export default {
     //导入到服务器
     dataImportToServer() {
       // 发送到服务器
-      axios.post('/user/dataImport', this.user.dataMigration.selectImport)
+      axios.post('/api/user/dataImport', this.user.dataMigration.selectImport)
           .then(res => {
             if (res.data.code == '1') {
               this.$message.success('导入成功！');
@@ -1741,7 +1741,7 @@ export default {
     },
     //获取订阅列表数据
     getSubList() {
-      axios.get('/sub/list')
+      axios.get('/api/sub/list')
           .then(res => {
             this.user.dataMigration.subData = res.data.data;
           }).catch(err => {
@@ -1779,7 +1779,7 @@ export default {
         param.append("files", this.$refs.uploadCertFile.uploadFiles[index].raw)
       }
 
-      axios.post('/user/cert', param, {
+      axios.post('/api/user/cert', param, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -1805,7 +1805,7 @@ export default {
     },
     //获取系统信息
     getSystemInfo() {
-      axios.get('/system/info')
+      axios.get('/api/system/info')
           .then(res => {
             if (res.data.code == '1') {
               this.system1.info = res.data.data;
@@ -1824,7 +1824,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        axios.get('/system/restart')
+        axios.get('/api/system/restart')
             .then(res => {
               if (res.data.code == '1') {
                 this.$message({
@@ -1862,7 +1862,7 @@ export default {
       this.system.update.windowsVisible = true;
       this.system.update.windowsLoading = true;
       this.getDownloadJarFileStatus();
-      axios.get('/system/update/has')
+      axios.get('/api/system/update/has')
           .then(res => {
             if (res.data.code == 1){
                 this.system.update.info = res.data.data;
@@ -1888,7 +1888,7 @@ export default {
 
     //获取Jar包文件下载状态
     getDownloadJarFileStatus(){
-      axios.get('/system/update/jarStatus?version=' + this.system.update.info.version)
+      axios.get('/api/system/update/jarStatus?version=' + this.system.update.info.version)
           .then(res => {
             if (res.data.code == 1){
              this.system.update.status = res.data.data;
@@ -1915,7 +1915,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        axios.get('/system/update/delete?version=' + this.system.update.info.version)
+        axios.get('/api/system/update/delete?version=' + this.system.update.info.version)
             .then(res => {
               if (res.data.code == 1){
                 if (res.data.data == true){
@@ -1961,7 +1961,7 @@ export default {
     downloadJarFile(){
       this.system.update.loadingTip = "正在发送下载请求中，请稍等..."
       this.system.update.windowsLoading = true;
-      axios.get('/system/update/download?version=' + this.system.update.info.version)
+      axios.get('/api/system/update/download?version=' + this.system.update.info.version)
           .then(res => {
             if (res.data.code == 1){
               this.system.update.windowsLoading = false;
@@ -2024,7 +2024,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        axios.get('/system/update/cancel')
+        axios.get('/api/system/update/cancel')
             .then(res => {
               if (res.data.code == 1){
                 this.$message({
@@ -2059,7 +2059,7 @@ export default {
     },
     //设置ssl
     switchSsl() {
-      axios.post('/user/switchSsl?status=' + this.user.cert.switchSsl)
+      axios.post('/api/user/switchSsl?status=' + this.user.cert.switchSsl)
           .then(res => {
             if (res.data.code == '1') {
               this.$message.success('设置成功，重启后生效！');
@@ -2082,7 +2082,7 @@ export default {
     },
     //获取ssl列表
     getSslList() {
-      axios.get('/user/cert')
+      axios.get('/api/user/cert')
           .then(res => {
             if (res.data.code == '1') {
               this.user.cert.list = res.data.data;
@@ -2111,7 +2111,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        axios.delete('/user/cert')
+        axios.delete('/api/user/cert')
             .then(res => {
               if (res.data.code == '1') {
                 this.$message.success('删除成功！')
@@ -2133,7 +2133,7 @@ export default {
     },
     //获取ssl状态
     getSslStatus() {
-      axios.get('/user/sslStatus')
+      axios.get('/api/user/sslStatus')
           .then(res => {
             if (res.data.code == '1') {
               this.user.cert.switchSsl = res.data.data;
@@ -2149,7 +2149,7 @@ export default {
     getPluginSettings(name) {
       this.plugin.settings = []
       this.plugin.settingsVisible = true;
-      axios.get('/plugin/settings/' + name)
+      axios.get('/api/plugin/settings/' + name)
           .then(res => {
             if (res.data.code == '1') {
               this.plugin.settings = res.data.data;
@@ -2164,7 +2164,7 @@ export default {
     //更新插件设置
     updatePluginSettings() {
       if (this.plugin.settings.length > 0) {
-        axios.put('/plugin/settings', this.plugin.settings)
+        axios.put('/api/plugin/settings', this.plugin.settings)
             .then(res => {
               if (res.data.code == '1') {
                 this.$message.success('更新插件设置成功！')
@@ -2193,7 +2193,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        axios.delete('/download/downloading?uuids=' + uuid)
+        axios.delete('/api/download/downloading?uuids=' + uuid)
             .then(res => {
               if (res.data.code == '1') {
                 this.$message.success('删除成功！')
@@ -2218,7 +2218,7 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-          axios.post('/user/path?path=' + path)
+          axios.post('/api/user/path?path=' + path)
               .then(res => {
                 if (res.data.code == '1') {
                   this.$message.success('修改成功！')
@@ -2241,7 +2241,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        axios.delete('/user/path')
+        axios.delete('/api/user/path')
             .then(res => {
               if (res.data.code == '1') {
                 this.$message.success("删除面板访问路径成功！");
@@ -2263,7 +2263,7 @@ export default {
     },
     //获取访问路径
     getPath() {
-      axios.get('/user/path')
+      axios.get('/api/user/path')
           .then(res => {
             if (res.data.code == '1') {
               this.user.path = res.data.data;
@@ -2285,7 +2285,7 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-          axios.post('/user/github?githubProxyUrl=' + githubProxyUrl)
+          axios.post('/api/user/github?githubProxyUrl=' + githubProxyUrl)
               .then(res => {
                 if (res.data.code == '1') {
                   this.$message.success('修改成功！')
@@ -2308,7 +2308,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        axios.delete('/user/github')
+        axios.delete('/api/user/github')
             .then(res => {
               if (res.data.code == '1') {
                 this.$message.success("删除Github加速站成功！");
@@ -2330,7 +2330,7 @@ export default {
     },
     //获取GithubProxyUrl
     getGithubProxyUrl() {
-      axios.get('/user/github')
+      axios.get('/api/user/github')
           .then(res => {
             if (res.data.code == '1') {
               this.user.githubProxyUrl = res.data.data;
@@ -2353,7 +2353,7 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-          axios.post('/user/plugin?pluginUrl=' + pluginUrl)
+          axios.post('/api/user/plugin?pluginUrl=' + pluginUrl)
               .then(res => {
                 if (res.data.code == '1') {
                   this.$message.success('修改成功！')
@@ -2376,7 +2376,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        axios.delete('/user/plugin')
+        axios.delete('/api/user/plugin')
             .then(res => {
               if (res.data.code == '1') {
                 this.$message.success("删除自定义插件仓库链接成功！");
@@ -2397,7 +2397,7 @@ export default {
     },
     //获取自定义插件仓库链接
     getPluginUrl() {
-      axios.get('/user/plugin')
+      axios.get('/api/user/plugin')
           .then(res => {
             if (res.data.code == '1') {
               this.user.pluginUrl = res.data.data;
@@ -2431,7 +2431,7 @@ export default {
         type: 'warning'
       }).then(() => {
         const uuids = this.download.selectionDownloadDone.map(item => item.uuid);
-        axios.delete('/download?uuids=' + uuids)
+        axios.delete('/api/download?uuids=' + uuids)
             .then(res => {
               if (res.data.code == '1') {
                 this.$message.success('批量删除成功！')
@@ -2449,7 +2449,7 @@ export default {
     },
     //更新alist配置
     updateAlistInfo() {
-      axios.post('/user/alist/update', this.user.submitAlist)
+      axios.post('/api/user/alist/update', this.user.submitAlist)
           .then(res => {
             if (res.data.code == '1') {
               this.getAlistInfo()
@@ -2468,7 +2468,7 @@ export default {
         type: 'warning'
       }).then(() => {
         this.user.submitAlist.open = true;
-        axios.post('/user/alist/update', this.user.submitAlist)
+        axios.post('/api/user/alist/update', this.user.submitAlist)
             .then(res => {
               if (res.data.code == '1') {
                 this.getAlistInfo()
@@ -2489,7 +2489,7 @@ export default {
         type: 'warning'
       }).then(() => {
         this.user.submitAlist.open = false;
-        axios.post('/user/alist/update', this.user.submitAlist)
+        axios.post('/api/user/alist/update', this.user.submitAlist)
             .then(res => {
               if (res.data.code == '1') {
                 this.getAlistInfo()
@@ -2504,7 +2504,7 @@ export default {
     },
     //获取alist配置信息
     getAlistInfo() {
-      axios.get('/user/alist/info')
+      axios.get('/api/user/alist/info')
           .then(res => {
             if (res.data.code == '1') {
               this.user.alistInfo = res.data.data;
@@ -2518,7 +2518,7 @@ export default {
     },
     //查看最近历史日志
     getHistoryLogs() {
-      axios.get('/system/logs/history/latest?' + 'minutes=' + this.system.historyLogsLatest + '&level=' + this.system.historyLogsLevel)
+      axios.get('/api/system/logs/history/latest?' + 'minutes=' + this.system.historyLogsLatest + '&level=' + this.system.historyLogsLevel)
           .then(res => {
             if (res.data.code == '1') {
               this.system.historyLogs = res.data.data;
@@ -2531,7 +2531,7 @@ export default {
       })
     },
     getHistoryLogsByTime() {
-      axios.get('/system/logs/history/between?start=' + this.system.selectHistoryByTime[0] + '&end=' + this.system.selectHistoryByTime[1] + '&level=' + this.system.historyLogsLevel)
+      axios.get('/api/system/logs/history/between?start=' + this.system.selectHistoryByTime[0] + '&end=' + this.system.selectHistoryByTime[1] + '&level=' + this.system.historyLogsLevel)
           .then(res => {
             if (res.data.code == '1') {
               this.system.historyLogs = res.data.data;
@@ -2588,7 +2588,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        axios.post('/user/addressFilter/update',this.user.ipAddressFilter)
+        axios.post('/api/user/addressFilter/update',this.user.ipAddressFilter)
             .then(res => {
               if (res.data.code == '1') {
                 this.$message.success("提交黑白名单成功！")
@@ -2606,7 +2606,7 @@ export default {
     },
     //获取黑白名单
     getAddressFilter() {
-      axios.get('/user/addressFilter')
+      axios.get('/api/user/addressFilter')
           .then(res => {
             if (res.data.code == '1') {
               this.user.ipAddressFilter = res.data.data;
@@ -2621,7 +2621,7 @@ export default {
     },
     //获取apiToken数据
     getApiTokenInfo(){
-      axios.get('/user/apiTokenInfo')
+      axios.get('/api/user/apiTokenInfo')
           .then(res => {
             if (res.data.code == '1') {
               this.user.apiToken = res.data.data;
@@ -2635,7 +2635,7 @@ export default {
     },
     //创建apiToken
     createApiToken(){
-      axios.get('/user/createApiToken')
+      axios.get('/api/user/createApiToken')
           .then(res => {
             if (res.data.code == '1') {
               this.user.apiToken.apiToken = res.data.data;
@@ -2651,7 +2651,7 @@ export default {
     },
     //移除apiToken
     removeApiToken(){
-      axios.delete('/user/apiToken')
+      axios.delete('/api/user/apiToken')
           .then(res => {
             if (res.data.code == '1') {
               this.user.apiToken.apiToken = '';
@@ -2667,7 +2667,7 @@ export default {
     },
     //获取botInfo
     getBotInfo(){
-      axios.get('/user/botInfo')
+      axios.get('/api/user/botInfo')
           .then(res => {
             if (res.data.code == '1') {
               this.user.botInfo = res.data.data;
@@ -2690,7 +2690,7 @@ export default {
           return;
         }
       }
-      axios.put('/user/botInfo', this.user.botInfo)
+      axios.put('/api/user/botInfo', this.user.botInfo)
           .then(res => {
             if (res.data.code == '1') {
               this.$message.success('更新botInfo成功！重启后失效');
@@ -2705,7 +2705,7 @@ export default {
     },
     //更新api文档状态
     updateApiDocStatus(){
-      axios.post('/user/apiDocStatus',this.user.apiDoc)
+      axios.post('/api/user/apiDocStatus',this.user.apiDoc)
           .then(res => {
             if (res.data.code == '1') {
               this.$message.success("修改成功！重启后失效")
@@ -2720,7 +2720,7 @@ export default {
     },
     //获取api文档状态
     getApiDocStatus(){
-      axios.get('/user/apiDocStatus')
+      axios.get('/api/user/apiDocStatus')
           .then(res => {
             if (res.data.code == '1') {
               this.user.apiDoc.status = res.data.data;
