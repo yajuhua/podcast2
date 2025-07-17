@@ -23,7 +23,7 @@ public class ResourcesController {
      * @return
      */
     @ApiOperation("解析alist资源")
-    @GetMapping("/resources/alist/{fileName}")
+    @GetMapping("/api/resources/alist/{fileName}")
     public RedirectView parseAlistResources(@PathVariable String fileName) {
         RedirectView redirectView = new RedirectView();
         String fileUrl = alist.getFileUrl(fileName);
