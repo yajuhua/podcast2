@@ -59,28 +59,7 @@
 
       <!-- 用户 -->
       <div v-show="activeMenu == '2'">
-        <el-form :model="form" label-position="top">
-          <h4>用户名密码</h4>
-          <el-row :gutter="20">
-            <el-col :xs="24" :sm="12">
-              <el-form-item label="用户名">
-                <el-input v-model="form.username" placeholder="请输入用户名" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12">
-              <el-form-item label="密码">
-                <el-input
-                  v-model="form.password"
-                  type="password"
-                  placeholder="请输入密码"
-                />
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-form-item>
-            <el-button type="primary" round size="mini">更新</el-button>
-          </el-form-item>
-        </el-form>
+        <User/>
       </div>
 
       <!-- 上传与下载 -->
@@ -105,8 +84,9 @@ import GeneralOverview from '../components/manager/GeneralOverview.vue'
 import ReadmeReader from '../components/manager/ReadmeReader.vue'
 import PluginManager from '../components/manager/PluginManager.vue'
 import DownloadUpload from '../components/manager/DownloadUpload.vue'
+import User from '@/components/manager/User.vue';
 export default {
-components: {GeneralOverview, ReadmeReader, PluginManager, DownloadUpload},
+components: {GeneralOverview, ReadmeReader, PluginManager, DownloadUpload, User},
   data() {
     return {
       isCollapse: false, // 是否收起
