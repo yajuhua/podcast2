@@ -16,7 +16,10 @@
     "vue-iframe": "^0.0.0",
     "vue-iframes": "^0.0.20",
     "vue-qr": "^4.0.9",
-    "vue-router": "^3.5.1"
+    "vue-router": "^3.5.1",
+    "marked": "^16.1.2",
+    "github-markdown-css": "^5.8.1",
+    "highlight": "^0.2.4"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",

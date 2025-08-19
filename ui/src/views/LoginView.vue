@@ -105,8 +105,8 @@ input:focus {
 }
 
 .login-form {
-  width: 300px;
-  height: 300px;
+  width: 190px;
+  height: 250px;
   padding: 20px;
   background-color: #fff;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
@@ -126,7 +126,7 @@ h2 {
 
 .form-group input {
   width: 100%;
-  height: 55px;
+  height: 40px;
   padding: 8px;
   font-size: 15px;
   color: #D7D2D7;
@@ -151,7 +151,7 @@ h2 {
 
 .form-group button {
   width: 100%;
-  height: 55px;
+  height: 40px;
   padding-top: calc(100% * 1/9);
   font-size: 14px;
   color: #fff;
@@ -200,7 +200,7 @@ button:active {
 
   /* 适配小屏幕手机，宽度小于等于480px */
   .login-form {
-    width: 90%;
+    width: 80%;
     height: 250px;
     zoom: 1;
   }
@@ -215,7 +215,7 @@ button:active {
   /* 适配中等屏幕手机，宽度大于480px小于等于768px */
   .login-form {
     width: 70%;
-    height: 300px;
+    height: 260px;
     zoom: 1.2;
   }
 }
@@ -225,7 +225,7 @@ button:active {
   /* 适配大屏幕手机，宽度大于768px小于等于1024px */
   .login-form {
     width: 50%;
-    height: 350px;
+    height: 260px;
     zoom: 1.4;
   }
 }
