@@ -62,6 +62,11 @@
         <User/>
       </div>
 
+      <!-- 设置 -->
+      <div v-show="activeMenu == '3'">
+        <SettingsView></SettingsView>
+      </div>
+
       <!-- 上传与下载 -->
       <div v-show="activeMenu == 4">
         <DownloadUpload/>
@@ -85,8 +90,9 @@ import ReadmeReader from '../components/manager/ReadmeReader.vue'
 import PluginManager from '../components/manager/PluginManager.vue'
 import DownloadUpload from '../components/manager/DownloadUpload.vue'
 import User from '@/components/manager/User.vue';
+import SettingsView from '@/components/manager/SettingsView.vue';
 export default {
-components: {GeneralOverview, ReadmeReader, PluginManager, DownloadUpload, User},
+components: {GeneralOverview, ReadmeReader, PluginManager, DownloadUpload, User, SettingsView},
   data() {
     return {
       isCollapse: false, // 是否收起
