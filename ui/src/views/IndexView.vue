@@ -324,7 +324,7 @@ export default {
 .page-wrapper {
   display: flex;
   flex-direction: column;
-  min-height: 100vh; /* 页面至少占满屏幕高度 */
+  min-height: 95vh; /* 页面至少占满屏幕高度 */
 }
 
 .page-content {
