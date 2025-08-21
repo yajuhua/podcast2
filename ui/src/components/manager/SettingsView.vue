@@ -69,6 +69,36 @@
         </el-form-item>
       </el-form>
     </div>
+    <!-- openlist -->
+    <div>
+      <el-form class="demo-form-inline" :model="openListSubmit" label-width="auto" label-position="top" :rules="openListRules"  ref="openListRef">
+        <h4>设置OpenList</h4>
+        <el-form-item label="链接" prop="url">
+          <el-tooltip class="item" effect="dark" content="如：http://192.168.123.3:5244" placement="top-start">
+            <el-input v-model="openListSubmit.url" :placeholder="openListInfo.url" clearable></el-input>
+          </el-tooltip>
+        </el-form-item>
+
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="openListSubmit.username" :placeholder="openListInfo.username" clearable></el-input>
+        </el-form-item>
+
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="openListSubmit.password" :placeholder="openListInfo.password" clearable></el-input>
+        </el-form-item>
+
+        <el-form-item label="目录" prop="path">
+          <el-tooltip class="item" effect="dark" content="如：/podcast2是alist根目录下的podcast2文件夹" placement="top-start">
+            <el-input v-model="openListSubmit.path" :placeholder="openListInfo.path" clearable></el-input>
+          </el-tooltip>
+        </el-form-item>
+
+        <el-form-item>
+          <el-button type="primary" @click="openAlist()" v-if="openListInfo.open == false">开启</el-button>
+          <el-button type="danger" @click="closeAlist()" v-if="openListInfo.open == true">关闭</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
   </div>
 </template>
 <script>
@@ -79,6 +109,7 @@ export default {
     this.getSslList();
     this.getSslStatus()
     this.getPath();
+    this.getOpenListInfo();
   },
   data() {
     return {
@@ -97,7 +128,38 @@ export default {
       },
       path: {
         value: ''
+      },
+      openListInfo: {
+        url: '',
+        username: '',
+        password: '',
+        path: '',
+        open: false
+      },
+      openListSubmit: {
+        url: '',
+        username: '',
+        password: '',
+        path: '',
+        open: false
+      },
+      openListRules: {
+        url: [
+          { required: true, message: '请输入链接', trigger: 'blur' },
+          { pattern: /^https?:\/\/[^\s]+$/, message: '请输入合法的链接（http/https 开头）', trigger: 'blur' }
+        ],
+        username: [
+          { required: true, message: '请输入用户名', trigger: 'blur' }
+        ],
+        password: [
+          { required: true, message: '请输入密码', trigger: 'blur' }
+        ],
+        path: [
+          { required: true, message: '请输入目录', trigger: 'blur' },
+          { pattern: /^\/.+/, message: '目录必须以斜杠 "/" 开头', trigger: 'blur' }
+        ]
       }
+
     }
   },
   methods: {
@@ -313,7 +375,7 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-          axios.post('/api/user/path?path=' +  path)
+          axios.post('/api/user/path?path=' + path)
             .then(res => {
               if (res.data.code == '1') {
                 this.$message.success('修改成功！')
@@ -374,6 +436,73 @@ export default {
       //删除token
       localStorage.removeItem('token');
       this.$router.push('/login')
+    },
+    //开启OpenList
+    openAlist() {
+      this.$refs.openListRef.validate((valid) => {
+        if (!valid) {
+          this.$message.error('请先填写完整OpenList信息');
+          return;
+        }
+
+        this.$confirm('此操作将开启OpenList, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.openListSubmit.open = true;
+
+          axios.post('/api/user/alist/update', this.openListSubmit)
+            .then(res => {
+              if (res.data.code == '1') {
+                this.getOpenListInfo();
+                this.$message.success("OpenList 开启成功");
+              } else {
+                this.$message.error(res.data.msg);
+              }
+            })
+            .catch(() => {
+              this.$message.error("请求失败，请检查网络");
+            });
+        }).catch(() => {
+          this.$message.info('已取消开启');
+        });
+      });
+    },
+    //关闭alist
+    closeAlist() {
+      this.$confirm('此操作将关闭OpenList, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.openListSubmit.open = false;
+        axios.post('/api/user/alist/update', this.openListSubmit)
+          .then(res => {
+            if (res.data.code == '1') {
+              this.getOpenListInfo();
+              this.$message.success("OpenList关闭成功")
+            } else {
+              this.$message.error(res.data.msg)
+            }
+          })
+      }).catch(() => {
+        this.$message.info('已取消关闭')
+      });
+    },
+    //获取OpenList配置信息
+    getOpenListInfo() {
+      axios.get('/api/user/alist/info')
+        .then(res => {
+          if (res.data.code == '1') {
+            this.openListInfo = res.data.data;
+          } else {
+            this.$message.error(res.data.msg);
+          }
+        }).catch(err => {
+          console.log(err);
+          this.$message.error('获取OpenList配置信息失败！')
+        })
     },
   }
 };
