@@ -95,32 +95,76 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" @click="openAlist()" v-if="openListInfo.open == false" round size="mini">开启</el-button>
-          <el-button type="danger" @click="closeAlist()" v-if="openListInfo.open == true" round size="mini">关闭</el-button>
+          <el-button type="primary" @click="openAlist()" v-if="openListInfo.open == false" round
+            size="mini">开启</el-button>
+          <el-button type="danger" @click="closeAlist()" v-if="openListInfo.open == true" round
+            size="mini">关闭</el-button>
         </el-form-item>
       </el-form>
     </div>
-
     <!-- Github加速站 -->
-    <el-form label-position="top">
-      <h4>Github加速站</h4>
-      <el-form-item label="链接" prop="url">
-            <el-input v-model="githubProxy.url" placeholder="请输入Github加速站" />
-            <el-tooltip class="item" effect="dark" content="国内无法直接通过yt-dlp更新需要设置Github加速站,当然代理除外。"
-              placement="top-start">
-              <i class="el-icon-question"></i>
-            </el-tooltip>
+    <div>
+      <el-form label-position="top">
+        <h4>Github加速站</h4>
+        <el-form-item label="链接" prop="url">
+          <el-input v-model="githubProxy.url" placeholder="请输入Github加速站" />
+          <el-tooltip class="item" effect="dark" content="国内无法直接通过yt-dlp更新需要设置Github加速站,当然代理除外。" placement="top-start">
+            <i class="el-icon-question"></i>
+          </el-tooltip>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="updateGithubProxyUrl()" size="mini" round>修改</el-button>
+          <el-button type="danger" @click="deleteGithubProxyUrl()" size="mini" round>删除</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+    <!--api-->
+    <div>
+      <div>
+        <h4>API</h4>
+        <el-input v-model="apiToken.apiToken" readonly>
+          <template slot="prepend">apiToken</template>
+          <el-button slot="append" @click="copy(apiToken.apiToken)">复制</el-button>
+        </el-input>
+
+        <el-row style="margin-top: 15px;">
+          <el-button type="primary" v-if="!apiToken.hasApiToken" @click="createApiToken()" round size="mini">点击生成</el-button>
+          <el-button type="danger" v-else @click="removeApiToken()" round size="mini">点击删除</el-button>
+        </el-row>
+      </div>
+
+      <div style="margin-top: 15px;">
+        <el-form label-width="80px" label-position="top">
+          <el-form-item label="api文档">
+            <a :href="currentHost + '/doc.html'" target="_blank">
+              {{ currentHost + '/doc.html' }}
+            </a>
           </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="updateGithubProxyUrl()" size="mini" round>修改</el-button>
-        <el-button type="danger" @click="deleteGithubProxyUrl()" size="mini" round>删除</el-button>
-      </el-form-item>
-    </el-form>
+
+          <el-form-item label="开关">
+            <el-select v-model="apiDoc.status">
+              <el-option label="开启" :value="true"></el-option>
+              <el-option label="关闭" :value="false"></el-option>
+            </el-select>
+          </el-form-item>
+
+          <el-form-item>
+            <el-button type="primary" @click="updateApiDocStatus()" round size="mini">修改</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+    </div>
+
   </div>
 </template>
 <script>
 import axios from 'axios';
 export default {
+  computed: {
+    currentHost() {
+      return window.location.origin;
+    }
+  },
   mounted() {
     this.getEnclosureDomain();
     this.getSslList();
@@ -128,6 +172,7 @@ export default {
     this.getPath();
     this.getOpenListInfo();
     this.getGithubProxyUrl();
+    this.getApiTokenInfo();
   },
   data() {
     return {
@@ -179,6 +224,13 @@ export default {
       },
       githubProxy: {
         url: '',
+      },
+      apiToken: {
+        hasApiToken: false,
+        apiToken: ''
+      },
+      apiDoc: {
+        status: false
       }
     }
   },
@@ -591,6 +643,105 @@ export default {
           this.$message.error('获取Github加速站失败！')
         })
     },
+    copy(content) {
+      const textarea = document.createElement('textarea');
+
+      console.log('复制到粘贴板')
+
+      textarea.value = content;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'absolute';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+
+      // 延迟显示复制成功提示
+      setTimeout(() => {
+        this.$message({
+          message: '复制成功！',
+          type: 'success'
+        });
+      }, 100);
+
+      console.log('内容已成功复制到剪贴板');
+    },
+    //获取apiToken数据
+    getApiTokenInfo() {
+      axios.get('/api/user/apiTokenInfo')
+        .then(res => {
+          if (res.data.code == '1') {
+            this.apiToken = res.data.data;
+          } else {
+            this.$message.error(res.data.msg);
+          }
+        }).catch(err => {
+          console.log(err);
+          this.$message.error('获取apiToken信息失败！')
+        })
+    },
+    //创建apiToken
+    createApiToken() {
+      axios.get('/api/user/createApiToken')
+        .then(res => {
+          if (res.data.code == '1') {
+            this.apiToken.apiToken = res.data.data;
+            this.apiToken.hasApiToken = true;
+            this.$message.success("创建apiToken成功！")
+          } else {
+            this.$message.error(res.data.msg);
+          }
+        }).catch(err => {
+          console.log(err);
+          this.$message.error('创建apiToken失败！')
+        })
+    },
+    //移除apiToken
+    removeApiToken() {
+      axios.delete('/api/user/apiToken')
+        .then(res => {
+          if (res.data.code == '1') {
+            this.apiToken.apiToken = '';
+            this.apiToken.hasApiToken = false;
+            this.$message.success("移除apiToken成功！")
+          } else {
+            this.$message.error(res.data.msg);
+          }
+        }).catch(err => {
+          console.log(err);
+          this.$message.error('移除apiToken失败！')
+        })
+    },
+    //更新api文档状态
+    updateApiDocStatus() {
+      axios.post('/api/user/apiDocStatus', this.apiDoc)
+        .then(res => {
+          if (res.data.code == '1') {
+            this.$message.success("修改成功！重启后生效")
+            this.getSslStatus();
+          } else {
+            this.$message.error(res.data.msg);
+          }
+        }).catch(err => {
+          console.log(err);
+          this.$message.error(err.toString());
+        })
+    },
+    //获取api文档状态
+    getApiDocStatus() {
+      axios.get('/api/user/apiDocStatus')
+        .then(res => {
+          if (res.data.code == '1') {
+            this.apiDoc.status = res.data.data;
+          } else {
+            this.$message.error(res.data.msg);
+          }
+        }).catch(err => {
+          console.log(err);
+          this.$message.error(err.toString())
+        })
+    }
   }
 };
 </script>
