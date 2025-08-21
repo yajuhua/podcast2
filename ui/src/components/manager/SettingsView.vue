@@ -71,7 +71,8 @@
     </div>
     <!-- openlist -->
     <div>
-      <el-form class="demo-form-inline" :model="openListSubmit" label-width="auto" label-position="top" :rules="openListRules"  ref="openListRef">
+      <el-form class="demo-form-inline" :model="openListSubmit" label-width="auto" label-position="top"
+        :rules="openListRules" ref="openListRef">
         <h4>设置OpenList</h4>
         <el-form-item label="链接" prop="url">
           <el-tooltip class="item" effect="dark" content="如：http://192.168.123.3:5244" placement="top-start">
@@ -94,11 +95,27 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" @click="openAlist()" v-if="openListInfo.open == false">开启</el-button>
-          <el-button type="danger" @click="closeAlist()" v-if="openListInfo.open == true">关闭</el-button>
+          <el-button type="primary" @click="openAlist()" v-if="openListInfo.open == false" round size="mini">开启</el-button>
+          <el-button type="danger" @click="closeAlist()" v-if="openListInfo.open == true" round size="mini">关闭</el-button>
         </el-form-item>
       </el-form>
     </div>
+
+    <!-- Github加速站 -->
+    <el-form label-position="top">
+      <h4>Github加速站</h4>
+      <el-form-item label="链接" prop="url">
+            <el-input v-model="githubProxy.url" placeholder="请输入Github加速站" />
+            <el-tooltip class="item" effect="dark" content="国内无法直接通过yt-dlp更新需要设置Github加速站,当然代理除外。"
+              placement="top-start">
+              <i class="el-icon-question"></i>
+            </el-tooltip>
+          </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="updateGithubProxyUrl()" size="mini" round>修改</el-button>
+        <el-button type="danger" @click="deleteGithubProxyUrl()" size="mini" round>删除</el-button>
+      </el-form-item>
+    </el-form>
   </div>
 </template>
 <script>
@@ -110,6 +127,7 @@ export default {
     this.getSslStatus()
     this.getPath();
     this.getOpenListInfo();
+    this.getGithubProxyUrl();
   },
   data() {
     return {
@@ -158,8 +176,10 @@ export default {
           { required: true, message: '请输入目录', trigger: 'blur' },
           { pattern: /^\/.+/, message: '目录必须以斜杠 "/" 开头', trigger: 'blur' }
         ]
+      },
+      githubProxy: {
+        url: '',
       }
-
     }
   },
   methods: {
@@ -502,6 +522,73 @@ export default {
         }).catch(err => {
           console.log(err);
           this.$message.error('获取OpenList配置信息失败！')
+        })
+    },
+    //更新GithubProxyUrl
+    updateGithubProxyUrl() {
+      const urlRegex = /^https?:\/\/(?:www\.)?[\w.-]+(?:\.[a-zA-Z]{2,})+(?:\/[\w-./?%&=]*)?$/;
+      const githubProxyUrl = this.githubProxy.url;
+      if (urlRegex.test(githubProxyUrl)) {
+        this.$confirm('此操作将修改Github加速站, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          axios.post('/api/user/github?githubProxyUrl=' + githubProxyUrl)
+            .then(res => {
+              if (res.data.code == '1') {
+                this.$message.success('修改成功！')
+                this.getGithubProxyUrl();
+              } else {
+                this.$message.error(res.data.msg)
+              }
+            })
+        }).catch(() => {
+          this.$message.info('已取消')
+        })
+      } else {
+        this.$message.error('请输入格式正确的URL！')
+      }
+    },
+    //删除GithubProxyUrl
+    deleteGithubProxyUrl() {
+      this.$confirm('此操作将删除Github加速站, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        axios.delete('/api/user/github')
+          .then(res => {
+            if (res.data.code == '1') {
+              this.$message.success("删除Github加速站成功！");
+              this.getGithubProxyUrl();
+
+            } else {
+              this.$message.error(res.data.msg);
+            }
+          }).catch(err => {
+            this.$message.error("删除Github加速站错误！")
+            console.log(err)
+          })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        });
+      });
+    },
+    //获取GithubProxyUrl
+    getGithubProxyUrl() {
+      axios.get('/api/user/github')
+        .then(res => {
+          if (res.data.code == '1') {
+            this.githubProxy.url = res.data.data;
+          } else {
+            this.$message.error(res.data.msg);
+          }
+        }).catch(err => {
+          console.log(err);
+          this.$message.error('获取Github加速站失败！')
         })
     },
   }
