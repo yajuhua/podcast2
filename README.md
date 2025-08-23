@@ -46,7 +46,7 @@ firewall-cmd --reload
 > 默认用户名：admin <br>
 > 默认密码：123456
 
-![登录](./images/login.png)
+![登录](https://raw.githubusercontent.com/yajuhua/podcast2/v2/images/login.png)
 
 #### 安装插件
 > 项目默认是没有添加插件的，自行按需添加
