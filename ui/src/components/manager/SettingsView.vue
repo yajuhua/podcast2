@@ -128,7 +128,8 @@
         </el-input>
 
         <el-row style="margin-top: 15px;">
-          <el-button type="primary" v-if="!apiToken.hasApiToken" @click="createApiToken()" round size="mini">点击生成</el-button>
+          <el-button type="primary" v-if="!apiToken.hasApiToken" @click="createApiToken()" round
+            size="mini">点击生成</el-button>
           <el-button type="danger" v-else @click="removeApiToken()" round size="mini">点击删除</el-button>
         </el-row>
       </div>
@@ -154,6 +155,22 @@
         </el-form>
       </div>
     </div>
+    <!-- 自定义插件仓库 -->
+    <div>
+      <el-form label-position="top">
+        <h4>自定义插件仓库</h4>
+        <el-form-item label="链接" prop="url">
+          <el-input v-model="pluginUrl" placeholder="请输入插件仓库链接" />
+          <el-tooltip class="item" effect="dark" content="支持不同插件仓库" placement="top-start">
+            <i class="el-icon-question"></i>
+          </el-tooltip>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="updatePluginUrl()" size="mini" round>修改</el-button>
+          <el-button type="danger" @click="deletePluginUrl()" size="mini" round>删除</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
 
   </div>
 </template>
@@ -173,6 +190,8 @@ export default {
     this.getOpenListInfo();
     this.getGithubProxyUrl();
     this.getApiTokenInfo();
+    this.getApiDocStatus();
+    this.getPluginUrl();
   },
   data() {
     return {
@@ -231,7 +250,8 @@ export default {
       },
       apiDoc: {
         status: false
-      }
+      },
+      pluginUrl: ''
     }
   },
   methods: {
@@ -719,7 +739,7 @@ export default {
         .then(res => {
           if (res.data.code == '1') {
             this.$message.success("修改成功！重启后生效")
-            this.getSslStatus();
+            this.getApiDocStatus()
           } else {
             this.$message.error(res.data.msg);
           }
@@ -741,7 +761,74 @@ export default {
           console.log(err);
           this.$message.error(err.toString())
         })
-    }
+    },
+    //更新插件仓库链接
+    // TODO
+    updatePluginUrl() {
+      const urlRegex = /^https?:\/\/(?:www\.)?[\w.-]+(?:\.[a-zA-Z]{2,})+(?:\/[\w-./?%&=]*)?$/;
+      const pluginUrl = this.pluginUrl;
+      if (urlRegex.test(pluginUrl)) {
+        this.$confirm('此操作将修改插件仓库链接, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          axios.post('/api/user/plugin?pluginUrl=' + this.pluginUrl)
+            .then(res => {
+              if (res.data.code == '1') {
+                this.$message.success('修改成功！')
+                this.getPluginUrl();
+              } else {
+                this.$message.error(res.data.msg)
+              }
+            })
+        }).catch(() => {
+          this.$message.info('已取消')
+        })
+      } else {
+        this.$message.error('请输入格式正确的URL！')
+      }
+    },
+    //删除自定义插件仓库链接
+    deletePluginUrl() {
+      this.$confirm('此操作将删除自定义插件仓库链接使用默认, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        axios.delete('/api/user/plugin')
+          .then(res => {
+            if (res.data.code == '1') {
+              this.$message.success("删除自定义插件仓库链接成功！");
+              this.getPluginUrl();
+            } else {
+              this.$message.error(res.data.msg);
+            }
+          }).catch(err => {
+            this.$message.error("删除自定义插件仓库链接错误！")
+            console.log(err)
+          })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        });
+      });
+    },
+    //获取自定义插件仓库链接
+    getPluginUrl() {
+      axios.get('/api/user/plugin')
+        .then(res => {
+          if (res.data.code == '1') {
+            this.pluginUrl = res.data.data;
+          } else {
+            this.$message.error(res.data.msg);
+          }
+        }).catch(err => {
+          console.log(err);
+          this.$message.error('获取自定义插件仓库链接失败！')
+        })
+    },
   }
 };
 </script>
