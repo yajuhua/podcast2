@@ -1,4 +1,4 @@
-<div align=center><img width = "200" height = "200" src="./images/975x975-logo.png"></div>
+<div align=center><img width = "200" height = "200" src="https://raw.githubusercontent.com/yajuhua/podcast2/v2/images/975x975-logo.png"></div>
 
 <br>
 <p align="center">
@@ -60,32 +60,34 @@ firewall-cmd --reload
 | [bilibili](https://www.bilibili.com)         | <img src="https://github.com/yajuhua/podcast2/actions/workflows/plugin-status-bilibili.com.yml/badge.svg"  />      | 
 
 1. 安装插件
-   ![安装插件](./images/installPlugin.png)
+   ![安装插件](https://raw.githubusercontent.com/yajuhua/podcast2/v2/images/installPlugin.png)
 
 2. 设置插件，如果有的话
-   ![设置插件](./images/setting.png)
+   ![设置插件](https://raw.githubusercontent.com/yajuhua/podcast2/v2/images/setting.png)
 
 #### 添加订阅
 > 以干净世界为例
 1. 复制主页链接
-   ![复制主页链接](./images/channelUrl.png)
+   ![复制主页链接](https://raw.githubusercontent.com/yajuhua/podcast2/v2/images/channelUrl.png)
 
 2. 粘贴并点击Add
-   ![添加订阅](./images/add.png)
+   ![添加订阅](https://raw.githubusercontent.com/yajuhua/podcast2/v2/images/add.png)
 
 3. 点击二维码
-   ![二维码](./images/QRcode.png)
+   ![二维码](https://raw.githubusercontent.com/yajuhua/podcast2/v2/images/QRcode.png)
 
 4. 扫描二维码添加到播客APP（如：AntennaPod）
 
-<img width="500" src="./images/AntennaPod-1.jpg" alt="链接地址" style="zoom:25%;" /><img width="500" src="./images/AntennaPod-2.jpg" alt="AntennaPod-2" style="zoom:25%;" />
+<img width="500" src="https://raw.githubusercontent.com/yajuhua/podcast2/v2/images/AntennaPod-1.jpg" alt="链接地址" style="zoom:25%;" /><img width="500" src="./images/AntennaPod-2.jpg" alt="AntennaPod-2" style="zoom:25%;" />
 
 #### 播客APP
 
 <a href="https://www.apple.com/apple-podcasts/" target="_blank">
-              <img src="https://www.apple.com/v/apple-podcasts/c/images/overview/hero_icon__c135x5gz14mu_large.png" width="35" alt="Apple Podcasts">
-            </a><a href="https://podcastaddict.com/" target="_blank"><img title="Podcast Addict" alt="Podcast Addict" src="https://pod.link/assets/apps/podcastaddict.svg" width="35"></a>  <a href="https://antennapod.org/" target="_blank">
-              <img src="https://antennapod.org/assets/branding/logo-full-horizontal-dynamic.svg" width="230" alt="AntennaPod">          </a>
+   <img src="https://www.apple.com/v/apple-podcasts/c/images/overview/hero_icon__c135x5gz14mu_large.png" width="35" alt="Apple Podcasts">
+</a> 
+<a href="https://antennapod.org/" target="_blank">
+      <img src="https://antennapod.org/assets/branding/logo-full-horizontal-dynamic.svg" width="230" alt="AntennaPod">
+</a>
 
 ## Star History
 ![Star History](https://api.star-history.com/svg?repos=yajuhua/podcast2)
@@ -106,7 +108,7 @@ firewall-cmd --reload
 
 ## 鸣谢
 特别感谢 [JetBrains](https://www.jetbrains.com) 为开源项目提供免费的 [IntelliJ IDEA](https://www.jetbrains.com/idea)的授权  
-[<img src="./images/jetbrains.svg" width="200"/>](https://www.jetbrains.com)
+[<img src="https://raw.githubusercontent.com/yajuhua/podcast2/v2/images/jetbrains.svg" width="200"/>](https://www.jetbrains.com)
 
 
 
