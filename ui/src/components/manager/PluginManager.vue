@@ -1,163 +1,397 @@
 <template>
-    <div class="plugin-container">
-  
-      <!-- 插件详情 -->
-      <el-dialog title="详细信息" :visible.sync="plugin.detailVisible" width="30%">
-        <el-table :data="plugin.detail" stripe>
-          <el-table-column prop="name"></el-table-column>
-          <el-table-column prop="content"></el-table-column>
-        </el-table>
-        <span slot="footer" class="dialog-footer">
-          <el-button type="primary" @click="plugin.detailVisible = false">确定</el-button>
-        </span>
-      </el-dialog>
-  
-      <!-- 搜索区 -->
-      <el-row :gutter="10" type="flex" wrap class="toolbar search-bar">
-        <!-- 输入框 -->
-        <el-col :xs="24" :sm="12" :md="8" :lg="6" class="search-input">
-          <el-input v-model="plugin.search" placeholder="搜索插件" clearable />
-        </el-col>
-        <!-- 按钮 -->
-        <el-col :xs="24" :sm="12" :md="8" :lg="6" class="search-buttons">
-          <el-button type="primary" @click="pluginSearch" icon="el-icon-search">搜索</el-button>
-          <el-button type="primary" @click="getPluginList">全部</el-button>
-        </el-col>
-      </el-row>
-  
-      <!-- 上传区 -->
-      <el-row type="flex" wrap class="toolbar upload-bar">
-        <el-upload ref="upload" :auto-upload="false" :limit="1" accept=".jar">
-          <el-button slot="trigger" size="small" type="primary">上传本地插件</el-button>
-        </el-upload>
-        <el-button size="small" type="success" @click="submitUpload">上传到服务器</el-button>
-        <el-button size="small" type="primary" @click="getPluginList">刷新插件列表</el-button>
-      </el-row>
-  
-      <!-- 表格 -->
-      <el-table :data="plugin.list" stripe :row-key="row => row.uuid">
-        <el-table-column prop="name" label="名称" min-width="120"/>
-        <el-table-column prop="version" label="版本" min-width="100"/>
-        <el-table-column prop="update" label="更新时间" min-width="160"/>
-        <el-table-column prop="keyInfo" label="提醒" min-width="120"/>
-        <el-table-column fixed="right" label="操作" min-width="150">
-          <template v-slot="scope">
-            <el-dropdown>
-              <el-button type="primary" size="mini">
-                操作 <i class="el-icon-arrow-down el-icon--right"></i>
-              </el-button>
-              <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item @click.native="pluginDetail(scope.row.uuid)">详细</el-dropdown-item>
-                <el-dropdown-item v-if="scope.row.install" @click.native="pluginDelete(scope.row.uuid)">卸载</el-dropdown-item>
-                <el-dropdown-item v-if="!scope.row.install" @click.native="pluginInstall(scope.row.uuid)">安装</el-dropdown-item>
-                <el-dropdown-item v-if="scope.row.hasUpdate" @click.native="pluginUpdate(scope.row.name)">更新</el-dropdown-item>
-                <el-dropdown-item @click.native="getPluginSettings(scope.row.name)">设置</el-dropdown-item>
-              </el-dropdown-menu>
-            </el-dropdown>
-          </template>
+  <div class="plugin-container">
+
+    <!-- 上传插件 -->
+    <el-upload class="upload-demo" ref="upload" :auto-upload="false" :limit="1">
+      <el-button slot="trigger" size="small" type="primary" round>选取插件文件</el-button>
+      <el-button style="margin-left: 10px;" size="small" type="success" round @click="submitUpload">上传
+      </el-button>
+      <el-button style="margin-left: 10px;" size="small" type="primary" round @click="fetchPluginList()">刷新
+      </el-button>
+      <div slot="tip" class="el-upload__tip">只能上传jar文件</div>
+    </el-upload>
+
+    <!-- 分类导航 -->
+    <el-tabs v-model="activeTab" @tab-click="onTabClick" type="card" class="tabs">
+      <el-tab-pane label="所有插件" name="all"></el-tab-pane>
+      <el-tab-pane label="已安装" name="installed"></el-tab-pane>
+      <el-tab-pane label="待安装" name="uninstalled"></el-tab-pane>
+      <el-tab-pane label="有更新" name="update"></el-tab-pane>
+    </el-tabs>
+
+    <!-- 插件列表 -->
+    <el-table :data="filteredPluginList" stripe :row-key="row => row.uuid" class="plugin-table">
+      <el-table-column prop="name" label="名称" min-width="120" />
+      <el-table-column prop="version" label="版本" min-width="100" />
+      <el-table-column prop="update" label="更新时间" min-width="160" />
+      <el-table-column prop="keyInfo" label="提醒" min-width="120" />
+      <el-table-column fixed="right" label="操作" min-width="150">
+        <template v-slot="scope">
+          <el-dropdown>
+            <el-button type="primary" size="mini" round
+              :icon="scope.row.installing ? 'el-icon-loading' : 'el-icon-more'">
+            </el-button>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item @click.native="pluginDetail(scope.row.uuid)">详细</el-dropdown-item>
+              <el-dropdown-item v-if="scope.row.install" @click.native="pluginDelete(scope.row.uuid)">
+                <i class="el-icon-delete"></i> 卸载
+              </el-dropdown-item>
+              <el-dropdown-item v-if="!scope.row.install && !scope.row.hasUpdate"
+                @click.native="pluginInstall(scope.row)">
+                <span v-if="!scope.row.installing"><i class="el-icon-download"></i> 安装</span>
+                <span v-if="scope.row.installing">
+                  <i class="el-icon-loading el-icon--right"></i> 安装中...
+                </span>
+              </el-dropdown-item>
+              <el-dropdown-item v-if="scope.row.hasUpdate" @click.native="pluginUpdate(scope.row)">
+                <i class="el-icon-refresh"></i> 更新
+                <span v-if="scope.row.installing">
+                  <i class="el-icon-loading el-icon--right"></i> 更新中...
+                </span>
+              </el-dropdown-item>
+              <el-dropdown-item @click.native="getPluginSettings(scope.row.name)">
+                <i class="el-icon-setting"></i> 设置
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <!-- 插件设置 -->
+    <el-dialog title="设置" :visible.sync="settingsVisible" :width="adaptWidth()">
+      <div v-if="settings.length > 0">
+        <el-form ref="form" label-width="auto">
+          <div v-for="(item, key) in settings" :key="key">
+            <el-form-item :label="item.name">
+              <el-input v-model="item.content"></el-input>
+              <el-tooltip class="item" effect="dark" :content="item.tip" placement="top-start">
+                <i class="el-icon-question"></i>
+              </el-tooltip>
+            </el-form-item>
+          </div>
+        </el-form>
+      </div>
+      <span v-if="settings.length == 0">暂无设置</span>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="settingsVisible = false">取 消</el-button>
+        <el-button type="primary" @click="updatePluginSettings()">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <!-- 插件详细信息 -->
+    <el-dialog title="详细信息" :visible.sync="detailVisible" :width="adaptWidth()">
+      <el-table :data="detail" stripe style="width: 100%">
+        <el-table-column prop="name">
+        </el-table-column>
+        <el-table-column prop="content">
         </el-table-column>
       </el-table>
-  
-    </div>
-  </template>
-  
-  <script>
-  export default {
-    name: 'PluginManager',
-    data() {
-      return {
-        plugin: {
-          search: '',
-          searchIng: false,
-          list: [
-            { uuid: '1', name: '插件A', version: '1.0', update: '2025-08-18', keyInfo: '无', install: true, hasUpdate: false },
-            { uuid: '2', name: '插件B', version: '1.1', update: '2025-08-10', keyInfo: '可更新', install: true, hasUpdate: true },
-            { uuid: '3', name: '插件C', version: '0.9', update: '2025-07-01', keyInfo: '未安装', install: false, hasUpdate: false }
-          ],
-          detail: [],
-          detailVisible: false
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="detailVisible = false">确 定</el-button>
+      </span>
+    </el-dialog>
+
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+
+export default {
+  name: 'PluginManager',
+  data() {
+    return {
+      activeTab: 'all', // 默认选择所有插件
+      plugin: {
+        list: []
+      },
+      settings: [],
+      settingsVisible: false,
+      detailVisible: false,
+      detail: []
+    };
+  },
+  mounted() {
+    this.fetchPluginList();
+  },
+  computed: {
+    // 根据激活的标签过滤插件列表
+    filteredPluginList() {
+      if (this.activeTab === 'installed') {
+        return this.plugin.list.filter(plugin => plugin.install);
+      } else if (this.activeTab === 'uninstalled') {
+        return this.plugin.list.filter(plugin => !plugin.install);
+      } else if (this.activeTab === 'update') {
+        return this.plugin.list.filter(plugin => plugin.hasUpdate);
+      }
+      return this.plugin.list;
+    }
+  },
+  methods: {
+    async fetchPluginList() {
+      try {
+        const response = await axios.get('/api/plugin/list');
+        if (response.data.code === 1) {
+          this.plugin.list = response.data.data;
+        } else {
+          this.$message.error('获取插件列表失败');
         }
+      } catch (error) {
+        console.error(error);
+        this.$message.error('获取插件列表失败');
       }
     },
-    methods: {
-      pluginSearch() {
-        this.$message.info(`搜索：${this.plugin.search}`)
-        // TODO: 调接口搜索插件
-      },
-      getPluginList() {
-        this.$message.success('刷新插件列表')
-        // TODO: 调接口获取插件列表
-      },
-      submitUpload() {
-        this.$refs.upload.submit()
-        this.$message.success('上传成功')
-        // TODO: 调接口上传插件
-      },
-      pluginDetail(uuid) {
-        this.plugin.detailVisible = true
-        this.plugin.detail = [
-          { name: 'UUID', content: uuid },
-          { name: '示例字段', content: 'xxx' }
-        ]
-        // TODO: 调接口获取插件详情
-      },
-      pluginInstall(uuid) {
-        this.$message.success(`安装插件：${uuid}`)
-        // TODO: 调接口安装插件
-      },
-      pluginDelete(uuid) {
-        this.$message.warning(`卸载插件：${uuid}`)
-        // TODO: 调接口卸载插件
-      },
-      pluginUpdate(name) {
-        this.$message.info(`更新插件：${name}`)
-        // TODO: 调接口更新插件
-      },
-      getPluginSettings(name) {
-        this.$message.info(`打开插件设置：${name}`)
-        // TODO: 打开插件设置
+    onTabClick(tab) {
+      console.log('Tab clicked:', tab.name);
+    },
+    pluginInstall(plugin) {
+      if (plugin.installing) {
+        this.$message.warning('插件正在安装，请稍候...');
+        return;
       }
-    }
+      this.$confirm('此操作将安装该插件, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        plugin.installing = true;
+        this.$message.success(`开始安装插件：${plugin.name}`);
+        axios.get('/api/plugin/install?uuids=' + plugin.uuid)
+          .then(res => {
+            if (res.data.code == '1') {
+              this.$message.success('插件安装成功！');
+              this.fetchPluginList();
+            } else {
+              this.$message.error(res.data.msg);
+            }
+            plugin.installing = false;
+          }).catch(err => {
+            this.$message.error('插件安装失败！');
+            console.log(err);
+            plugin.installing = false;
+          });
+
+        // 定时查询安装状态
+        const intervalId = setInterval(() => {
+          axios.get('/api/plugin/install/status/' + plugin.uuid)
+            .then(res => {
+              if (res.data.data.install === true) {
+                this.plugin.installStatus = ''; // 清除安装状态
+                clearInterval(intervalId); // 停止定时查询
+
+              }
+            }).catch(err => {
+              console.error('查询安装状态失败：', err);
+              clearInterval(intervalId); // 停止定时查询
+            });
+        }, 2000); // 每2秒查询一次安装状态
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        });
+      });
+
+    },
+    async pluginUpdate(plugin) {
+      if (plugin.installing) {
+        this.$message.warning('插件正在更新，请稍候...');
+        return;
+      }
+      plugin.installing = true;
+      this.$message.success(`开始更新插件：${plugin.name}`);
+
+      try {
+        const response = await axios.post('/api/plugin/update', { names: [plugin.name] });
+
+        if (response.data.code === 1) {
+          // 轮询更新状态
+          const checkUpdateStatus = setInterval(async () => {
+            const statusResponse = await axios.get(`/api/plugin/update/status/${plugin.name}`);
+
+            if (statusResponse.data.code === 1) {
+              const pluginStatus = statusResponse.data.data;
+              if (pluginStatus.install && !pluginStatus.hasUpdate) {
+                clearInterval(checkUpdateStatus);
+                plugin.installing = false;
+                plugin.hasUpdate = false;
+                this.$message.success(`${plugin.name} 更新成功`);
+              }
+            }
+          }, 1000); // 每1秒检查一次
+        } else {
+          plugin.installing = false;
+          this.$message.error('更新失败，请重试');
+        }
+      } catch (error) {
+        plugin.installing = false;
+        this.$message.error('更新请求失败');
+      }
+    },
+    pluginDelete(uuid) {
+      this.$confirm('此操作将永久删除该插件, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        axios.delete('/api/plugin?uuids=' + uuid)
+          .then(res => {
+            if (res.data.code == '1') {
+              this.$message.success("插件删除成功！");
+              this.fetchPluginList();
+
+            } else {
+              this.$message.error(res.data.msg);
+            }
+          }).catch(err => {
+            this.$message.error("插件删除错误！")
+            console.log(err)
+          })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        });
+      });
+    },
+    //获取插件设置
+    getPluginSettings(name) {
+      this.settings = []
+      this.settingsVisible = true;
+      axios.get('/api/plugin/settings/' + name)
+        .then(res => {
+          if (res.data.code == '1') {
+            this.settings = res.data.data;
+          } else {
+            this.$message.error(res.data.msg);
+          }
+        }).catch(err => {
+          console.log(err);
+          this.$message.error('获取插件设置失败！')
+        })
+    },
+    //更新插件设置
+    updatePluginSettings() {
+      axios.put('/api/plugin/settings', this.settings)
+        .then(res => {
+          if (res.data.code == '1') {
+            this.$message.success('更新插件设置成功！')
+          } else {
+            this.$message.error(res.data.mgs);
+          }
+          this.settingsVisible = false;
+        }).catch(err => {
+          console.log(err);
+          this.$message.error('更新插件设置错误！');
+        });
+    },
+    //获取插件详细信息
+    pluginDetail(uuid) {
+      axios.get('/api/plugin/detail/' + uuid)
+        .then(res => {
+          if (res.data.code == '1') {
+            this.detail = res.data.data;
+            this.detailVisible = true;
+          } else {
+            this.$message.warning('请先安装插件！')
+          }
+        }).catch(err => {
+          console.log('获取插件详细信息失败!')
+          console.log(err)
+        })
+    },
+    //适配宽度
+    adaptWidth() {
+      let type = this.$deviceType;
+      console.log("deviceType: " + type);
+      if (type == 'mobile') {
+        return '80%';
+      } else if (type == 'tablet') {
+        return '50%';
+      } else {
+        return '40%';
+      }
+    },
+    //上传插件
+    submitUpload() {
+      let name = this.$refs.upload.uploadFiles[0].name;
+      let s = name.split(".");
+      let ext = s[s.length - 1];
+      console.log('文件格式' + ext)
+      if (ext == 'jar') {
+        //构建一个表单把文件传进去
+        let param = new FormData()
+        param.append("files", this.$refs.upload.uploadFiles[0].raw)
+        axios.post('/api/common/upload/plugin', param, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }).then(res => {
+          if (res.data.code == '1') {
+            this.$message.success('上传插件成功');
+            this.$refs.upload.uploadFiles = [];
+            this.fetchPluginList();
+          } else {
+            this.$message.error(res.data.msg);
+          }
+
+        })
+          .catch(error => {
+            console.error(error);
+          });
+      } else {
+        this.$message.error('只能上传插件jar包！')
+      }
+
+    },
+  },
+  created() {
+    this.fetchPluginList();
   }
-  </script>
-  
-  <style scoped>
-  .plugin-container {
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
+};
+</script>
+
+<style scoped>
+.plugin-container {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tabs {
+  margin-bottom: 15px;
+}
+
+.el-table {
+  margin-top: 15px;
+}
+
+.el-table th {
+  background-color: #f5f7fa;
+}
+
+.el-table .el-button {
+  width: 100%;
+  text-align: center;
+}
+
+.el-dropdown-menu {
+  display: block;
+}
+
+.el-dropdown-menu i.el-icon-loading {
+  animation: spin 1.5s infinite linear;
+}
+
+/* Spin animation for loading icon */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
   }
-  
-  .el-table {
-    margin-top: 15px;
+
+  100% {
+    transform: rotate(360deg);
   }
-  
-  /* 工具栏基础间距 */
-  .toolbar {
-    margin: 10px 0;
-    align-items: center;
-  }
-  
-  /* 上传区：始终紧凑排列 */
-  .upload-bar > * {
-    margin-right: 8px;
-    margin-bottom: 8px;
-  }
-  
-  /* 搜索区：小屏幕时输入框在第一行，按钮在第二行 */
-  @media screen and (max-width: 768px) {
-    .search-bar {
-      flex-direction: column; /* 垂直排列 */
-    }
-    .search-bar .search-input,
-    .search-bar .search-buttons {
-      width: 100%;
-      margin-bottom: 10px;
-    }
-    .search-bar .search-buttons .el-button {
-      margin-right: 8px;
-      margin-bottom: 8px;
-    }
-  }
-  </style>
-  
+}
+</style>
