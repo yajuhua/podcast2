@@ -6,7 +6,7 @@
       <el-button slot="trigger" size="small" type="primary" round>选取插件文件</el-button>
       <el-button style="margin-left: 10px;" size="small" type="success" round @click="submitUpload">上传
       </el-button>
-      <el-button style="margin-left: 10px;" size="small" type="primary" round @click="fetchPluginList()">刷新
+      <el-button style="margin-left: 10px;" size="small" type="primary" round @click="fetchPluginList() && $message.success('刷新成功！')">刷新
       </el-button>
       <div slot="tip" class="el-upload__tip">只能上传jar文件</div>
     </el-upload>
@@ -29,10 +29,10 @@
         <template v-slot="scope">
           <el-dropdown>
             <el-button type="primary" size="mini" round
-              :icon="scope.row.installing ? 'el-icon-loading' : 'el-icon-more'">
+              :icon="scope.row.installing || scope.row.updating ? 'el-icon-loading' : 'el-icon-more'">
             </el-button>
             <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item @click.native="pluginDetail(scope.row.uuid)">详细</el-dropdown-item>
+              <el-dropdown-item @click.native="pluginDetail(scope.row.uuid)"><i class="el-icon-info"></i>详细</el-dropdown-item>
               <el-dropdown-item v-if="scope.row.install" @click.native="pluginDelete(scope.row.uuid)">
                 <i class="el-icon-delete"></i> 卸载
               </el-dropdown-item>
@@ -44,12 +44,12 @@
                 </span>
               </el-dropdown-item>
               <el-dropdown-item v-if="scope.row.hasUpdate" @click.native="pluginUpdate(scope.row)">
-                <i class="el-icon-refresh"></i> 更新
-                <span v-if="scope.row.installing">
+                <span v-if="!scope.row.updating"><i class="el-icon-refresh"></i> 更新</span>
+                <span v-if="scope.row.updating">
                   <i class="el-icon-loading el-icon--right"></i> 更新中...
                 </span>
               </el-dropdown-item>
-              <el-dropdown-item @click.native="getPluginSettings(scope.row.name)">
+              <el-dropdown-item v-if="scope.row.install" @click.native="getPluginSettings(scope.row.name)">
                 <i class="el-icon-setting"></i> 设置
               </el-dropdown-item>
             </el-dropdown-menu>
@@ -194,12 +194,12 @@ export default {
       });
 
     },
-    async pluginUpdate(plugin) {
-      if (plugin.installing) {
+    async pluginUpdateBak(plugin) {
+      if (plugin.updating) {
         this.$message.warning('插件正在更新，请稍候...');
         return;
       }
-      plugin.installing = true;
+      plugin.updating = true;
       this.$message.success(`开始更新插件：${plugin.name}`);
 
       try {
@@ -315,6 +315,10 @@ export default {
     },
     //上传插件
     submitUpload() {
+      if(this.$refs.upload.uploadFiles.length == 0){
+        this.$message.error('请先选择插件文件！');
+        return;
+      }
       let name = this.$refs.upload.uploadFiles[0].name;
       let s = name.split(".");
       let ext = s[s.length - 1];
@@ -344,6 +348,56 @@ export default {
         this.$message.error('只能上传插件jar包！')
       }
 
+    },
+    //更新单个插件
+    pluginUpdate(plugin) {
+      if (plugin.updating) {
+        this.$message.warning('插件正在更新，请稍候...');
+        return;
+      }
+      this.$confirm('此操作将更新该插件, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        plugin.updating = true;
+        axios.post('/api/plugin/update', 'names=' + plugin.name)
+          .then(res => {
+            if (res.data.code == '1') {
+              //重新获取插件更新列表
+              this.$message.success('更新成功！')
+              this.fetchPluginList();
+            } else {
+              this.$message.error('更新插件错误！');
+            }
+          }).catch(err => {
+            this.$message.error('更新插件错误！');
+            console.log(err);
+          }).finally(() => {
+            plugin.updating = false;
+          });
+
+        // 定时查询更新状态
+        const intervalId = setInterval(() => {
+          axios.get('/api/plugin/update/status/' + plugin.name)
+            .then(res => {
+              if (res.data.data.hasUpdate === false) {
+                clearInterval(intervalId); // 停止定时查询
+                plugin.updating = false;
+              }
+            }).catch(err => {
+              plugin.updating = false;
+              console.error('查询更新状态失败：', err);
+              clearInterval(intervalId); // 停止定时查询
+            });
+        }, 2000); // 每2秒查询一次安装状态
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消更新'
+        });
+      });
+      console.log(plugin.name)
     },
   },
   created() {
