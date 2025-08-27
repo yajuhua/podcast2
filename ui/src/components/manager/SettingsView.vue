@@ -160,7 +160,7 @@
       <el-form label-position="top">
         <h4>自定义插件仓库</h4>
         <el-form-item label="链接" prop="url">
-          <el-input v-model="pluginUrl" placeholder="请输入插件仓库链接" />
+          <el-input v-model="plugin.url" placeholder="请输入插件仓库链接" />
           <el-tooltip class="item" effect="dark" content="支持不同插件仓库" placement="top-start">
             <i class="el-icon-question"></i>
           </el-tooltip>
@@ -170,6 +170,15 @@
           <el-button type="danger" @click="deletePluginUrl()" size="mini" round>删除</el-button>
         </el-form-item>
       </el-form>
+    </div>
+    <!-- 自动更新插件 -->
+    <div>
+      <div>
+        <h4>插件更新</h4>
+        <div @click="autoUpdatePlugin()">
+          <el-switch v-model="plugin.autoUpdate" active-text="自动更新"></el-switch>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -192,6 +201,7 @@ export default {
     this.getApiTokenInfo();
     this.getApiDocStatus();
     this.getPluginUrl();
+    this.getAutoUpdateStatus()
   },
   data() {
     return {
@@ -251,7 +261,10 @@ export default {
       apiDoc: {
         status: false
       },
-      pluginUrl: ''
+      plugin: {
+        url: '',
+        autoUpdate: true
+      }
     }
   },
   methods: {
@@ -763,17 +776,16 @@ export default {
         })
     },
     //更新插件仓库链接
-    // TODO
     updatePluginUrl() {
       const urlRegex = /^https?:\/\/(?:www\.)?[\w.-]+(?:\.[a-zA-Z]{2,})+(?:\/[\w-./?%&=]*)?$/;
-      const pluginUrl = this.pluginUrl;
+      const pluginUrl = this.plugin.url;
       if (urlRegex.test(pluginUrl)) {
         this.$confirm('此操作将修改插件仓库链接, 是否继续?', '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-          axios.post('/api/user/plugin?pluginUrl=' + this.pluginUrl)
+          axios.post('/api/user/plugin?pluginUrl=' + this.plugin.url)
             .then(res => {
               if (res.data.code == '1') {
                 this.$message.success('修改成功！')
@@ -820,13 +832,54 @@ export default {
       axios.get('/api/user/plugin')
         .then(res => {
           if (res.data.code == '1') {
-            this.pluginUrl = res.data.data;
+            this.plugin.url = res.data.data;
           } else {
             this.$message.error(res.data.msg);
           }
         }).catch(err => {
           console.log(err);
           this.$message.error('获取自定义插件仓库链接失败！')
+        })
+    },
+    //设置插件自动更新
+    autoUpdatePlugin() {
+      let status = 0;
+      if (this.plugin.autoUpdate) {
+        status = 1;
+      }
+      axios.post('/api/plugin/autoUpdate?status=' + status)
+        .then(res => {
+          if (res.data.code == '1') {
+            if (status == '1') {
+              this.plugin.autoUpdate = true;
+            } else {
+              this.plugin.autoUpdate = false;
+            }
+            console.log('修改成功！')
+            this.$message.success('修改成功！');
+          } else {
+            this.$message.error('修改错误！')
+          }
+        }).catch(err => {
+          this.$message.error('修改错误！');
+          console.log(err)
+        })
+    },
+    getAutoUpdateStatus() {
+      axios.get('/api/plugin/autoUpdate')
+        .then(res => {
+          if (res.data.code == '1') {
+            if (res.data.data == '1') {
+              this.plugin.autoUpdate = true;
+            } else {
+              this.plugin.autoUpdate = false;
+            }
+          } else {
+            this.$message.error('获取插件自动更新状态失败！');
+          }
+        }).catch(err => {
+          this.$message.error('获取插件自动更新状态失败！');
+          console.log(err);
         })
     },
   }
