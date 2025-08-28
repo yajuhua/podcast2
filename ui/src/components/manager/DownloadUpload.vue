@@ -3,7 +3,7 @@
     <!-- 使用 el-tabs 实现顶部导航切换 -->
     <el-tabs v-model="activeTab" type="card">
       <!-- 正在下载标签页 -->
-      <el-tab-pane label="正在下载" name="Downloading">
+      <el-tab-pane :label="downloadUploadLabel" name="Downloading">
         <el-table :data="download.progress" stripe style="width: 100%">
           <el-table-column prop="channelName" label="频道名称" width="180"></el-table-column>
           <el-table-column prop="itemName" label="节目名称" width="180"></el-table-column>
@@ -17,36 +17,10 @@
           <el-table-column label="操作">
             <template slot-scope="{ row }">
               <el-dropdown trigger="click">
-                <el-button type="primary">更多</el-button>
+                <el-button type="primary" round size="mini" icon="el-icon-more"></el-button>
                 <el-dropdown-menu slot="dropdown">
-                  <el-dropdown-item @click="downloadDetail(row.uuid)">详细</el-dropdown-item>
-                  <el-dropdown-item @click="deleteDownloading(row.uuid)">删除</el-dropdown-item>
-                </el-dropdown-menu>
-              </el-dropdown>
-            </template>
-          </el-table-column>
-        </el-table>
-      </el-tab-pane>
-
-      <!-- 正在上传标签页 -->
-      <el-tab-pane label="正在上传" name="Uploading">
-        <el-table :data="upload.progress" stripe style="width: 100%">
-          <el-table-column prop="channelName" label="频道名称" width="180"></el-table-column>
-          <el-table-column prop="itemName" label="节目名称" width="180"></el-table-column>
-          <el-table-column label="进度">
-            <template slot-scope="{ row }">
-              <el-progress :text-inside="true" :stroke-width="26" :percentage="row.uploadProgress"></el-progress>
-            </template>
-          </el-table-column>
-          <el-table-column prop="uploadSpeed" label="速度"></el-table-column>
-          <el-table-column prop="uploadTimeLeft" label="剩余时间"></el-table-column>
-          <el-table-column label="操作">
-            <template slot-scope="{ row }">
-              <el-dropdown trigger="click">
-                <el-button type="primary">更多</el-button>
-                <el-dropdown-menu slot="dropdown">
-                  <el-dropdown-item @click="uploadDetail(row.uuid)">详细</el-dropdown-item>
-                  <el-dropdown-item @click="deleteUploading(row.uuid)">删除</el-dropdown-item>
+                  <el-dropdown-item @click.native="downloadDetail(row.uuid)">详细</el-dropdown-item>
+                  <el-dropdown-item @click.native="deleteDownloading(row.uuid)">删除</el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
             </template>
@@ -55,42 +29,35 @@
       </el-tab-pane>
 
       <!-- 错误标签页 -->
-      <el-tab-pane label="错误" name="Error">
+      <el-tab-pane :label="downloadErrorLabel" name="Error">
         <el-table :data="download.error" stripe style="width: 100%">
           <el-table-column label="状态" width="180">
             <template slot-scope="{ row }">
-              <i
-                :class="{
-                  'el-icon-success': row.status === '5' || row.status === '24',
-                  'el-icon-error': row.status !== '5' && row.status !== '24'
-                }"
-                :style="{
-                  fontSize: '45px',
-                  color: row.status === '5' || row.status === '24' ? '#54AC1C' : '#F95C61'
-                }"
-              ></i>
+              <i :class="{
+                'el-icon-success': row.status === '5' || row.status === '24',
+                'el-icon-error': row.status !== '5' && row.status !== '24'
+              }" :style="{
+                fontSize: '45px',
+                color: row.status === '5' || row.status === '24' ? '#54AC1C' : '#F95C61'
+              }"></i>
             </template>
           </el-table-column>
           <el-table-column prop="channelName" label="频道名称" width="180"></el-table-column>
           <el-table-column prop="itemName" label="节目标题"></el-table-column>
           <el-table-column label="进度">
             <template slot-scope="{ row }">
-              <el-progress
-                :status="row.status !== '5' && row.status !== '24' ? 'exception' : 'success'"
-                :text-inside="true"
-                :stroke-width="26"
-                :percentage="row.downloadProgress"
-              ></el-progress>
+              <el-progress :status="row.status !== '5' && row.status !== '24' ? 'exception' : 'success'"
+                :text-inside="true" :stroke-width="26" :percentage="row.downloadProgress"></el-progress>
             </template>
           </el-table-column>
           <el-table-column label="操作">
             <template slot-scope="{ row }">
               <el-dropdown trigger="click">
-                <el-button type="primary">更多</el-button>
+                <el-button type="primary" round size="mini" icon="el-icon-more"></el-button>
                 <el-dropdown-menu slot="dropdown">
-                  <el-dropdown-item @click="reDownload(row.uuid)">重新</el-dropdown-item>
-                  <el-dropdown-item @click="downloadDetail(row.uuid)">详细</el-dropdown-item>
-                  <el-dropdown-item @click="downloadDelete(row.uuid)">删除</el-dropdown-item>
+                  <el-dropdown-item @click.native="reDownload(row.uuid)">重新</el-dropdown-item>
+                  <el-dropdown-item @click.native="downloadDetail(row.uuid)">详细</el-dropdown-item>
+                  <el-dropdown-item @click.native="downloadDelete(row.uuid)">删除</el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
             </template>
@@ -99,49 +66,38 @@
       </el-tab-pane>
 
       <!-- 已完成标签页 -->
-      <el-tab-pane label="已完成" name="Done">
+      <el-tab-pane :label="doneLabel" name="Done">
         <div style="height: 90vh; overflow-y: scroll">
-          <el-button type="danger" round @click="batchDeleteDownloadDone()" v-if="download.selectionDownloadDone.length > 1">
+          <el-button type="danger" round @click="batchDeleteDownloadDone()"
+            v-if="download.selectionDownloadDone.length > 1" size="mini">
             批量删除
           </el-button>
-          <el-button type="primary" round @click="getDownloadDone()">刷新列表</el-button>
-          <el-table :data="download.done" stripe style="width: 100%" ref="selectDownloadDone" @selection-change="handleSelectionDownloadDone">
+          <el-button type="primary" round @click="getDownloadDone()" size="mini">刷新列表</el-button>
+          <el-table :data="download.done" stripe style="width: 100%" ref="selectDownloadDone"
+            @selection-change="handleSelectionDownloadDone">
             <el-table-column type="selection" width="55"></el-table-column>
             <el-table-column type="index" width="50"></el-table-column>
             <el-table-column label="状态" width="180">
-              <template slot-scope="{ row }">
-                <i
-                  :class="{
-                    'el-icon-success': row.status === '5' || row.status === '24',
-                    'el-icon-error': row.status !== '5' && row.status !== '24'
-                  }"
-                  :style="{
-                    fontSize: '45px',
-                    color: row.status === '5' || row.status === '24' ? '#54AC1C' : '#F95C61'
-                  }"
-                ></i>
-              </template>
+              <i slot-scope="scope"
+                :class="{ 'el-icon-success': scope.row.status === 5 || scope.row.status === 24, 'el-icon-error': scope.row.status !== 5 && scope.row.status !== 24 }"
+                :style="{ fontSize: '45px', color: scope.row.status === 5 || scope.row.status === 24 ? '#54AC1C' : '#F95C61' }">
+              </i>
             </el-table-column>
             <el-table-column prop="channelName" label="频道名称" width="180"></el-table-column>
             <el-table-column prop="itemName" label="节目标题"></el-table-column>
             <el-table-column label="进度">
-              <template slot-scope="{ row }">
-                <el-progress
-                  :status="row.status !== '5' && row.status !== '24' ? 'exception' : 'success'"
-                  :text-inside="true"
-                  :stroke-width="26"
-                  :percentage="row.downloadProgress"
-                ></el-progress>
-              </template>
+              <el-progress :status="scope.row.status != '5' && scope.row.status != '24' ? 'exception' : 'success'"
+                :text-inside="true" :stroke-width="26" slot-scope="scope" :percentage="scope.row.downloadProgress">
+              </el-progress>
             </el-table-column>
             <el-table-column label="操作">
               <template slot-scope="{ row }">
                 <el-dropdown trigger="click">
-                  <el-button type="primary">更多</el-button>
+                  <el-button type="primary" round size="mini" icon="el-icon-more"></el-button>
                   <el-dropdown-menu slot="dropdown">
-                    <el-dropdown-item @click="reDownload(row.uuid)">重新</el-dropdown-item>
-                    <el-dropdown-item @click="downloadDetail(row.uuid)">详细</el-dropdown-item>
-                    <el-dropdown-item @click="downloadDelete(row.uuid)">删除</el-dropdown-item>
+                    <el-dropdown-item @click.native="reDownload(row.uuid)">重新</el-dropdown-item>
+                    <el-dropdown-item @click.native="downloadDetail(row.uuid)">详细</el-dropdown-item>
+                    <el-dropdown-item @click.native="downloadDelete(row.uuid)">删除</el-dropdown-item>
                   </el-dropdown-menu>
                 </el-dropdown>
               </template>
@@ -159,108 +115,143 @@
         </el-table>
       </el-tab-pane>
     </el-tabs>
+
+    <!-- 下载信息 -->
+    <div>
+      <el-dialog title="详细" :visible.sync="download.downloadDetailVisible" :width="adaptWidth()" label-position="top">
+        <el-form ref="form" :model="download.detail" label-width="auto">
+          <el-form-item label="下载时间">
+            <div @click="copy(download.detail.createTime)">
+              <el-input v-model="download.detail.createTime"></el-input>
+            </div>
+          </el-form-item>
+          <el-form-item label="状态">
+            <div @click="copy(download.detail.status)">
+              <el-input v-model="download.detail.status"></el-input>
+            </div>
+          </el-form-item>
+          <el-form-item label="下载器">
+            <div @click="copy(download.detail.downloaderName)">
+              <el-input v-model="download.detail.downloaderName"></el-input>
+            </div>
+          </el-form-item>
+          <el-form-item label="下载器版本">
+            <div @click="copy(download.detail.downloaderVersion)">
+              <el-input v-model="download.detail.downloaderVersion"></el-input>
+            </div>
+          </el-form-item>
+          <el-form-item label="文件名称">
+            <div @click="copy(download.detail.fileName)">
+              <el-input v-model="download.detail.fileName"></el-input>
+            </div>
+          </el-form-item>
+          <el-form-item label="频道名称">
+            <div @click="copy(download.detail.channelName)">
+              <el-input v-model="download.detail.channelName"></el-input>
+            </div>
+          </el-form-item>
+          <el-form-item label="节目标题">
+            <div @click="copy(download.detail.itemTitle)">
+              <el-input v-model="download.detail.itemTitle"></el-input>
+            </div>
+          </el-form-item>
+          <el-form-item label="节目链接">
+            <div @click="copy(download.detail.itemLink)">
+              <el-input v-model="download.detail.itemLink"></el-input>
+            </div>
+          </el-form-item>
+          <el-form-item label="订阅链接">
+            <div @click="copy(download.detail.subLink)">
+              <el-input v-model="download.detail.subLink"></el-input>
+            </div>
+          </el-form-item>
+        </el-form>
+      </el-dialog>
+    </div>
   </div>
 </template>
 
 <script>
+import axios from 'axios';
 export default {
+  computed:{
+    downloadUploadLabel(){
+      return this.download.progress.length > 0 ? '正在上传/下载 ' +  this.download.progress.length: '正在上传/下载';
+    },
+    downloadErrorLabel(){
+      return this.download.error.length > 0 ? '错误 ' +  this.download.progress.error: '错误';
+    },
+    doneLabel(){
+      return this.download.done.length > 0 ? '完成 ' +  this.download.done.length: '完成';
+    }
+  },
+  mounted() {
+    this.getDownloaderInfo();
+    this.getDownloadDone();
+    this.getDownloadError();
+    this.setupDownloadSocket();
+  },
   data() {
     return {
-      activeTab: 'Downloading', // 默认显示“正在下载”标签页
+      activeTab: 'Downloading',
       download: {
-        progress: [
-          {
-            uuid: '1',
-            channelName: '新闻频道',
-            itemName: '每日新闻摘要',
-            downloadProgress: 50,
-            downloadSpeed: '1MB/s',
-            downloadTimeLeft: '5min',
-          },
-          {
-            uuid: '2',
-            channelName: '科技频道',
-            itemName: '最新科技报道',
-            downloadProgress: 20,
-            downloadSpeed: '500KB/s',
-            downloadTimeLeft: '10min',
-          },
-        ],
-        error: [
-          {
-            uuid: '3',
-            channelName: '娱乐频道',
-            itemName: '明星八卦',
-            downloadProgress: 0,
-            status: 'error',
-          },
-          {
-            uuid: '4',
-            channelName: '体育频道',
-            itemName: '足球直播',
-            downloadProgress: 0,
-            status: '5',
-          },
-        ],
-        done: [
-          {
-            uuid: '7',
-            channelName: '历史频道',
-            itemName: '古代战争纪录片',
-            downloadProgress: 100,
-            status: '5',
-          },
-          {
-            uuid: '8',
-            channelName: '教育频道',
-            itemName: '数学教程',
-            downloadProgress: 100,
-            status: '24',
-          },
-        ],
-        info: [
-          {
-            name: 'Downloader A',
-            version: '1.0.0',
-            updateTime: '2023-10-01',
-          },
-          {
-            name: 'Downloader B',
-            version: '2.0.1',
-            updateTime: '2023-09-15',
-          },
-        ],
+        progress: [],
+        error: [],
+        done: [],
+        info: [],
+        detail: {},
+        downloadDetailVisible: false,
         selectionDownloadDone: [],
       },
       upload: {
-        progress: [
-          {
-            uuid: '5',
-            channelName: '艺术频道',
-            itemName: '画作上传',
-            uploadProgress: 30,
-            uploadSpeed: '2MB/s',
-            uploadTimeLeft: '2min',
-          },
-          {
-            uuid: '6',
-            channelName: '游戏频道',
-            itemName: '游戏录像',
-            uploadProgress: 80,
-            uploadSpeed: '3MB/s',
-            uploadTimeLeft: '30sec',
-          },
-        ],
+        progress: [],
       },
     };
   },
   methods: {
-    // 操作方法
+    //重新下载
     reDownload(uuid) {
-      console.log('重新下载', uuid);
+      this.$confirm('此操作将重新处理该节目, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        axios.get('/api/download/reDownload/' + uuid)
+          .then(res => {
+            if (res.data.code == '1') {
+              this.$message.success('正在重新处理中');
+              //重新获取完成下载信息
+              this.getDownloadDone();
+            } else {
+              this.$message.error(res.data.msg);
+            }
+          }).catch(err => {
+            this.$message.error('重新处理失败！');
+            console.log(err)
+          })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消重新处理'
+        });
+      });
+
     },
+    //获取下载详细信息
     downloadDetail(uuid) {
-      console.log('查看详情', uuid);
+      this.download.detail = {}
+      this.download.downloadDetailVisible = true
+      axios.get('/api/download/detail/' + uuid)
+        .then(res => {
+          if (res.data.code == '1') {
+            this.download.detail = res.data.data;
+          } else {
+            this.$message.error(res.data.msg);
+          }
+        }).catch(err => {
+          this.$message.error('获取下载详细信息失败！');
+          console.log(err);
+        })
     },
     downloadDelete(uuid) {
       console.log('删除任务', uuid);
@@ -274,11 +265,131 @@ export default {
     batchDeleteDownloadDone() {
       console.log('批量删除已完成任务');
     },
-    getDownloadDone() {
-      console.log('刷新已完成任务列表');
-    },
     handleSelectionDownloadDone(val) {
       this.download.selectionDownloadDone = val;
+    },
+    //获取下载器信息
+    getDownloaderInfo() {
+      axios.get('/api/download/info')
+        .then(res => {
+          if (res.data.code == '1') {
+            this.download.info = res.data.data;
+          } else {
+            this.$message.error('获取下载器信息失败！')
+          }
+        }).catch(err => {
+          this.$message.error('获取下载器信息失败！')
+          console.log(err)
+        })
+    },
+    //获取下载完成的信息
+    getDownloadDone() {
+      axios.get('/api/download/completed')
+        .then(res => {
+          if (res.data.code == '1') {
+            this.download.done = res.data.data;
+          } else {
+            this.$message.error(res.data.msg)
+          }
+        }).catch(err => {
+          console.log(err)
+          this.$message.error('获取下载完成的信息失败！')
+        })
+    },
+    //获取下载错误的信息
+    getDownloadError() {
+      axios.get('/api/download/error')
+        .then(res => {
+          if (res.data.code == '1') {
+            this.download.error = res.data.data;
+          } else {
+            this.$message.error(res.data.msg)
+          }
+        }).catch(err => {
+          console.log(err)
+          this.$message.error('获取下载完成的信息失败！')
+        })
+    },
+    //复制内容到粘贴板
+    copy(content) {
+      const textarea = document.createElement('textarea');
+
+      console.log('复制到粘贴板')
+
+      textarea.value = content;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'absolute';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+
+      // 延迟显示复制成功提示
+      setTimeout(() => {
+        this.$message({
+          message: '复制成功！',
+          type: 'success'
+        });
+      }, 100);
+
+      console.log('内容已成功复制到剪贴板');
+    },
+    //适配宽度
+    adaptWidth() {
+      let type = this.$deviceType;
+      console.log("deviceType: " + type);
+      if (type == 'mobile') {
+        return '80%';
+      } else if (type == 'tablet') {
+        return '50%';
+      } else {
+        return '40%';
+      }
+    },
+    //下载进度展示
+    setupDownloadSocket() {
+      let clientId = Math.random().toString(36).substr(2);
+      let wsUrl = `/ws/download/${clientId}`;
+      let websocket = null;
+
+      if ('WebSocket' in window) {
+        websocket = new WebSocket(wsUrl);
+      } else {
+        alert('Not support websocket')
+      }
+
+      //连接发生错误的回调方法
+      websocket.onerror = function () {
+        console.log('下载ws连接错误')
+      };
+
+      //连接成功建立的回调方法
+      websocket.onopen = function () {
+        console.log('下载ws连接成功')
+      }
+
+      //接收到消息的回调方法
+      var vm = this;
+      websocket.onmessage = function (event) {
+        let message = event.data;
+        let object = JSON.parse(message);
+        console.log(object);
+        if (vm.download.progress.length != object.length) {
+          vm.getDownloadDone();
+          vm.getDownloadError();
+        }
+        vm.download.progress = object;
+      }
+
+      //连接关闭的回调方法
+      websocket.onclose = function () {
+        console.log('下载ws关闭')
+      }
+
+      window.onbeforeunload = function () {
+        websocket.close();
+      }
     },
   },
 };
