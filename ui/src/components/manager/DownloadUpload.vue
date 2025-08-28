@@ -72,7 +72,8 @@
             v-if="download.selectionDownloadDone.length > 1" size="mini">
             批量删除
           </el-button>
-          <el-button type="primary" round @click="getDownloadDone()" size="mini">刷新列表</el-button>
+          <el-button size="mini" type="primary" round @click="getDownloadDone() && $message.success('刷新成功！')">刷新
+      </el-button>
           <el-table :data="download.done" stripe style="width: 100%" ref="selectDownloadDone"
             @selection-change="handleSelectionDownloadDone">
             <el-table-column type="selection" width="55"></el-table-column>
@@ -174,15 +175,15 @@
 <script>
 import axios from 'axios';
 export default {
-  computed:{
-    downloadUploadLabel(){
-      return this.download.progress.length > 0 ? '正在上传/下载 ' +  this.download.progress.length: '正在上传/下载';
+  computed: {
+    downloadUploadLabel() {
+      return this.download.progress.length > 0 ? '正在上传/下载 ' + this.download.progress.length : '正在上传/下载';
     },
-    downloadErrorLabel(){
-      return this.download.error.length > 0 ? '错误 ' +  this.download.progress.error: '错误';
+    downloadErrorLabel() {
+      return this.download.error.length > 0 ? '错误 ' + this.download.error.length : '错误';
     },
-    doneLabel(){
-      return this.download.done.length > 0 ? '完成 ' +  this.download.done.length: '完成';
+    doneLabel() {
+      return this.download.done.length > 0 ? '完成 ' + this.download.done.length : '完成';
     }
   },
   mounted() {
@@ -254,16 +255,70 @@ export default {
         })
     },
     downloadDelete(uuid) {
-      console.log('删除任务', uuid);
+      this.$confirm('此操作将删除该下载, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        axios.delete('/api/download?uuids=' + uuid)
+          .then(res => {
+            if (res.data.code == '1') {
+              this.$message.success('删除成功！')
+              this.getDownloadDone();
+            } else {
+              this.$message.error(res.data.msg)
+            }
+          }).catch(err => {
+            console.log(err)
+            this.$message.error('删除失败！')
+          })
+      }).catch(() => {
+        this.$message.info('已取消删除')
+      });
     },
     deleteDownloading(uuid) {
-      console.log('删除下载任务', uuid);
-    },
-    deleteUploading(uuid) {
-      console.log('删除上传任务', uuid);
+      this.$confirm('此操作将删除该下载, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        axios.delete('/api/download/downloading?uuids=' + uuid)
+          .then(res => {
+            if (res.data.code == '1') {
+              this.$message.success('删除成功！')
+            } else {
+              this.$message.error(res.data.msg)
+            }
+          }).catch(err => {
+            console.log(err)
+            this.$message.error('删除失败！')
+          })
+      }).catch(() => {
+        this.$message.info('已取消删除')
+      });
     },
     batchDeleteDownloadDone() {
-      console.log('批量删除已完成任务');
+      this.$confirm('此操作将批量删除下载, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        const uuids = this.download.selectionDownloadDone.map(item => item.uuid);
+        axios.delete('/api/download?uuids=' + uuids)
+          .then(res => {
+            if (res.data.code == '1') {
+              this.$message.success('批量删除成功！')
+              this.getDownloadDone();
+            } else {
+              this.$message.error(res.data.msg)
+            }
+          }).catch(err => {
+            console.log(err)
+            this.$message.error('批量删除失败！')
+          })
+      }).catch(() => {
+        this.$message.info('已取消批量删除')
+      });
     },
     handleSelectionDownloadDone(val) {
       this.download.selectionDownloadDone = val;
@@ -283,7 +338,7 @@ export default {
         })
     },
     //获取下载完成的信息
-    getDownloadDone() {
+    async getDownloadDone() {
       axios.get('/api/download/completed')
         .then(res => {
           if (res.data.code == '1') {
