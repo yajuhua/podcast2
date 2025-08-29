@@ -2,8 +2,8 @@
   <div class="dashboard">
     <!-- 顶部操作区 -->
     <div class="actions">
-      <el-button type="primary" @click="handleRestart">重启</el-button>
-      <el-button type="success" @click="handleCheckUpdate">检查更新</el-button>
+      <el-button type="primary" @click="handleRestart" round>重启</el-button>
+      <el-button type="success" @click="handleCheckUpdate" round>检查更新</el-button>
     </div>
 
     <!-- 系统信息卡片 -->
