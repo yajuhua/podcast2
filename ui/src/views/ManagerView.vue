@@ -1,51 +1,46 @@
 <template>
   <div class="container">
     <!-- 左侧菜单 -->
-    <el-menu
-      :default-active="activeMenu"
-      class="el-menu-vertical-demo"
-      :collapse="isCollapse"
-      @select="handleSelect"
-      unique-opened="true"
-    >
+    <el-menu :default-active="activeMenu" class="el-menu-vertical-demo" :collapse="isCollapse" @select="handleSelect"
+      unique-opened="true">
       <!-- 手动展开/收起 -->
       <el-menu-item index="0" @click="toggleMenu">
-        <i class="el-icon-menu"></i>
+        <i class="el-icon-s-unfold"></i>
         <span slot="title">{{ isCollapse ? "展开" : "收起" }}</span>
       </el-menu-item>
 
       <el-menu-item index="1">
-        <i class="el-icon-menu"></i>
+        <i class="el-icon-s-data"></i>
         <span slot="title">概况</span>
       </el-menu-item>
 
       <el-menu-item index="2">
-        <i class="el-icon-menu"></i>
+        <i class="el-icon-user"></i>
         <span slot="title">用户</span>
       </el-menu-item>
 
       <el-menu-item index="3">
-        <i class="el-icon-location"></i>
-          <span slot="title">设置</span>
+        <i class="el-icon-setting"></i>
+        <span slot="title">设置</span>
       </el-menu-item>
 
       <el-menu-item index="4">
-        <i class="el-icon-location"></i>
-          <span slot="title">上传与下载</span>
+        <i class="el-icon-download"></i>
+        <span slot="title">上传与下载</span>
       </el-menu-item>
 
       <el-menu-item index="5">
-        <i class="el-icon-location"></i>
-          <span slot="title">插件</span>
+        <i class="el-icon-s-grid"></i>
+        <span slot="title"> 插件</span>
       </el-menu-item>
 
       <el-menu-item index="6" @click="($router.push('/'))">
-        <i class="el-icon-menu"></i>
+        <i class="el-icon-s-home"></i>
         <span slot="title">订阅列表</span>
       </el-menu-item>
 
       <el-menu-item index="7">
-        <i class="el-icon-menu"></i>
+        <i class="el-icon-info"></i>
         <span slot="title">关于</span>
       </el-menu-item>
     </el-menu>
@@ -54,12 +49,12 @@
     <div class="main">
       <div v-show="activeMenu == '1'">
         <h2>概况</h2>
-        <GeneralOverview/>
+        <GeneralOverview />
       </div>
 
       <!-- 用户 -->
       <div v-show="activeMenu == '2'">
-        <User/>
+        <User />
       </div>
 
       <!-- 设置 -->
@@ -69,16 +64,16 @@
 
       <!-- 上传与下载 -->
       <div v-show="activeMenu == 4">
-        <DownloadUpload/>
+        <DownloadUpload />
       </div>
 
       <div v-show="activeMenu == '5'">
         <h2>插件</h2>
-        <PluginManager/>
+        <PluginManager />
       </div>
 
       <div v-show="activeMenu == '7'">
-        <ReadmeReader url="https://raw.githubusercontent.com/yajuhua/podcast2/refs/heads/v2/README.md"/>
+        <ReadmeReader url="https://raw.githubusercontent.com/yajuhua/podcast2/refs/heads/v2/README.md" />
       </div>
     </div>
   </div>
@@ -92,7 +87,7 @@ import DownloadUpload from '../components/manager/DownloadUpload.vue'
 import User from '@/components/manager/User.vue';
 import SettingsView from '@/components/manager/SettingsView.vue';
 export default {
-components: {GeneralOverview, ReadmeReader, PluginManager, DownloadUpload, User, SettingsView},
+  components: { GeneralOverview, ReadmeReader, PluginManager, DownloadUpload, User, SettingsView },
   data() {
     return {
       isCollapse: false, // 是否收起
@@ -130,10 +125,12 @@ components: {GeneralOverview, ReadmeReader, PluginManager, DownloadUpload, User,
   display: flex;
   height: 100vh;
 }
+
 .el-menu-vertical-demo {
   min-height: 100vh;
   transition: width 0.3s;
 }
+
 .main {
   flex: 1;
   padding: 20px;
