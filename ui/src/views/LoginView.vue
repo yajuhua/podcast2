@@ -197,8 +197,6 @@ button:active {
 
 /* 媒体查询 */
 @media only screen and (max-width: 480px) {
-
-  /* 适配小屏幕手机，宽度小于等于480px */
   .login-form {
     width: 80%;
     height: 250px;
@@ -211,8 +209,6 @@ button:active {
 }
 
 @media only screen and (min-width: 481px) and (max-width: 768px) {
-
-  /* 适配中等屏幕手机，宽度大于480px小于等于768px */
   .login-form {
     width: 70%;
     height: 260px;
@@ -221,8 +217,6 @@ button:active {
 }
 
 @media only screen and (min-width: 769px) and (max-width: 1024px) {
-
-  /* 适配大屏幕手机，宽度大于768px小于等于1024px */
   .login-form {
     width: 50%;
     height: 260px;
@@ -231,5 +225,11 @@ button:active {
 }
 
 
-/* 添加更多媒体查询以适配其他屏幕尺寸 */
+@media only screen and (min-width: 1024px) and (max-width: 2160px) {
+  .login-form {
+    width: 25%;
+    height: 260px;
+    zoom: 1.4;
+  }
+}
 </style>
