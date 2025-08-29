@@ -37,12 +37,12 @@
                   <el-button type="primary" plain round icon="el-icon-more" size="mini"></el-button>
                 </span>
                 <el-dropdown-menu slot="dropdown">
-                  <el-dropdown-item icon="el-icon-plus" @click.native="copyUrl(scope.row.uuid)">复制URL</el-dropdown-item>
-                  <el-dropdown-item icon="el-icon-circle-plus" @click.native="qrcode(scope.row.uuid)">二维码</el-dropdown-item>
-                  <el-dropdown-item icon="el-icon-circle-plus-outline" @click.native="batchDelete(scope.row.uuid)">删除</el-dropdown-item>
-                  <el-dropdown-item icon="el-icon-check" @click.native="(editSubUuid = scope.row.uuid) && (editSubVisible = true)">编辑</el-dropdown-item>
-                  <el-dropdown-item icon="el-icon-circle-check" @click.native="subDetailShow(scope.row.uuid)">详细</el-dropdown-item>
-                  <el-dropdown-item icon="el-icon-circle-check" @click.native="(appendItem.channelUuid = scope.row.uuid) && (appendItem.visible = true)">追加节目</el-dropdown-item>
+                  <el-dropdown-item icon="el-icon-document-copy" @click.native="copyUrl(scope.row.uuid)">复制URL</el-dropdown-item>
+                  <el-dropdown-item icon="el-icon-full-screen" @click.native="qrcode(scope.row.uuid)">二维码</el-dropdown-item>
+                  <el-dropdown-item icon="el-icon-delete" @click.native="batchDelete(scope.row.uuid)">删除</el-dropdown-item>
+                  <el-dropdown-item icon="el-icon-edit-outline" @click.native="(editSubUuid = scope.row.uuid) && (editSubVisible = true)">编辑</el-dropdown-item>
+                  <el-dropdown-item icon="el-icon-info" @click.native="subDetailShow(scope.row.uuid)">详细</el-dropdown-item>
+                  <el-dropdown-item icon="el-icon-circle-plus" @click.native="(appendItem.channelUuid = scope.row.uuid) && (appendItem.visible = true)">追加节目</el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
             </template>
@@ -72,11 +72,11 @@
             <el-button type="primary" icon="el-icon-s-tools" circle></el-button>
           </span>
           <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item icon="el-icon-plus" @click.native="addSubVisible = true">添加订阅</el-dropdown-item>
-            <el-dropdown-item icon="el-icon-plus" @click.native="selectionVisible = !selectionVisible">选择</el-dropdown-item>
-            <el-dropdown-item icon="el-icon-circle-plus" @click.native="batchDelete('')">批量删除</el-dropdown-item>
-            <el-dropdown-item icon="el-icon-circle-plus-outline" @click.native="downloadOPML">生成OPML</el-dropdown-item>
-            <el-dropdown-item icon="el-icon-check" @click.native="subGroup()">订阅组</el-dropdown-item>
+            <el-dropdown-item icon="el-icon-circle-plus" @click.native="addSubVisible = true">添加订阅</el-dropdown-item>
+            <el-dropdown-item icon="el-icon-position" @click.native="selectionVisible = !selectionVisible">选择</el-dropdown-item>
+            <el-dropdown-item icon="el-icon-delete" @click.native="batchDelete('')">批量删除</el-dropdown-item>
+            <el-dropdown-item icon="el-icon-document-add" @click.native="downloadOPML">生成OPML</el-dropdown-item>
+            <el-dropdown-item icon="el-icon-folder-add" @click.native="subGroup()">订阅组</el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
       </div>

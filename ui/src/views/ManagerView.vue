@@ -10,7 +10,7 @@
       </el-menu-item>
 
       <el-menu-item index="1">
-        <i class="el-icon-s-data"></i>
+        <i class="el-icon-menu"></i>
         <span slot="title">概况</span>
       </el-menu-item>
 
@@ -107,7 +107,9 @@ export default {
   },
   methods: {
     handleSelect(key) {
-      this.activeMenu = key;
+      if(key != '0'){
+        this.activeMenu = key;
+      }
     },
     toggleMenu() {
       this.isCollapse = !this.isCollapse; // 手动切换

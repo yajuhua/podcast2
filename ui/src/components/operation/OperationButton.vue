@@ -8,16 +8,16 @@
         <!-- 使用 @click.native 可以强制监听原生 DOM 的 click 事件，绕开 Element UI 某些组件内部事件封装的问题。 -->
         <el-dropdown-menu slot="dropdown">
           <el-dropdown-item
-            icon="el-icon-plus"
+            icon="el-icon-chat-dot-square"
             @click.native="$store.operationButton.realTimelogVisible = true"
             >实时日志</el-dropdown-item
           >
           <el-dropdown-item
-            icon="el-icon-plus"
+            icon="el-icon-chat-line-square"
             @click.native="$store.operationButton.historyLogVisible = true"
             >历史日志</el-dropdown-item
           >
-          <el-dropdown-item icon="el-icon-plus" @click.native="logout()"
+          <el-dropdown-item icon="el-icon-circle-close" @click.native="logout()"
             >退出</el-dropdown-item
           >
         </el-dropdown-menu>

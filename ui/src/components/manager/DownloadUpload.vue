@@ -19,8 +19,8 @@
               <el-dropdown trigger="click">
                 <el-button type="primary" round size="mini" icon="el-icon-more"></el-button>
                 <el-dropdown-menu slot="dropdown">
-                  <el-dropdown-item @click.native="downloadDetail(row.uuid)">详细</el-dropdown-item>
-                  <el-dropdown-item @click.native="deleteDownloading(row.uuid)">删除</el-dropdown-item>
+                  <el-dropdown-item @click.native="downloadDetail(row.uuid)"><i class="el-icon-info"></i>详细</el-dropdown-item>
+                  <el-dropdown-item @click.native="deleteDownloading(row.uuid)"><i class="el-icon-delete"></i>删除</el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
             </template>
@@ -55,9 +55,9 @@
               <el-dropdown trigger="click">
                 <el-button type="primary" round size="mini" icon="el-icon-more"></el-button>
                 <el-dropdown-menu slot="dropdown">
-                  <el-dropdown-item @click.native="reDownload(row.uuid)">重新</el-dropdown-item>
-                  <el-dropdown-item @click.native="downloadDetail(row.uuid)">详细</el-dropdown-item>
-                  <el-dropdown-item @click.native="downloadDelete(row.uuid)">删除</el-dropdown-item>
+                  <el-dropdown-item @click.native="reDownload(row.uuid)"><i class="el-icon-refresh"></i>重新</el-dropdown-item>
+                  <el-dropdown-item @click.native="downloadDetail(row.uuid)"><i class="el-icon-info"></i>详细</el-dropdown-item>
+                  <el-dropdown-item @click.native="downloadDelete(row.uuid)"><i class="el-icon-delete"></i>删除</el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
             </template>
@@ -96,9 +96,9 @@
                 <el-dropdown trigger="click">
                   <el-button type="primary" round size="mini" icon="el-icon-more"></el-button>
                   <el-dropdown-menu slot="dropdown">
-                    <el-dropdown-item @click.native="reDownload(row.uuid)">重新</el-dropdown-item>
-                    <el-dropdown-item @click.native="downloadDetail(row.uuid)">详细</el-dropdown-item>
-                    <el-dropdown-item @click.native="downloadDelete(row.uuid)">删除</el-dropdown-item>
+                    <el-dropdown-item @click.native="reDownload(row.uuid)"><i class="el-icon-refresh"></i>重新</el-dropdown-item>
+                    <el-dropdown-item @click.native="downloadDetail(row.uuid)"><i class="el-icon-info"></i>详细</el-dropdown-item>
+                    <el-dropdown-item @click.native="downloadDelete(row.uuid)"><i class="el-icon-delete"></i>删除</el-dropdown-item>
                   </el-dropdown-menu>
                 </el-dropdown>
               </template>
