@@ -259,7 +259,6 @@
                         <configuration>
                             <nodeVersion>v20.10.0</nodeVersion>
                             <npmVersion>10.2.3</npmVersion>
-                            <nodeDownloadRoot>https://npmmirror.com/mirrors/node/</nodeDownloadRoot>
                             <installDirectory>ui</installDirectory>
                         </configuration>
                     </execution>
@@ -285,29 +284,33 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!--参考https://blog.luvying.com/archives/vue-maven-demo-->
             <plugin>
-                  <artifactId>maven-resources-plugin</artifactId>
-                  <version>3.2.0</version>
-                      <executions>
-                          <execution>
-                              <id>copy-ui-dist</id>
-                              <phase>package</phase>
-                                    <goals>
-                                             <goal>copy-resources</goal>
-                                    </goals>
-                              <configuration>
-                                  <outputDirectory>${project.basedir}/src/main/resources/static</outputDirectory>
-                                  <resources>
-                                      <resource>
-                                          <directory>${project.basedir}/ui/dist</directory>
-                                          <filtering>false</filtering>
-                                      </resource>
-                                  </resources>
-                                     <verbose>true</verbose>
-                              </configuration>
-                          </execution>
-                      </executions>
-         </plugin>     
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>copy static</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <!-- 复制前端打包文件到这里 -->
+                            <outputDirectory>src/main/resources/static</outputDirectory>
+                            <overwrite>true</overwrite>
+                            <resources>
+                                <resource>
+                                    <!-- 从前端打包的目录dist进行指定文件、文件夹内容的复制-->
+                                    <directory>ui/dist</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
 
         <resources>
