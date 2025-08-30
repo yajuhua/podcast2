@@ -36,6 +36,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Download jar artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: jar
+          path: .    
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
