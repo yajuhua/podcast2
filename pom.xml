@@ -291,7 +291,7 @@
                       <executions>
                           <execution>
                               <id>copy-ui-dist</id>
-                              <phase>process-resources</phase>
+                              <phase>package</phase>
                                     <goals>
                                              <goal>copy-resources</goal>
                                     </goals>
@@ -303,6 +303,7 @@
                                           <filtering>false</filtering>
                                       </resource>
                                   </resources>
+                                     <verbose>true</verbose>
                               </configuration>
                           </execution>
                       </executions>
