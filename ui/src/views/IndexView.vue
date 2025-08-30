@@ -159,7 +159,8 @@ export default {
       return this.subData.filter(item => {
         const titleMatch = item.title.includes(this.searchQuery);
         const updateTimeMatch = item.updateTime.includes(this.searchQuery);
-        return titleMatch || updateTimeMatch;
+        const uuidMatch = item.uuid.includes(this.searchQuery);
+        return titleMatch || updateTimeMatch || uuidMatch;
       });
     },
   },
