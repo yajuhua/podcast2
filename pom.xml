@@ -279,12 +279,34 @@
                             <goal>npm</goal>
                         </goals>
                         <configuration>
-                            <arguments>run build -- --dest=../src/main/resources/static</arguments>
+                            <arguments>run build</arguments>
                             <workingDirectory>ui</workingDirectory>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                  <artifactId>maven-resources-plugin</artifactId>
+                  <version>3.2.0</version>
+                      <executions>
+                          <execution>
+                              <id>copy-ui-dist</id>
+                              <phase>process-resources</phase>
+                                    <goals>
+                                             <goal>copy-resources</goal>
+                                    </goals>
+                              <configuration>
+                                  <outputDirectory>${project.basedir}/src/main/resources/static</outputDirectory>
+                                  <resources>
+                                      <resource>
+                                          <directory>${project.basedir}/ui/dist</directory>
+                                          <filtering>false</filtering>
+                                      </resource>
+                                  </resources>
+                              </configuration>
+                          </execution>
+                      </executions>
+         </plugin>     
         </plugins>
 
         <resources>
