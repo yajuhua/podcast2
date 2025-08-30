@@ -4,26 +4,18 @@
       <operation-button :data.sync="operationButton" v-if="false"></operation-button>
       <!-- 搜索订阅 -->
       <div style="text-align: center;">
-        <el-input v-model="searchKeyword" style="width: 70%" placeholder="搜索订阅">
-          <!-- <el-button type="primary" @click="subSearch()" slot="append" icon="el-icon-search"></el-button> -->
+        <el-input v-model="searchQuery" style="width: 70%" placeholder="搜索订阅" @input="handleSearchInput()">
         </el-input>
       </div>
 
       <!-- 订阅详细信息 -->
       <sub-detail :data="subDetail.detail" :visible.sync="subDetail.visible"></sub-detail>
-      
+
       <!-- 订阅列表展示 -->
       <div style="display: flex;justify-content: center; padding-left: 5%;padding-right: 5%">
-        <el-table 
-          ref="multipleTable" 
-          :data="subData" 
-          tooltip-effect="dark" 
-          style="width: 100%"
-          @selection-change="handleSelectionChange" 
-          :header-cell-style="{ textAlign: 'center' }" 
-          :cell-style="{'text-align':'center'}"
-          empty-text="暂无订阅"
-        >
+        <el-table ref="multipleTable" :data="filteredSubListData" tooltip-effect="dark" style="width: 100%"
+          @selection-change="handleSelectionChange" :header-cell-style="{ textAlign: 'center' }"
+          :cell-style="{ 'text-align': 'center' }" empty-text="暂无订阅">
           <el-table-column type="selection" width="auto" v-if="selectionVisible"></el-table-column>
           <el-table-column type="index"></el-table-column>
           <el-table-column label="更新" prop="updateTime"></el-table-column>
@@ -37,12 +29,18 @@
                   <el-button type="primary" plain round icon="el-icon-more" size="mini"></el-button>
                 </span>
                 <el-dropdown-menu slot="dropdown">
-                  <el-dropdown-item icon="el-icon-document-copy" @click.native="copyUrl(scope.row.uuid)">复制URL</el-dropdown-item>
-                  <el-dropdown-item icon="el-icon-full-screen" @click.native="qrcode(scope.row.uuid)">二维码</el-dropdown-item>
-                  <el-dropdown-item icon="el-icon-delete" @click.native="batchDelete(scope.row.uuid)">删除</el-dropdown-item>
-                  <el-dropdown-item icon="el-icon-edit-outline" @click.native="(editSubUuid = scope.row.uuid) && (editSubVisible = true)">编辑</el-dropdown-item>
-                  <el-dropdown-item icon="el-icon-info" @click.native="subDetailShow(scope.row.uuid)">详细</el-dropdown-item>
-                  <el-dropdown-item icon="el-icon-circle-plus" @click.native="(appendItem.channelUuid = scope.row.uuid) && (appendItem.visible = true)">追加节目</el-dropdown-item>
+                  <el-dropdown-item icon="el-icon-document-copy"
+                    @click.native="copyUrl(scope.row.uuid)">复制URL</el-dropdown-item>
+                  <el-dropdown-item icon="el-icon-full-screen"
+                    @click.native="qrcode(scope.row.uuid)">二维码</el-dropdown-item>
+                  <el-dropdown-item icon="el-icon-delete"
+                    @click.native="batchDelete(scope.row.uuid)">删除</el-dropdown-item>
+                  <el-dropdown-item icon="el-icon-edit-outline"
+                    @click.native="(editSubUuid = scope.row.uuid) && (editSubVisible = true)">编辑</el-dropdown-item>
+                  <el-dropdown-item icon="el-icon-info"
+                    @click.native="subDetailShow(scope.row.uuid)">详细</el-dropdown-item>
+                  <el-dropdown-item icon="el-icon-circle-plus"
+                    @click.native="(appendItem.channelUuid = scope.row.uuid) && (appendItem.visible = true)">追加节目</el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
             </template>
@@ -73,7 +71,8 @@
           </span>
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item icon="el-icon-circle-plus" @click.native="addSubVisible = true">添加订阅</el-dropdown-item>
-            <el-dropdown-item icon="el-icon-position" @click.native="selectionVisible = !selectionVisible">选择</el-dropdown-item>
+            <el-dropdown-item icon="el-icon-position"
+              @click.native="selectionVisible = !selectionVisible">选择</el-dropdown-item>
             <el-dropdown-item icon="el-icon-delete" @click.native="batchDelete('')">批量删除</el-dropdown-item>
             <el-dropdown-item icon="el-icon-document-add" @click.native="downloadOPML">生成OPML</el-dropdown-item>
             <el-dropdown-item icon="el-icon-folder-add" @click.native="subGroup()">订阅组</el-dropdown-item>
@@ -107,6 +106,7 @@ import AppendItem from '../components/index/AppendItem'
 import EditSub from '../components/index/EditSub'
 import OperationButton from '../components/operation/OperationButton'
 import { copy } from '@/utils/utils';
+import { debounce } from 'lodash';
 
 export default {
   components: {
@@ -121,7 +121,7 @@ export default {
   },
   data() {
     return {
-      searchKeyword: '',
+      searchQuery: '',
       searchIng: '',
       subData: [],
       qrcodeVisible: false,
@@ -153,6 +153,15 @@ export default {
         historyLogVisible: false
       }
     }
+  },
+  computed: {
+    filteredSubListData() {
+      return this.subData.filter(item => {
+        const titleMatch = item.title.includes(this.searchQuery);
+        const updateTimeMatch = item.updateTime.includes(this.searchQuery);
+        return titleMatch || updateTimeMatch;
+      });
+    },
   },
   mounted() {
     this.getSubList();
@@ -315,7 +324,10 @@ export default {
         this.subGroupData.url = window.location.protocol + '//' + window.location.host + '/sub/xml?uuids=' + this.subGroupData.uuids + '&group=';
         this.subGroupData.qrcodeVisible = true;
       }
-    }
+    },
+    handleSearchInput: debounce(function() {
+      console.log('搜索关键词:', this.searchQuery);
+    }, 500), 
   }
 }
 </script>
@@ -324,11 +336,13 @@ export default {
 .page-wrapper {
   display: flex;
   flex-direction: column;
-  min-height: 95vh; /* 页面至少占满屏幕高度 */
+  min-height: 95vh;
+  /* 页面至少占满屏幕高度 */
 }
 
 .page-content {
-  flex: 1; /* 内容区撑开，footer 被推到底部 */
+  flex: 1;
+  /* 内容区撑开，footer 被推到底部 */
 }
 
 .el-tag+.el-tag {
