@@ -126,7 +126,7 @@ jobs:
             md5.txt
             
   update-info:
-    if: ${{ inputs.docker == 'true' && inputs.package == 'true' }}
+    if: ${{ inputs.docker && inputs.package }}
     permissions: write-all
     runs-on: ubuntu-latest
     needs: [build-installation-package,build-and-push-docker]
