@@ -42,7 +42,7 @@ jobs:
           path: target/  # 上传 target 目录
 
   build-and-push-docker:
-    if: ${{ inputs.docker == 'true' }}
+    if: ${{ inputs.docker }}
     needs: build-jar
     runs-on: ubuntu-latest
     steps:
@@ -76,7 +76,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
 
   build-installation-package:
-    if: ${{ inputs.package == 'true' }}
+    if: ${{ inputs.package }}
     permissions: write-all
     runs-on: ubuntu-latest
     needs: build-jar
@@ -112,7 +112,7 @@ jobs:
           md5sum app.jar >> md5.txt
 
       - name: Release
-        if: ${{ inputs.release == 'true' }}    
+        if: ${{ inputs.release }}    
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
