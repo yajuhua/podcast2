@@ -60,20 +60,22 @@ export default {
       }
     },
     resetPassword() {
-      this.$alert(
+      this.$confirm(
         '将config/config.json中initUserNameAndPasswor字段改成true',
         '重置密码',
         {
-          confirmButtonText: '确定'
+          showCancelButton: false,
+          confirmButtonText: '我知道了'
         }
       );
     },
     resetAccount() {
-      this.$alert(
+      this.$confirm(
         '将config/config.json中initUserNameAndPasswor字段改成true',
         '重置用户名和密码',
         {
-          confirmButtonText: '确定'
+          showCancelButton: false,
+          confirmButtonText: '我知道了'
         }
       );
     }
@@ -198,7 +200,7 @@ button:active {
 /* 媒体查询 */
 @media only screen and (max-width: 480px) {
   .login-form {
-    width: 80%;
+    width: 70%;
     height: 250px;
     zoom: 1;
   }
