@@ -37,6 +37,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -66,14 +68,14 @@ public class PluginManager extends ClassLoader{
 
     public PluginManager(File pluginDir, String remotePluginRepoUrl) {
         this.pluginDir = pluginDir;
-        this.remotePluginRepoUrl = remotePluginRepoUrl;
+        this.remotePluginRepoUrl = getFinalRepoUrl(remotePluginRepoUrl);
     }
 
     public PluginManager(File pluginDir, String remotePluginRepoUrl, PluginMapper pluginMapper,
                          SubMapper subMapper, SettingsMapper settingsMapper, ExtendMapper extendMapper,
                          UserService userService, InfoProperties infoProperties, PluginService pluginService) {
         this.pluginDir = pluginDir;
-        this.remotePluginRepoUrl = remotePluginRepoUrl;
+        this.remotePluginRepoUrl = getFinalRepoUrl(remotePluginRepoUrl);
         this.pluginMapper = pluginMapper;
         this.subMapper = subMapper;
         this.settingsMapper = settingsMapper;
@@ -200,7 +202,7 @@ public class PluginManager extends ClassLoader{
         Params params = getParams();
         if (hasParamsConstructor(plugin)){
             Constructor constructor = plugin.getConstructor(Params.class);
-             o = (Podcast2)constructor.newInstance(params);
+            o = (Podcast2)constructor.newInstance(params);
         }else {
             Constructor constructor = plugin.getConstructor(String.class);
             o = (Podcast2)constructor.newInstance(gson.toJson(params));
@@ -494,33 +496,33 @@ public class PluginManager extends ClassLoader{
         boolean isJar;
         Properties properties;
         for (File file : files) {
-             jarPath = file.getAbsolutePath();
-             isJar = "jar".equals(jarPath.substring(jarPath.lastIndexOf(".") + 1));
-             if (isJar){
+            jarPath = file.getAbsolutePath();
+            isJar = "jar".equals(jarPath.substring(jarPath.lastIndexOf(".") + 1));
+            if (isJar){
 
-                 try {
-                     properties = getPluginProperties(jarPath, PROPERTIES_FILE_NAME);
-                 } catch (Exception e) {
-                     continue;
-                 }
-                 if (properties != null && name.equals(properties.get("name"))){
-                      String mainClass = properties.get("mainClass").toString();
-                      String version = properties.get("version").toString();
-                      String update = properties.get("update").toString();
-                      String uuid = properties.get("uuid").toString();
-                      LocalDate updateDate = LocalDate.parse(update,DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                try {
+                    properties = getPluginProperties(jarPath, PROPERTIES_FILE_NAME);
+                } catch (Exception e) {
+                    continue;
+                }
+                if (properties != null && name.equals(properties.get("name"))){
+                    String mainClass = properties.get("mainClass").toString();
+                    String version = properties.get("version").toString();
+                    String update = properties.get("update").toString();
+                    String uuid = properties.get("uuid").toString();
+                    LocalDate updateDate = LocalDate.parse(update,DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
-                      PluginData pluginData = new PluginData();
-                      pluginData.setClassPath(mainClass);
-                      pluginData.setJarFile(file);
-                      pluginData.setName(name);
-                      pluginData.setUuid(uuid);
-                      pluginData.setUpdate(updateDate);
-                      pluginData.setVersion(version);
+                    PluginData pluginData = new PluginData();
+                    pluginData.setClassPath(mainClass);
+                    pluginData.setJarFile(file);
+                    pluginData.setName(name);
+                    pluginData.setUuid(uuid);
+                    pluginData.setUpdate(updateDate);
+                    pluginData.setVersion(version);
 
-                      pluginDataList.add(pluginData);
-                  }
-             }
+                    pluginDataList.add(pluginData);
+                }
+            }
         }
         return pluginDataList;
     }
@@ -636,7 +638,7 @@ public class PluginManager extends ClassLoader{
      * @return
      */
     public boolean delete(String name){
-       //删除文件
+        //删除文件
         try {
             for (PluginData data : getPluginDataList(name)) {
                 File jarFile = data.getJarFile();
@@ -1104,9 +1106,13 @@ public class PluginManager extends ClassLoader{
      * @throws Exception
      */
     private boolean downloadAndVerifyMD5(PluginInfo pluginInfo)throws Exception{
+        //提取请求参数如果有的话
+        String reqParams = "";
+        if (remotePluginRepoUrl.contains("?")){
+            reqParams = remotePluginRepoUrl.substring(remotePluginRepoUrl.indexOf("?"), remotePluginRepoUrl.length());
+        }
         //下载该插件文件
-        URL url = new URL(remotePluginRepoUrl);
-        String dlUrl = url.getProtocol() + "://" + url.getHost() + pluginInfo.getUrl();
+        String dlUrl = remotePluginRepoUrl.substring(0, remotePluginRepoUrl.lastIndexOf("/")) + pluginInfo.getUrl() + reqParams;
         log.info("下载插件: {}",dlUrl);
         Http.downloadFile(dlUrl,pluginDir.getAbsolutePath());
         log.info("下载完成: {}",pluginInfo.getName());
@@ -1131,13 +1137,18 @@ public class PluginManager extends ClassLoader{
      * @return
      */
     public List<PluginInfo> getRemotePluginRepoData(){
-       return getRemotePluginRepoData(remotePluginRepoUrl);
+        return getRemotePluginRepoData(remotePluginRepoUrl);
     }
     /**
      * 获取远程插件仓库数据
+     * 支持使用github 仓库分支
+     * @param repoUrl 格式 owner/repo@branch Or https://plugin-podcast2.pages.dev/metadata.json
+     * @return https://raw.githubusercontent.com/{owner}/{repo}/refs/heads/{branch}/metadata.json
      * @return
      */
-    public List<PluginInfo> getRemotePluginRepoData(String repoUrl){
+    public List<PluginInfo> getRemotePluginRepoData(String repoUrl) {
+        //解析成http类型的
+        repoUrl = getFinalRepoUrl(repoUrl);
         String json = null;
         try {
             json = Http.get(repoUrl);
@@ -1381,7 +1392,7 @@ public class PluginManager extends ClassLoader{
     public static boolean remoteRepoIsOK(String repoUrl){
         try {
             Gson gson = new Gson();
-            String json = Http.get(repoUrl);
+            String json = Http.get(getFinalRepoUrl(repoUrl));
             PluginMetadata pluginMetadata = gson.fromJson(json, PluginMetadata.class);
             return true;
         } catch (Exception e) {
@@ -1546,5 +1557,61 @@ public class PluginManager extends ClassLoader{
         PluginData data = getPluginDataByDomainName(domainName);
         return hasRequestMethod(UUID.fromString(data.getUuid()));
     }
+
+    /**
+     * 使用github 仓库分支
+     * @param githubRepoRef 格式 owner/repo@branch
+     * @return https://raw.githubusercontent.com/{owner}/{repo}/refs/heads/{branch}/metadata.json
+     */
+    public static String getRepoUrlByGithubRepoAndBranch(String githubRepoRef) throws Exception {
+
+        String pattern = "^([a-zA-Z0-9_.-]+)/([a-zA-Z0-9_.-]+)@([a-zA-Z0-9_.\\-/]+)$";
+        Pattern r = Pattern.compile(pattern);
+        Matcher m = r.matcher(githubRepoRef);
+
+        if (m.matches()) {
+            String owner = m.group(1);
+            String repo = m.group(2);
+            String branch = m.group(3);
+
+            return new StringBuffer()
+                    .append("https://raw.githubusercontent.com/")
+                    .append(owner)
+                    .append("/")
+                    .append(repo)
+                    .append("/refs/heads/")
+                    .append(branch)
+                    .append("/metadata.json")
+                    .toString();
+        } else {
+            throw new Exception("Invalid format:" + githubRepoRef);
+        }
+    }
+
+    public static boolean isValidUrl(String url) {
+        try {
+            new URL(url);
+            return true;
+        } catch (MalformedURLException e) {
+            return false;
+        }
+    }
+
+    /**
+     * 获取最终的插件仓库链接
+     * @param repoUrl
+     * @return
+     */
+    public static String getFinalRepoUrl(String repoUrl){
+        if (!isValidUrl(repoUrl) || !repoUrl.endsWith("/metadata.json")) {
+            try {
+                return getRepoUrlByGithubRepoAndBranch(repoUrl);
+            } catch (Exception ex) {
+                throw new RuntimeException("Invalid repoUrl and failed to resolve: " + repoUrl, ex);
+            }
+        }
+        return repoUrl;
+    }
+
 }
 
