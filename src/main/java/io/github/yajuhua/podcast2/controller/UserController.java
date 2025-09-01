@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 @RestController
 @Slf4j
 @Api(tags = "用户相关接口")
-@RequestMapping("/user")
+@RequestMapping("/api/user")
 public class UserController {
 
     @Autowired
