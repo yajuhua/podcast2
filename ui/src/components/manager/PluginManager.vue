@@ -27,7 +27,7 @@
       <el-table-column prop="keyInfo" label="提醒" min-width="120" />
       <el-table-column fixed="right" label="操作" min-width="150">
         <template v-slot="scope">
-          <el-dropdown>
+          <el-dropdown trigger="click">
             <el-button type="primary" size="mini" round
               :icon="scope.row.installing || scope.row.updating ? 'el-icon-loading' : 'el-icon-more'">
             </el-button>
