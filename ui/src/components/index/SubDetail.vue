@@ -12,7 +12,7 @@
         :key="field.key"
         :label="field.label"
       >
-        <div @click="handleCopy(field.key, data[field.key])" @touchstart="handleCopy(field.key, data[field.key])">
+        <div @pointerdown="handleCopy(field.key, data[field.key])">
           <el-input :value="data[field.key] || ''" readonly></el-input>
         </div>
       </el-form-item>
