@@ -48,15 +48,15 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
     protected void addInterceptors(InterceptorRegistry registry) {
         log.info("开始注册自定义拦截器...");
         registry.addInterceptor(jwtTokenInterceptor)
-                .addPathPatterns("/system/**")//拦截
-                .addPathPatterns("/plugin/**")//拦截
-                .addPathPatterns("/common/**")//拦截
-                .addPathPatterns("/download/**")//拦截
+                .addPathPatterns("/api/system/**")//拦截
+                .addPathPatterns("/api/plugin/**")//拦截
+                .addPathPatterns("/api/common/**")//拦截
+                .addPathPatterns("/api/download/**")//拦截
                 .addPathPatterns("/ws/**")//拦截
-                .excludePathPatterns("/user/login")//不拦截
-                .addPathPatterns("/user/**")//拦截
+                .excludePathPatterns("/api/user/login")//不拦截
+                .addPathPatterns("/api/user/**")//拦截
                 .excludePathPatterns("/sub/xml/**")//不拦截
-                .addPathPatterns("/sub/**");//拦截
+                .addPathPatterns("/api/sub/**");//拦截
 
     }
 

@@ -39,7 +39,7 @@ export default {
         this.$message.error('请输入用户名和密码！');
       } else {
         axios
-          .post('/user/login', this.login)
+          .post('/api/user/login', this.login)
           .then(response => {
             console.log(response.data); // 打印响应数据
             if (response.data.code == '1') {
@@ -105,8 +105,8 @@ input:focus {
 }
 
 .login-form {
-  width: 300px;
-  height: 300px;
+  width: 190px;
+  height: 250px;
   padding: 20px;
   background-color: #fff;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
@@ -126,7 +126,7 @@ h2 {
 
 .form-group input {
   width: 100%;
-  height: 55px;
+  height: 40px;
   padding: 8px;
   font-size: 15px;
   color: #D7D2D7;
@@ -151,7 +151,7 @@ h2 {
 
 .form-group button {
   width: 100%;
-  height: 55px;
+  height: 40px;
   padding-top: calc(100% * 1/9);
   font-size: 14px;
   color: #fff;
@@ -197,10 +197,8 @@ button:active {
 
 /* 媒体查询 */
 @media only screen and (max-width: 480px) {
-
-  /* 适配小屏幕手机，宽度小于等于480px */
   .login-form {
-    width: 90%;
+    width: 80%;
     height: 250px;
     zoom: 1;
   }
@@ -211,25 +209,27 @@ button:active {
 }
 
 @media only screen and (min-width: 481px) and (max-width: 768px) {
-
-  /* 适配中等屏幕手机，宽度大于480px小于等于768px */
   .login-form {
     width: 70%;
-    height: 300px;
+    height: 260px;
     zoom: 1.2;
   }
 }
 
 @media only screen and (min-width: 769px) and (max-width: 1024px) {
-
-  /* 适配大屏幕手机，宽度大于768px小于等于1024px */
   .login-form {
     width: 50%;
-    height: 350px;
+    height: 260px;
     zoom: 1.4;
   }
 }
 
 
-/* 添加更多媒体查询以适配其他屏幕尺寸 */
+@media only screen and (min-width: 1024px) and (max-width: 2160px) {
+  .login-form {
+    width: 25%;
+    height: 260px;
+    zoom: 1.4;
+  }
+}
 </style>
