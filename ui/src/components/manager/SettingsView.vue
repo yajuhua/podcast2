@@ -777,7 +777,7 @@ export default {
     },
     //更新插件仓库链接
     updatePluginUrl() {
-      const urlRegex = /^https?:\/\/(?:www\.)?[\w.-]+(?:\.[a-zA-Z]{2,})+(?:\/[\w-./?%&=]*)?$/;
+      const urlRegex = /^(https?:\/\/[\w.-]+(?:\/[\w\-./?%&=]*)?)$|^([\w.-]+\/[\w.-]+@[\w.\-/]+)$/;
       const pluginUrl = this.plugin.url;
       if (urlRegex.test(pluginUrl)) {
         this.$confirm('此操作将修改插件仓库链接, 是否继续?', '提示', {
