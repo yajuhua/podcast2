@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 @RestController
 @Slf4j
 @Api(tags = "插件相关接口")
-@RequestMapping("/api/plugin")
+@RequestMapping("/plugin")
 public class PluginController {
 
     @Autowired

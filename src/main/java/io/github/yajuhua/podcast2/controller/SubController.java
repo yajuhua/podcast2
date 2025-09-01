@@ -70,6 +70,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @Slf4j
+@RequestMapping("/sub")
 @Api(tags = "订阅相关接口")
 public class SubController {
 
@@ -109,7 +110,7 @@ public class SubController {
      * @return
      */
     @ApiOperation("获取订阅列表")
-    @GetMapping("/api/sub/list")
+    @GetMapping("/list")
     public Result<List<SubVO>> list(){
         List<Sub> list = subService.list();
         list = list.stream().sorted(new Comparator<Sub>() {
@@ -133,7 +134,7 @@ public class SubController {
      * @return
      */
     @ApiOperation("搜索订阅")
-    @GetMapping("/api/sub/search")
+    @GetMapping("/search")
     public Result<List<SubVO>> search(String keywords){
         List<Sub> list = subService.list();
 
@@ -167,7 +168,7 @@ public class SubController {
      * @return
      */
     @ApiOperation("根据uuid获取订阅xml")
-    @GetMapping(value = "/sub/xml/{uuid}", produces = {MediaType.APPLICATION_XML_VALUE})
+    @GetMapping(value = "xml/{uuid}", produces = {MediaType.APPLICATION_XML_VALUE})
     public String xml(@PathVariable String uuid, HttpServletRequest request){
         Sub sub = subService.selectByUuid(uuid);
         if (sub == null){
@@ -220,7 +221,7 @@ public class SubController {
      * @return
      */
     @ApiOperation("获取组xml")
-    @GetMapping(value = "/sub/xml", produces = {MediaType.APPLICATION_XML_VALUE})
+    @GetMapping(value = "/xml", produces = {MediaType.APPLICATION_XML_VALUE})
     public String groupXml(@RequestParam("uuids") List<String> uuids, @RequestParam("group") String group, HttpServletRequest request){
 
         String requestURL = request.getRequestURL() + "?" + request.getQueryString();
@@ -513,7 +514,7 @@ public class SubController {
      * @param uuids
      * @return
      */
-    @DeleteMapping("/api/sub")
+    @DeleteMapping
     @ApiOperation("删除订阅")
     @Transactional
     public Result delete(@RequestParam List<String> uuids) throws Exception {
@@ -581,7 +582,7 @@ public class SubController {
      * @return
      */
     @ApiOperation("添加订阅")
-    @PostMapping("/api/sub/add")
+    @PostMapping("/add")
     public Result add(@RequestBody AddSubDTO addSubDTO){
         try {
             if (addSubDTO.getSubType().equalsIgnoreCase("plugin")){
@@ -676,7 +677,7 @@ public class SubController {
      * @param getExtendListDTO
      * @return
      */
-    @GetMapping("/api/sub/extendList")
+    @GetMapping("/extendList")
     @ApiOperation("获取插件扩展")
     public Result<ExtendListVO> extendList(GetExtendListDTO getExtendListDTO) throws Exception {
         log.info("getExtendListDTO:{}",getExtendListDTO);
@@ -703,7 +704,7 @@ public class SubController {
      * @return
      */
     @ApiOperation("提交编辑订阅")
-    @PutMapping("/api/sub")
+    @PutMapping
     @Transactional
     public Result editSub(@RequestBody EditSubVO editSubVO) throws Exception{
         log.info("editSubVO:{}",editSubVO);
@@ -741,7 +742,7 @@ public class SubController {
      * @return
      */
     @ApiOperation("获取编辑订阅信息")
-    @GetMapping("/api/sub/edit/{uuid}")
+    @GetMapping("/edit/{uuid}")
     public Result<EditSubVO> getEditSubInfo(@PathVariable String uuid)throws Exception{
         //1.获取sub
         Sub sub = subService.selectByUuid(uuid);
@@ -905,7 +906,7 @@ public class SubController {
      * @return
      */
     @ApiOperation("获取订阅详细信息")
-    @GetMapping("/api/sub/detail/{uuid}")
+    @GetMapping("/detail/{uuid}")
     public Result<SubDetailVO> subDetail(@PathVariable String uuid){
         Sub sub = subMapper.selectByUuid(uuid);
         SubDetailVO subDetailVO = new SubDetailVO();
@@ -929,7 +930,7 @@ public class SubController {
      * @return
      */
     @ApiOperation("订阅追加节目")
-    @PostMapping("/api/sub/appendItem")
+    @PostMapping("/appendItem")
     public Result appendItem(@RequestBody AppendItemDTO appendItemDTO){
         Task.appendItemList.add(appendItemDTO);
         log.info("追加节目已加入列表: {}",appendItemDTO.getUrl());

@@ -6,17 +6,14 @@ Vue.use(VueRouter)
 const routes = [
   {
     path: '/',
-    meta: { showOperationButton: true },
     component: () => import('../views/IndexView.vue')
   },
   {
     path: '/index',
-    meta: { showOperationButton: true },
     component: () => import('../views/IndexView.vue')
   },
   {
     path: '/login',
-    meta: { showOperationButton: false },
     component: () => import('../views/LoginView.vue')
   },
   {
@@ -25,17 +22,14 @@ const routes = [
   },
   {
     path: '/manager',
-    meta: { showOperationButton: true },
     component: () => import('../views/ManagerView.vue')
   },
   {
     path: '/404',
-    meta: { showOperationButton: false },
     component: () => import( '../views/404View.vue')
   },
   {
     path: '*',
-    meta: { showOperationButton: false },
     redirect: '/404'
   }
 

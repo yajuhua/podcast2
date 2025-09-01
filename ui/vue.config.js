@@ -14,7 +14,7 @@ module.exports = defineConfig({
         ws: true,
         changeOrigin: true
       },
-      '/api': {
+      '/': {
         target: 'http://localhost:8088',  // 后端 HTTP 服务地址
         ws: false,
         changeOrigin: true

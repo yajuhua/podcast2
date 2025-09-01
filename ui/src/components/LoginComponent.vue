@@ -47,11 +47,8 @@ export default {
                 message: '登录成功！',
                 type: 'success'
               });
-              //将token写入LocalStorage
-              localStorage.setItem('token',response.data.data.token);
-              this.$router.push('/')
             } else if (response.data.code == '0') {
-              this.$message.error(response.data.msg);
+              this.$message.error(response.data.data.msg);
             }
           })
           .catch(error => {
@@ -61,7 +58,7 @@ export default {
     },
     resetPassword() {
       this.$alert(
-        '将config/config.json中initUserNameAndPasswor字段改成true',
+        '在init/system.init文件中添加PASSWORD字段，若没有system.init,请创建。',
         '重置密码',
         {
           confirmButtonText: '确定'
@@ -70,7 +67,7 @@ export default {
     },
     resetAccount() {
       this.$alert(
-        '将config/config.json中initUserNameAndPasswor字段改成true',
+        '在init/system.init文件中添加ACCOUNT字段，若没有system.init,请创建。',
         '重置用户名和密码',
         {
           confirmButtonText: '确定'
@@ -97,11 +94,6 @@ body {
   justify-content: center;
   align-items: center;
   height: 95vh;
-}
-
-input:focus {
-    outline: none; /* 隐藏默认的黑色边框 */
-    border: 1px solid #007bff; /* 自定义选中时的边框样式 */
 }
 
 .login-form {
