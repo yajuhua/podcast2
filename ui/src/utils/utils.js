@@ -25,3 +25,38 @@ function fallbackCopy(content) {
   document.body.removeChild(input);
   return result;
 }
+/**
+ * 获取设备类型
+ * @returns {'mobile' | 'tablet' | 'desktop'}
+ */
+export function getDeviceType() {
+  const width = window.innerWidth;
+
+  // 优先根据屏幕宽度判断
+  if (width <= 768) {
+    return 'mobile';
+  } else if (width <= 1024) {
+    return 'tablet';
+  }
+  
+  return 'desktop';
+}
+
+/**
+ * 根据设备类型返回适配宽度
+ * @returns {string} CSS 宽度，比如 '80%' | '50%' | '40%'
+ */
+export function adaptWidth() {
+  const type = getDeviceType();
+  console.log("deviceType:", type);
+
+  switch (type) {
+    case 'mobile':
+      return '80%';
+    case 'tablet':
+      return '50%';
+    default:
+      return '40%';
+  }
+}
+
