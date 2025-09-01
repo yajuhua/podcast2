@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
 @RestController
 @Slf4j
 @Api(tags = "下载相关接口")
-@RequestMapping("/download")
+@RequestMapping("/api/download")
 public class DownloadController {
     @Autowired
     private DataPathProperties dataPathProperties;

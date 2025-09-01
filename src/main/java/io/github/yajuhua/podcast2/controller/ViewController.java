@@ -55,7 +55,7 @@ public class ViewController {
      * @throws IOException
      */
     @ApiOperation("设置路径访问")
-    @GetMapping("/p/{path}")
+    @GetMapping("/api/p/{path}")
     public Resource path(@PathVariable String path, HttpServletRequest request) throws IOException {
         boolean ban = NetWorkUtils.isBan(request.getRemoteAddr(), userService.getExtendInfo().getAddressFilter());
         if (ban){

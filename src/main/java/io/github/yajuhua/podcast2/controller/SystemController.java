@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 @RestController
 @Slf4j
 @Api(tags = "系统相关接口")
-@RequestMapping("/system")
+@RequestMapping("/api/system")
 public class SystemController {
 
     @Autowired
