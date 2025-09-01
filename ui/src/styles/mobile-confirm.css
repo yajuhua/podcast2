@@ -1,0 +1,26 @@
+/* 针对小屏幕优化 confirm 弹窗 */
+@media screen and (max-width: 768px) {
+    .mobile-confirm {
+      width: 90% !important;
+      max-width: 320px;
+      left: 5% !important;
+      margin: 0 auto;
+      padding: 16px 12px;
+      border-radius: 10px;
+    }
+  
+    .mobile-confirm .el-message-box__title {
+      font-size: 16px;
+    }
+  
+    .mobile-confirm .el-message-box__message {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+  
+    .mobile-confirm .el-button {
+      padding: 8px 16px;
+      font-size: 14px;
+    }
+  }
+  
