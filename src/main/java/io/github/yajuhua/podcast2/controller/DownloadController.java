@@ -1,5 +1,6 @@
 package io.github.yajuhua.podcast2.controller;
 
+import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import io.github.yajuhua.download.commons.Context;
 import io.github.yajuhua.download.manager.DownloadManager;
@@ -13,13 +14,15 @@ import io.github.yajuhua.podcast2.common.result.Result;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.mapper.*;
 import io.github.yajuhua.podcast2.plugin.PluginManager;
+import io.github.yajuhua.podcast2.pojo.dto.DownloadConfDTO;
 import io.github.yajuhua.podcast2.pojo.entity.Downloader;
 import io.github.yajuhua.podcast2.pojo.entity.Items;
 import io.github.yajuhua.podcast2.pojo.entity.Sub;
-import io.github.yajuhua.podcast2.pojo.vo.DownloadCompletedVO;
-import io.github.yajuhua.podcast2.pojo.vo.DownloadDetailVO;
-import io.github.yajuhua.podcast2.pojo.vo.DownloaderInfoVO;
+import io.github.yajuhua.podcast2.pojo.vo.*;
 import io.github.yajuhua.podcast2.task.Task;
+import io.github.yajuhua.podcast2API.extension.build.Input;
+import io.github.yajuhua.podcast2API.extension.build.Select;
+import io.github.yajuhua.podcast2API.extension.reception.InputAndSelectData;
 import io.github.yajuhua.podcast2API.utils.TimeFormat;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -32,6 +35,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.lang.reflect.Type;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -65,6 +69,8 @@ public class DownloadController {
 
     @Autowired
     private PluginManager pluginManager;
+    @Autowired
+    private SubController subController;
 
 
     /**
@@ -291,6 +297,71 @@ public class DownloadController {
                 throw new RuntimeException(uuid+ "移除下载失败:" + e.getMessage());
             }
         }
+        return Result.success();
+    }
+
+    /**
+     * 获取下载配置 type和扩展选项
+     * @return 类型和扩展选项
+     */
+    @ApiOperation("获取下载配置")
+    @GetMapping("/conf/{uuid}")
+    public Result<DownloadConfVO> getDownloadConf(@PathVariable String uuid) throws Exception {
+        Items items = itemsMapper.selectByUuid(uuid);
+        EditSubVO editSubVO = subController.getEditSubInfo(items.getChannelUuid()).getData();
+
+        DownloadConfVO downloadConfVO = new DownloadConfVO();
+        //items表中的只有inputAndSelectDataList数据，无法直接区分Input和Select
+        List<InputAndSelectData> itemInputDataListData = new ArrayList<>();
+        List<InputAndSelectData> itemSelectDataListData = new ArrayList<>();
+        Type listType = new TypeToken<List<InputAndSelectData>>(){}.getType();
+        if (items.getInputAndSelectDataList() != null && !items.getInputAndSelectDataList().isEmpty()){
+            List<InputAndSelectData> itemInputAndSelectDataList = gson.fromJson(items.getInputAndSelectDataList(),listType);
+            for (Input input : editSubVO.getExtendList().getInputList()) {
+                for (InputAndSelectData data : itemInputAndSelectDataList) {
+                    if (input.getName().equalsIgnoreCase(data.getName())){
+                        itemInputDataListData.add(data);
+                    }
+                }
+            }
+
+            for (Select select : editSubVO.getExtendList().getSelectList()) {
+                for (InputAndSelectData data : itemInputAndSelectDataList) {
+                    if (select.getName().equalsIgnoreCase(data.getName())){
+                        itemSelectDataListData.add(data);
+                    }
+                }
+            }
+            downloadConfVO.setSelectListData(itemSelectDataListData.stream().filter(inputAndSelectData -> inputAndSelectData.getName() != null).collect(Collectors.toList()));
+            downloadConfVO.setInputListData(itemInputDataListData.stream().filter(inputAndSelectData -> inputAndSelectData.getName() != null).collect(Collectors.toList()));
+        }else {
+            downloadConfVO.setSelectListData(editSubVO.getSelectListData().stream().filter(inputAndSelectData -> inputAndSelectData.getName() != null).collect(Collectors.toList()));
+            downloadConfVO.setInputListData(editSubVO.getInputListData().stream().filter(inputAndSelectData -> inputAndSelectData.getName() != null).collect(Collectors.toList()));
+        }
+
+        downloadConfVO.setType(items.getType());
+        downloadConfVO.setIsExtend(editSubVO.getIsExtend());
+        downloadConfVO.setExtendList(editSubVO.getExtendList());
+
+        return Result.success(downloadConfVO);
+    }
+
+    /**
+     * 更新下载配置
+     * @return
+     */
+    @ApiOperation("更新下载配置")
+    @PostMapping("/conf")
+    public Result updateDownloadConf(@RequestBody DownloadConfDTO confDTO){
+        List<InputAndSelectData> inputAndSelectDataList =  new ArrayList<>();
+        inputAndSelectDataList.addAll(confDTO.getInputListData());
+        inputAndSelectDataList.addAll(confDTO.getSelectListData());
+        Items updateItems = Items.builder()
+                .uuid(confDTO.getUuid())
+                .type(confDTO.getType())
+                .inputAndSelectDataList(gson.toJson(inputAndSelectDataList))
+                .build();
+        itemsMapper.update(updateItems);
         return Result.success();
     }
 }
