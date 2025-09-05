@@ -16,45 +16,26 @@
               <el-option label="音频" value="Audio"></el-option>
             </el-select>
           </el-form-item>
-
-          <!-- 动态生成 select 下拉框 -->
-          <div
-            v-for="(select, selectIndex) in downloadConfData.extendList.selectList"
-            :key="'select-' + selectIndex"
-          >
-            <el-form-item :label="select.name">
-              <el-select
-                v-model="downloadConfData.selectListData[selectIndex].content"
-                placeholder="请选择"
-              >
-                <span v-show="false">
-                  {{ (downloadConfData.selectListData[selectIndex].name = select.name) }}
-                </span>
-                <el-option
-                  v-for="(option, i) in select.options"
-                  :key="i"
-                  :label="option"
-                  :value="option"
-                ></el-option>
-              </el-select>
-            </el-form-item>
-          </div>
-
-          <!-- 动态生成 input 输入框 -->
-          <div
-            v-for="(input, inputIndex) in downloadConfData.extendList.inputList"
-            :key="'input-' + inputIndex"
-          >
-            <span v-show="false">
-              {{ (downloadConfData.inputListData[inputIndex].name = input.name) }}
-            </span>
-            <el-form-item :label="input.name">
-              <el-input
-                v-model="downloadConfData.inputListData[inputIndex].content"
-                placeholder="请输入"
-              ></el-input>
-            </el-form-item>
-          </div>
+          <div>
+                        <!-- select选择框 -->
+                        <div v-for="(select, selectIndex) in downloadConfData.extendList.selectList" :key="select.id">
+                            <el-form-item :label="select.name">
+                                <el-select v-model="downloadConfData.selectListData[selectIndex].content">
+                                    <span v-show="false">{{ downloadConfData.selectListData[selectIndex].name = select.name
+                                      }}</span>
+                                    <el-option v-for="(option) in select.options" :key="option" :label="option"
+                                               :value="option"></el-option>
+                                </el-select>
+                            </el-form-item>
+                        </div>
+                      <!-- 输入框 -->
+                        <div v-for="(input, inputIndex) in downloadConfData.extendList.inputList" :key="input.id">
+                            <span v-show="false">{{ downloadConfData.inputListData[inputIndex].name = input.name }}</span>
+                            <el-form-item :label="input.name">
+                                <el-input v-model="downloadConfData.inputListData[inputIndex].content"></el-input>
+                            </el-form-item>
+                        </div>
+                    </div>
         </el-form>
       </span>
       <span slot="footer" class="dialog-footer">
@@ -105,39 +86,28 @@ export default {
           this.downloadConfData = res.data.data;
 
           // 初始化 selectListData
-          if (
-            !this.downloadConfData.selectListData ||
-            this.downloadConfData.selectListData.length === 0
-          ) {
-            this.downloadConfData.selectListData = this.downloadConfData.extendList.selectList.map(
-              (item) => ({
-                name: item.name,
-                content: "",
-              })
-            );
+          if (!this.downloadConfData.selectListData || this.downloadConfData.selectListData.length === 0) {
+            this.downloadConfData.selectListData = this.downloadConfData.extendList.selectList.map((item) => ({
+              name: item.name,
+              content: "",
+            }));
           }
 
           // 初始化 inputListData
-          if (
-            !this.downloadConfData.inputListData ||
-            this.downloadConfData.inputListData.length === 0
-          ) {
-            this.downloadConfData.inputListData = this.downloadConfData.extendList.inputList.map(
-              (item) => ({
-                name: item.name,
-                content: "",
-              })
-            );
+          if (!this.downloadConfData.inputListData || this.downloadConfData.inputListData.length === 0) {
+            this.downloadConfData.inputListData = this.downloadConfData.extendList.inputList.map((item) => ({
+              name: item.name,
+              content: "",
+            }));
           }
         } else {
           this.$message.error("获取配置失败：" + res.data.msg);
         }
-      } catch (error) {
-        console.error(error);
+      } catch (err) {
+        console.error(err);
         this.$message.error("请求出错，请稍后再试");
       }
     },
-
     /** 提交配置 */
     async handleSubmit() {
       try {
@@ -162,7 +132,14 @@ export default {
     },
     handleClose() {
       this.$emit("update:visible", false); // 通知父组件关闭弹窗
-    },
+    }
   },
+  watch: {
+    visible(newVal) {
+      if (newVal){
+        this.fetchDownloadConf();
+      }
+    }
+  }
 };
 </script>
