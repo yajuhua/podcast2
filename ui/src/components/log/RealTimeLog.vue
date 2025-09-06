@@ -29,7 +29,7 @@ export default {
   },
   data() {
     return {
-      realTimeLogs: []
+      realTimeLogs: [],
     };
   },
   mounted() {
@@ -47,48 +47,48 @@ export default {
       return formattedLog;
     },
     setupLogsSocket() {
-      let clientId = Math.random().toString(36).substr(2);
-      // let wsProtocol = window.location.protocol.includes("https") ? "wss" : "ws";
-      // let wsHost = window.location.hostname; // 使用前端主机名
-      // let wsPort = window.location.port ? `:${window.location.port}` : ''; // 使用前端端口，如果有的话
-      // let wsUrl = `${wsProtocol}://${wsHost}${wsPort}/ws/logs/${clientId}`;
-      let wsUrl = `/ws/logs/${clientId}`;
+      const clientId = Math.random().toString(36).substr(2);
+      const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+      const wsUrl = `${wsProtocol}://${window.location.host}/ws/logs/${clientId}`;
 
       let websocket = null;
-      //判断当前浏览器是否支持WebSocket
-      if ("WebSocket" in window) {
-        //连接WebSocket节点
+      let reconnectTimer = null;
+
+      const createWS = () => {
         websocket = new WebSocket(wsUrl);
-      } else {
-        alert("Not support websocket");
-      }
 
-      //连接发生错误的回调方法
-      websocket.onerror = function () {
-        console.log("日志ws连接错误");
+        websocket.onopen = () => {
+          console.log("日志ws连接成功");
+        };
+
+        websocket.onmessage = (event) => {
+          this.realTimeLogs.push(event.data);
+        };
+
+        websocket.onerror = () => {
+          console.error("日志ws错误");
+          reconnect();
+        };
+
+        websocket.onclose = () => {
+          console.warn("日志ws关闭");
+          reconnect();
+        };
       };
 
-      //连接成功建立的回调方法
-      websocket.onopen = function () {
-        console.log("日志ws连接成功");
+      const reconnect = () => {
+        if (reconnectTimer) return;
+        reconnectTimer = setTimeout(() => {
+          console.log("尝试重连日志ws");
+          createWS();
+          reconnectTimer = null;
+        }, 3000);
       };
 
-      //接收到消息的回调方法
-      var vm = this; // 保存对Vue实例的引用
-      websocket.onmessage = function (event) {
-        let message = event.data;
-        vm.realTimeLogs.push(message);
-      };
+      createWS();
 
-      //连接关闭的回调方法
-      websocket.onclose = function () {
-        console.log("日志ws关闭");
-      };
-
-      //监听窗口关闭事件，当窗口关闭时，主动去关闭websocket连接，防止连接还没断开就关闭窗口，server端会抛异常。
-      window.onbeforeunload = function () {
-        websocket.close();
-      };
+      // 页面关闭时断开
+      window.addEventListener("beforeunload", () => websocket.close());
     },
     //清空实时日志
     clearRealTimeLog() {

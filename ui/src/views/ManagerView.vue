@@ -54,16 +54,19 @@
 
       <!-- 用户 -->
       <div v-show="activeMenu == '2'">
+        <h2>用户</h2>
         <User />
       </div>
 
       <!-- 设置 -->
       <div v-show="activeMenu == '3'">
+        <h2>设置</h2>
         <SettingsView></SettingsView>
       </div>
 
       <!-- 上传与下载 -->
       <div v-show="activeMenu == 4">
+        <h2>上传与下载</h2>
         <DownloadUpload />
       </div>
 

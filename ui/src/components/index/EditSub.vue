@@ -1,6 +1,6 @@
 <template>
     <div>
-        <el-dialog :title="editSubData.title" :visible="visible" width="audo" v-loading="editSubData.loading"
+        <el-dialog :title="editSubData.title" :visible="visible" :width="adaptWidth" v-loading="editSubData.loading"
             element-loading-text="正在获取数据中..." @close="handleClose">
             <el-form ref="form" :model="editSubData" label-width="80px">
                 <!-- 默认方式 -->
@@ -298,10 +298,16 @@
 
 <script>
 import axios from 'axios'
+import { adaptWidth } from '@/utils/utils';
 export default {
     components: {
         
     },
+    computed: {
+    adaptWidth() {
+      return adaptWidth(); 
+    }
+},
     name: 'EditSub',
     props: {
         visible: {
