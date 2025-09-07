@@ -13,4 +13,5 @@ public class TaskPackage {
     private Runnable task;
     private TimeUnit timeUnit;
     private Integer timeout;
+    private String description;
 }

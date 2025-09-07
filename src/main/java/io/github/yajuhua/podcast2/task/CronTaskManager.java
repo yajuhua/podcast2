@@ -44,7 +44,7 @@ public class CronTaskManager {
     }
 
     /** 添加 Cron 表达式任务，UUID 字符串标识 */
-    public void add(String taskUUIDStr, String cronExpression, Runnable task, TimeUnit timeUnit, Integer timeout) {
+    public void add(String taskUUIDStr, String cronExpression, Runnable task, TimeUnit timeUnit, Integer timeout, String description) {
         UUID taskUUID = UUID.fromString(taskUUIDStr);
         try {
             JobDetail jobDetail = JobBuilder.newJob(TaskJob.class)
@@ -56,6 +56,7 @@ public class CronTaskManager {
             jobDetail.getJobDataMap().put("manager", this);
             jobDetail.getJobDataMap().put("timeUnit", timeUnit);
             jobDetail.getJobDataMap().put("timeout", timeout);
+            jobDetail.getJobDataMap().put("description", description);
 
             Trigger trigger = TriggerBuilder.newTrigger()
                     .withIdentity(taskUUID.toString())
@@ -74,12 +75,13 @@ public class CronTaskManager {
         UUID taskUUID = UUID.fromString(taskUUIDStr);
         try {
             JobDetail jobDetail = jobMap.get(taskUUID);
+            String description = (String) jobDetail.getJobDataMap().get("description");
             if (jobDetail != null) {
                 scheduler.deleteJob(jobDetail.getKey());
                 jobMap.remove(taskUUID);
-                log.info("任务 {} 已移除",taskUUID);
+                log.info(" {} - 已移除",description);
             } else {
-                log.error("找不到任务: {}", taskUUID);
+                log.error("找不到 - {}", description);
             }
         } catch (SchedulerException e) {
             e.printStackTrace();
@@ -87,10 +89,10 @@ public class CronTaskManager {
     }
 
     /** 添加秒级任务，每隔 seconds 秒执行一次，串行 */
-    public void add(int seconds, Runnable task, TimeUnit timeUnit, Integer timeout) {
+    public void add(int seconds, Runnable task, TimeUnit timeUnit, Integer timeout, String description) {
         executorService.scheduleAtFixedRate(() -> {
             try {
-                taskQueue.put(new TaskPackage(task, timeUnit, timeout));
+                taskQueue.put(new TaskPackage(task, timeUnit, timeout, description));
             } catch (InterruptedException e) {
                 log.error("添加秒级任务出错: {}", e);
             }
@@ -98,8 +100,8 @@ public class CronTaskManager {
     }
 
     /** 提供一个公共方法给 Quartz Job 调用，提交任务到串行队列 */
-    public void submitTask(Runnable task, TimeUnit timeUnit, Integer timeout) throws InterruptedException {
-        taskQueue.put(new TaskPackage(task, timeUnit, timeout));
+    public void submitTask(Runnable task, TimeUnit timeUnit, Integer timeout, String description) throws InterruptedException {
+        taskQueue.put(new TaskPackage(task, timeUnit, timeout, description));
     }
 
     /** 串行任务执行器 */
@@ -107,17 +109,19 @@ public class CronTaskManager {
         @Override
         public void run() {
             Future<?> future = null;
+            String description = null;
             while (running) {
                 try {
                     TaskPackage taskPackage = taskQueue.take();
+                    description = taskPackage.getDescription();
                     future = executorService
                             .submit(taskPackage.getTask());
                     future.get(taskPackage.getTimeout(), taskPackage.getTimeUnit());
                 } catch (TimeoutException e){
                     future.cancel(true);
-                    log.error("任务超时: {}", e);
+                    log.error("{} - 超时",description);
                 }catch (Exception e) {
-                    log.error("任务执行错误: {}", e);
+                    log.error("{} - 错误: {}",description, e);
                 }
             }
         }
@@ -131,9 +135,10 @@ public class CronTaskManager {
             CronTaskManager manager = (CronTaskManager) context.getJobDetail().getJobDataMap().get("manager");
             TimeUnit timeUnit = (TimeUnit) context.getJobDetail().getJobDataMap().get("timeUnit");
             Integer timeout = (Integer) context.getJobDetail().getJobDataMap().get("timeout");
+            String description = (String) context.getJobDetail().getJobDataMap().get("description");
             if (task != null && manager != null) {
                 try {
-                    manager.submitTask(task, timeUnit, timeout); // 调用公共方法
+                    manager.submitTask(task, timeUnit, timeout, description); // 调用公共方法
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
