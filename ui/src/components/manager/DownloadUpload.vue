@@ -57,6 +57,7 @@
                 <el-dropdown-menu slot="dropdown">
                   <el-dropdown-item @click.native="reDownload(row.uuid)"><i class="el-icon-refresh"></i>重新</el-dropdown-item>
                   <el-dropdown-item @click.native="downloadDetail(row.uuid)"><i class="el-icon-info"></i>详细</el-dropdown-item>
+                  <el-dropdown-item @click.native="(download.conf.uuid = row.uuid) && (download.conf.visible = true)"><i class="el-icon-edit-outline"></i>配置</el-dropdown-item>
                   <el-dropdown-item @click.native="downloadDelete(row.uuid)"><i class="el-icon-delete"></i>删除</el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
@@ -98,6 +99,7 @@
                   <el-dropdown-menu slot="dropdown">
                     <el-dropdown-item @click.native="reDownload(row.uuid)"><i class="el-icon-refresh"></i>重新</el-dropdown-item>
                     <el-dropdown-item @click.native="downloadDetail(row.uuid)"><i class="el-icon-info"></i>详细</el-dropdown-item>
+                    <el-dropdown-item @click.native="(download.conf.uuid = row.uuid) && (download.conf.visible = true)"><i class="el-icon-edit-outline"></i>配置</el-dropdown-item>
                     <el-dropdown-item @click.native="downloadDelete(row.uuid)"><i class="el-icon-delete"></i>删除</el-dropdown-item>
                   </el-dropdown-menu>
                 </el-dropdown>
@@ -169,12 +171,18 @@
         </el-form>
       </el-dialog>
     </div>
+    <!--  下载配置  -->
+    <DownloadConf :uuid="download.conf.uuid" :visible.sync="download.conf.visible"/>
   </div>
 </template>
 
 <script>
 import axios from 'axios';
+import DownloadConf from "@/components/manager/DownloadConf.vue";
 export default {
+  components: {
+    DownloadConf
+  },
   computed: {
     downloadUploadLabel() {
       return this.download.progress.length > 0 ? '正在上传/下载 ' + this.download.progress.length : '正在上传/下载';
@@ -203,6 +211,10 @@ export default {
         detail: {},
         downloadDetailVisible: false,
         selectionDownloadDone: [],
+        conf: {
+          uuid: '',
+          visible: false
+        }
       },
       upload: {
         progress: [],

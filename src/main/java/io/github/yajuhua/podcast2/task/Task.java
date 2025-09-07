@@ -16,6 +16,7 @@ import io.github.yajuhua.podcast2.common.constant.SubStatusCode;
 import io.github.yajuhua.podcast2.common.exception.ItemNotFoundException;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.properties.InfoProperties;
+import io.github.yajuhua.podcast2.common.result.Result;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.common.utils.Http;
 import io.github.yajuhua.podcast2.controller.DownloadController;
@@ -26,18 +27,25 @@ import io.github.yajuhua.podcast2.plugin.PluginManager;
 import io.github.yajuhua.podcast2.pojo.dto.AppendItemDTO;
 import io.github.yajuhua.podcast2.pojo.dto.GithubActionWorkflowsDTO;
 import io.github.yajuhua.podcast2.pojo.entity.*;
+import io.github.yajuhua.podcast2.pojo.vo.DownloadConfVO;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
 import io.github.yajuhua.podcast2.pojo.vo.PluginVO;
 import io.github.yajuhua.podcast2.service.SubService;
 import io.github.yajuhua.podcast2.service.UserService;
+import io.github.yajuhua.podcast2API.Params;
+import io.github.yajuhua.podcast2API.Podcast2;
+import io.github.yajuhua.podcast2API.extension.reception.InputAndSelectData;
+import io.github.yajuhua.podcast2API.setting.Setting;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Predicate;
@@ -85,6 +93,8 @@ public class Task {
 
     @Autowired
     private PluginManager pluginManager;
+    @Autowired
+    private DownloadController downloadController;
 
     /**
      * 获取进度
@@ -540,21 +550,59 @@ public class Task {
                     Type type = Type.valueOf(items.getType());
                     DownloadManager.Downloader downloader = DownloadManager.Downloader.valueOf(items.getDownloader());
                     Operation operation = Operation.valueOf(items.getOperation());
+                    Request build = null;
+                    if (items.getInputAndSelectDataList() != null && !items.getInputAndSelectDataList().isEmpty()){
+                        /* 如果有数据就直接使用items中的 */
+                        //获取二级域名
+                        String host = new URL(items.getLink()).getHost();
+                        String secondLevelDomain = Http.getSecondLevelDomain(host);
 
-                    //构建下载请求
-                    Request build = Request.builder()
-                            .links(links)
-                            .type(type)
-                            .operation(operation)
-                            .downloader(downloader)
-                            .args(args)
-                            .dir(new File(dataPathProperties.getResourcesPath()))
-                            .channelUuid(items.getChannelUuid())
-                            .uuid(items.getUuid())
-                            .build();
-                    ReDownload reDownload = new ReDownload(build, itemsMapper, subMapper, pluginMapper, dataPathProperties,
-                            settingsMapper, pluginManager);
-                    reDownload.run();
+                        //获取参数
+                        List<InputAndSelectData> inputAndSelectDataList = new ArrayList<>();
+                        Result<DownloadConfVO> downloadConf =
+                                downloadController.getDownloadConf(items.getUuid());
+                        inputAndSelectDataList.addAll(downloadConf.getData().getInputListData());
+                        inputAndSelectDataList.addAll(downloadConf.getData().getSelectListData());
+                        Params params = pluginManager.getParams();
+                        params.setType(io.github.yajuhua.podcast2API.Type
+                                .valueOf(downloadConf.getData().getType()));
+                        params.setInputAndSelectDataList(inputAndSelectDataList);
+
+                        //插件设置信息
+                        List<Settings> settingsFromDB = settingsMapper.selectByPluginName(secondLevelDomain);
+                        List<Setting> settings = new ArrayList<>();
+                        for (Settings settings1 : settingsFromDB) {
+                            Setting setting = new Setting();
+                            BeanUtils.copyProperties(settings1,setting);
+                            settings.add(setting);
+                        }
+                        params.setSettings(settings);
+
+                        //获取插件实例
+                        Podcast2 instance = pluginManager.getPluginInstanceByDomainName(secondLevelDomain,params);
+                        build = instance.getRequest(items.getLink());
+                        build.setChannelUuid(items.getChannelUuid());
+                        build.setDir(new File(dataPathProperties.getResourcesPath()));
+                        build.setUuid(items.getUuid());
+                        ReConfDownload reConfDownload = new ReConfDownload(build, itemsMapper, subMapper, pluginManager);
+                        reConfDownload.run();
+                    }else {
+                        /* 构建下载请求 默认是*/
+                        build = Request.builder()
+                                .links(links)
+                                .type(type)
+                                .operation(operation)
+                                .downloader(downloader)
+                                .args(args)
+                                .dir(new File(dataPathProperties.getResourcesPath()))
+                                .channelUuid(items.getChannelUuid())
+                                .uuid(items.getUuid())
+                                .build();
+                        ReDownload reDownload = new ReDownload(build, itemsMapper, subMapper, pluginMapper, dataPathProperties,
+                                settingsMapper, pluginManager);
+                        reDownload.run();
+                    }
+
                 } catch (Exception e) {
                    log.error("{}重新下载移除: {}",items.getUuid(),e.getMessage());
                 }
