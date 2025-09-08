@@ -10,14 +10,15 @@ import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.controller.SystemController;
 import io.github.yajuhua.podcast2.controller.UserController;
 import io.github.yajuhua.podcast2.downloader.aria2.Aria2RPC;
-import io.github.yajuhua.podcast2.mapper.DownloaderMapper;
-import io.github.yajuhua.podcast2.mapper.ItemsMapper;
-import io.github.yajuhua.podcast2.mapper.SubMapper;
-import io.github.yajuhua.podcast2.mapper.UserMapper;
+import io.github.yajuhua.podcast2.mapper.*;
+import io.github.yajuhua.podcast2.plugin.PluginManager;
 import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
+import io.github.yajuhua.podcast2.service.SubService;
 import io.github.yajuhua.podcast2.service.UserService;
+import io.github.yajuhua.podcast2.task.CronTaskManager;
 import io.github.yajuhua.podcast2.task.Task;
+import io.github.yajuhua.podcast2.task.Update;
 import io.github.yajuhua.podcast2.websocket.DownloadWebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -49,6 +50,8 @@ public class StartupRunner implements ApplicationRunner{
     private DownloadWebSocketServer downloadWebSocketServer;
     private UserService userService;
     private ItemsMapper itemsMapper;
+    private Task task;
+    private CronTaskManager cronTaskManager;
 
     public StartupRunner() {
     }
@@ -57,7 +60,7 @@ public class StartupRunner implements ApplicationRunner{
     public StartupRunner(Gson gson, SubMapper subMapper, InfoProperties infoProperties, UserMapper userMapper,
                          DownloaderMapper downloaderMapper, DataPathProperties dataPathProperties,
                          DownloadWebSocketServer downloadWebSocketServer, UserService userService,
-                         ItemsMapper itemsMapper) {
+                         ItemsMapper itemsMapper, Task task, CronTaskManager cronTaskManager) {
         this.gson = gson;
         this.subMapper = subMapper;
         this.infoProperties = infoProperties;
@@ -67,6 +70,9 @@ public class StartupRunner implements ApplicationRunner{
         this.downloadWebSocketServer = downloadWebSocketServer;
         this.userService = userService;
         this.itemsMapper = itemsMapper;
+        this.task = task;
+        this.cronTaskManager = cronTaskManager;
+
     }
 
 
@@ -90,6 +96,9 @@ public class StartupRunner implements ApplicationRunner{
 
         //检查未完成下载
         checkForUndownload();
+
+        //开始任务调度
+        startUpdateSub();
 
         //获取地址过滤
         UserController.addressFilterTmp = userService.getExtendInfo().getAddressFilter();
@@ -280,4 +289,16 @@ public class StartupRunner implements ApplicationRunner{
         ProxySelector proxySelector = proxySearch.getProxySelector();
         ProxySelector.setDefault(proxySelector);
     }
+
+    /**
+     * 开始任务调度
+     */
+    private void startUpdateSub(){
+       log.info("开始任务调度");
+       task.updateSub();
+       //TODO 其他任务
+    }
+
+
+
 }

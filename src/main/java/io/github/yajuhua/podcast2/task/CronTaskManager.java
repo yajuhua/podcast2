@@ -47,7 +47,7 @@ public class CronTaskManager {
 
     /** 添加 Cron 表达式任务，UUID 字符串标识 */
     public void add(String taskUUIDStr, String cronExpression, Runnable task, TimeUnit timeUnit
-            , Integer timeout, String description) {
+            , long timeout, String description) {
         UUID taskUUID = UUID.fromString(taskUUIDStr);
         try {
             JobDetail jobDetail = JobBuilder.newJob(TaskJob.class)
@@ -97,15 +97,15 @@ public class CronTaskManager {
     }
 
     /** 添加秒级任务，每隔 seconds 秒执行一次，串行 */
-    public void add(String taskUUID, int seconds, Runnable task, TimeUnit timeUnit, Integer timeout
-            , String description) {
+    public void add(String taskUUID, long seconds, Runnable task, TimeUnit timeUnit, long timeout
+            , String description, long initialDelay) {
         ScheduledFuture<?> scheduledTask = executorService.scheduleAtFixedRate(() -> {
             try {
                 taskQueue.put(new TaskPackage(task, timeUnit, timeout, description));
             } catch (InterruptedException e) {
                 log.error("添加秒级任务出错: {}", e);
             }
-        }, 0, seconds, TimeUnit.SECONDS);
+        }, initialDelay, seconds, TimeUnit.SECONDS);
         scheduledTasksMap.put(UUID.fromString(taskUUID), scheduledTask);
     }
 
@@ -133,14 +133,14 @@ public class CronTaskManager {
      * @param timeout 超时时间
      * @param description 描述
      */
-    public void update(String taskUUID, int seconds, Runnable task, TimeUnit timeUnit, Integer timeout
+    public void update(String taskUUID, long seconds, Runnable task, TimeUnit timeUnit, Integer timeout
             , String description){
         remove(taskUUID);
-        add(taskUUID, seconds, task, timeUnit, timeout, description);
+        add(taskUUID, seconds, task, timeUnit, timeout, description, 0);
     }
 
     /** 提供一个公共方法给 Quartz Job 调用，提交任务到串行队列 */
-    public void submitTask(Runnable task, TimeUnit timeUnit, Integer timeout, String description)
+    public void submitTask(Runnable task, TimeUnit timeUnit, long timeout, String description)
             throws InterruptedException {
         taskQueue.put(new TaskPackage(task, timeUnit, timeout, description));
     }
@@ -177,7 +177,7 @@ public class CronTaskManager {
             Runnable task = (Runnable) context.getJobDetail().getJobDataMap().get("task");
             CronTaskManager manager = (CronTaskManager) context.getJobDetail().getJobDataMap().get("manager");
             TimeUnit timeUnit = (TimeUnit) context.getJobDetail().getJobDataMap().get("timeUnit");
-            Integer timeout = (Integer) context.getJobDetail().getJobDataMap().get("timeout");
+            long timeout = (Integer) context.getJobDetail().getJobDataMap().get("timeout");
             String description = (String) context.getJobDetail().getJobDataMap().get("description");
             if (task != null && manager != null) {
                 try {

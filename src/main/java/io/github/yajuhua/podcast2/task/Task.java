@@ -109,7 +109,7 @@ public class Task {
     /**
      * 每隔分钟检查一次频道是否需要更新
      */
-    @Scheduled(fixedDelay = 60000)
+//    @Scheduled(fixedDelay = 60000)
     public void updateSubBak(){
         ExecutorService executor = Executors.newSingleThreadExecutor();
         long timeout;
@@ -152,17 +152,67 @@ public class Task {
         }
     }
 
-    /**
-     * 支持cron表达式 和 间隔秒数
-     */
     public void updateSub(){
+        log.info("开始检查更新订阅...");
+        //获取还在更新的订阅
+        List<Sub> hasUpdataSubList = subMapper.list().stream().filter(new Predicate<Sub>() {
+            @Override
+            public boolean test(Sub sub) {
+                return sub.getIsUpdate() == 1 && sub.getSubType().equalsIgnoreCase("plugin");
+            }
+        }).collect(Collectors.toList());
 
+        //获取schedule_type=cron
+        List<Sub> cronSubList = hasUpdataSubList.stream().filter(new Predicate<Sub>() {
+            @Override
+            public boolean test(Sub sub) {
+                return sub.getScheduleType().equalsIgnoreCase("cron");
+            }
+        }).collect(Collectors.toList());
+        for (Sub cronSub : cronSubList) {
+            long initialDelay = 0;
+            long duration = System.currentTimeMillis() - cronSub.getCheckTime();
+            if (duration < (cronSub.getCron() * 1000) ){
+                initialDelay = (cronSub.getCron() * 1000) - duration;
+            }
+            Runnable task = new Update(cronSub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
+                    settingsMapper,pluginManager);
+            cronTaskManager.add(cronSub.getUuid(), cronSub.getCron(), task, TimeUnit.SECONDS,
+                    calculateUpdateSubTimeout(cronSub), "更新: " + cronSub.getTitle(), initialDelay);
+        }
+
+        //schedule_type=cronExpression
+        List<Sub> cronExSubList = hasUpdataSubList.stream().filter(new Predicate<Sub>() {
+            @Override
+            public boolean test(Sub sub) {
+                return sub.getScheduleType().equalsIgnoreCase("cron_expression");
+            }
+        }).collect(Collectors.toList());
+        for (Sub cronExSub : cronExSubList) {
+            Runnable task = new Update(cronExSub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
+                    settingsMapper,pluginManager);
+            cronTaskManager.add(cronExSub.getUuid(), cronExSub.getCronExpression(),
+                    task, TimeUnit.SECONDS, calculateUpdateSubTimeout(cronExSub), "更新: " + cronExSub.getTitle());
+        }
+    }
+
+    /**
+     * 计算更新订阅超时时间
+     * @param sub
+     * @return
+     */
+    private long calculateUpdateSubTimeout(Sub sub){
+        String[] customEpisodes = sub.getCustomEpisodes().split(",");
+        int downloadItemNum = sub.getIsFirst().equals(1) && sub.getEpisodes().equals(-1)?30:1;
+        downloadItemNum = sub.getIsFirst().equals(1)
+                && !sub.getCustomEpisodes().isEmpty()?customEpisodes.length:downloadItemNum;
+        return downloadItemNum * TimeUnit.MINUTES.toMillis(30);
     }
 
     /**
      * 每小时删除过期节目
      */
-    @Scheduled(cron = "0 0 * * * *")
+//    @Scheduled(cron = "0 0 * * * *")
     public void clearExpired(){
         try {
             List<Sub> subList = subMapper.list();
@@ -238,7 +288,7 @@ public class Task {
     /**
      * 清除数据库未记录的文件,每小时执行一次
      */
-    @Scheduled(cron = "0 0 * * * *")
+//    @Scheduled(cron = "0 0 * * * *")
     public void clearNotFoundFile(){
         try {
             List<File> files = Arrays.asList(new File(dataPathProperties.getResourcesPath()).listFiles());
@@ -269,7 +319,7 @@ public class Task {
     /**
      * 更新yt-dlp,每小时执行一次
      */
-    @Scheduled(fixedDelay = 3600000)
+//    @Scheduled(fixedDelay = 3600000)
     public void updateYtDlp() {
         try {
             log.info("检查更新yt-dlp");
@@ -324,7 +374,7 @@ public class Task {
     /**
      * 每个两分钟检查一次
      */
-    @Scheduled(fixedDelay = 120000)
+//    @Scheduled(fixedDelay = 120000)
     public void autoUpdatePlugin(){
         try {
             List<User> list = userMapper.list();
@@ -364,7 +414,7 @@ public class Task {
     /**
      * 获取GithubActionWorkflows状态
      */
-    @Scheduled(fixedDelay = 24,timeUnit = TimeUnit.HOURS)
+//    @Scheduled(fixedDelay = 24,timeUnit = TimeUnit.HOURS)
     public void getGithubActionWorkflowsStatus(){
         log.info("Github Action Status 开始更新...");
         List<GithubActionWorkflowsDTO> tmp = new ArrayList<>();
@@ -408,7 +458,7 @@ public class Task {
      * 每一分钟检查一次
      */
 
-    @Scheduled(fixedRate = 1,timeUnit = TimeUnit.MINUTES)
+//    @Scheduled(fixedRate = 1,timeUnit = TimeUnit.MINUTES)
     public void uploadResourcesToAList(){
         try {
             if (userMapper.list().isEmpty()){
@@ -496,7 +546,7 @@ public class Task {
     /**
      * 每24小时刷新一次AList的token
      */
-    @Scheduled(fixedRate = 24,timeUnit = TimeUnit.HOURS)
+//    @Scheduled(fixedRate = 24,timeUnit = TimeUnit.HOURS)
     public void refreshAListToken(){
         try {
             List<User> list = userMapper.list();
@@ -535,7 +585,7 @@ public class Task {
     /**
      * 点击重新下载后会先提交到reDownloadItems集合中，每分钟轮询一次，如果有就下载
      */
-    @Scheduled(fixedDelay = 1,timeUnit = TimeUnit.MINUTES)
+//    @Scheduled(fixedDelay = 1,timeUnit = TimeUnit.MINUTES)
     public void reDownloadTask(){
         if (!reDownloadItems.isEmpty()){
             for (Items items : reDownloadItems) {
@@ -626,7 +676,7 @@ public class Task {
     /**
      * 下载订阅追加节目
      */
-    @Scheduled(fixedDelay = 1,timeUnit = TimeUnit.MINUTES)
+//    @Scheduled(fixedDelay = 1,timeUnit = TimeUnit.MINUTES)
     public void downloadAppendItemList(){
         for (AppendItemDTO appendItem : appendItemList) {
             try {

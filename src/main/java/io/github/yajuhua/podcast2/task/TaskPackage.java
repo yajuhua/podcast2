@@ -15,6 +15,6 @@ import java.util.concurrent.TimeUnit;
 public class TaskPackage {
     private Runnable task;
     private TimeUnit timeUnit;
-    private Integer timeout;
+    private long timeout;
     private String description;
 }
