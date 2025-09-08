@@ -6,6 +6,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 把任务信息封装起来
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

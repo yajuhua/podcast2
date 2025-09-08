@@ -20,9 +20,11 @@ public class CronTaskManager {
     private final ScheduledExecutorService executorService; // 秒级任务调度器
     private Thread taskExecutorThread;                 // 串行执行线程
     private volatile boolean running = true;           // 控制线程退出
+    private final Map<UUID, ScheduledFuture<?>> scheduledTasksMap; // 秒级任务的管理
 
     public CronTaskManager(Scheduler scheduler) {
         this.scheduler = scheduler;
+        this.scheduledTasksMap = new ConcurrentHashMap<>();
         this.taskQueue = new LinkedBlockingQueue<>();
         this.jobMap = new ConcurrentHashMap<>();
         this.executorService = Executors.newScheduledThreadPool(1);
@@ -44,7 +46,8 @@ public class CronTaskManager {
     }
 
     /** 添加 Cron 表达式任务，UUID 字符串标识 */
-    public void add(String taskUUIDStr, String cronExpression, Runnable task, TimeUnit timeUnit, Integer timeout, String description) {
+    public void add(String taskUUIDStr, String cronExpression, Runnable task, TimeUnit timeUnit
+            , Integer timeout, String description) {
         UUID taskUUID = UUID.fromString(taskUUIDStr);
         try {
             JobDetail jobDetail = JobBuilder.newJob(TaskJob.class)
@@ -74,33 +77,71 @@ public class CronTaskManager {
     public void remove(String taskUUIDStr) {
         UUID taskUUID = UUID.fromString(taskUUIDStr);
         try {
+            //cron表达式任务
             JobDetail jobDetail = jobMap.get(taskUUID);
-            String description = (String) jobDetail.getJobDataMap().get("description");
+            ScheduledFuture<?> scheduledTask = scheduledTasksMap.get(taskUUID);
             if (jobDetail != null) {
                 scheduler.deleteJob(jobDetail.getKey());
                 jobMap.remove(taskUUID);
-                log.info(" {} - 已移除",description);
+            }else if (scheduledTask != null && !scheduledTask.isCancelled()) {
+                //秒级任务
+                scheduledTask.cancel(true);  // 取消任务
+                scheduledTasksMap.remove(taskUUID);
             } else {
-                log.error("找不到 - {}", description);
+                log.error("找不到 - {}", taskUUID);
             }
+
         } catch (SchedulerException e) {
-            e.printStackTrace();
+            log.error("移除错误: {}",e);
         }
     }
 
     /** 添加秒级任务，每隔 seconds 秒执行一次，串行 */
-    public void add(int seconds, Runnable task, TimeUnit timeUnit, Integer timeout, String description) {
-        executorService.scheduleAtFixedRate(() -> {
+    public void add(String taskUUID, int seconds, Runnable task, TimeUnit timeUnit, Integer timeout
+            , String description) {
+        ScheduledFuture<?> scheduledTask = executorService.scheduleAtFixedRate(() -> {
             try {
                 taskQueue.put(new TaskPackage(task, timeUnit, timeout, description));
             } catch (InterruptedException e) {
                 log.error("添加秒级任务出错: {}", e);
             }
         }, 0, seconds, TimeUnit.SECONDS);
+        scheduledTasksMap.put(UUID.fromString(taskUUID), scheduledTask);
+    }
+
+    /**
+     * 更新cron表达式任务
+     * @param taskUUIDStr 唯一ID
+     * @param cronExpression cron表达式
+     * @param task 任务
+     * @param timeUnit 时间单位
+     * @param timeout 超时时间
+     * @param description 描述
+     */
+    public void update(String taskUUIDStr, String cronExpression, Runnable task, TimeUnit timeUnit
+            , Integer timeout, String description){
+        remove(taskUUIDStr);
+        add(taskUUIDStr, cronExpression, task, timeUnit, timeout, description);
+    }
+
+    /**
+     * 更新秒级任务
+     * @param taskUUID 唯一ID
+     * @param seconds 时间
+     * @param task 任务
+     * @param timeUnit 时间单位
+     * @param timeout 超时时间
+     * @param description 描述
+     */
+    public void update(String taskUUID, int seconds, Runnable task, TimeUnit timeUnit, Integer timeout
+            , String description){
+        remove(taskUUID);
+        add(taskUUID, seconds, task, timeUnit, timeout, description);
     }
 
     /** 提供一个公共方法给 Quartz Job 调用，提交任务到串行队列 */
-    public void submitTask(Runnable task, TimeUnit timeUnit, Integer timeout, String description) throws InterruptedException {
+    public void submitTask(Runnable task, TimeUnit timeUnit, Integer timeout, String description)
+            throws InterruptedException {
         taskQueue.put(new TaskPackage(task, timeUnit, timeout, description));
     }
 
@@ -119,7 +160,9 @@ public class CronTaskManager {
                     future.get(taskPackage.getTimeout(), taskPackage.getTimeUnit());
                 } catch (TimeoutException e){
                     future.cancel(true);
-                    log.error("{} - 超时",description);
+                    log.error("{} - timeout",description);
+                } catch (InterruptedException e){
+                    log.info("shut down...");
                 }catch (Exception e) {
                     log.error("{} - 错误: {}",description, e);
                 }

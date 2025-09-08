@@ -95,6 +95,8 @@ public class Task {
     private PluginManager pluginManager;
     @Autowired
     private DownloadController downloadController;
+    @Autowired
+    private CronTaskManager cronTaskManager;
 
     /**
      * 获取进度
@@ -108,7 +110,7 @@ public class Task {
      * 每隔分钟检查一次频道是否需要更新
      */
     @Scheduled(fixedDelay = 60000)
-    public void updateSub(){
+    public void updateSubBak(){
         ExecutorService executor = Executors.newSingleThreadExecutor();
         long timeout;
         String uuid = null;
@@ -148,6 +150,13 @@ public class Task {
             //关闭所有插件类加载器,释放资源
             PluginManager.closeAllClassLoader();
         }
+    }
+
+    /**
+     * 支持cron表达式 和 间隔秒数
+     */
+    public void updateSub(){
+
     }
 
     /**
