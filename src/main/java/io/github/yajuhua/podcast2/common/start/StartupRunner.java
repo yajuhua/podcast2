@@ -11,14 +11,11 @@ import io.github.yajuhua.podcast2.controller.SystemController;
 import io.github.yajuhua.podcast2.controller.UserController;
 import io.github.yajuhua.podcast2.downloader.aria2.Aria2RPC;
 import io.github.yajuhua.podcast2.mapper.*;
-import io.github.yajuhua.podcast2.plugin.PluginManager;
 import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
-import io.github.yajuhua.podcast2.service.SubService;
 import io.github.yajuhua.podcast2.service.UserService;
 import io.github.yajuhua.podcast2.task.CronTaskManager;
 import io.github.yajuhua.podcast2.task.Task;
-import io.github.yajuhua.podcast2.task.Update;
 import io.github.yajuhua.podcast2.websocket.DownloadWebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -94,86 +91,20 @@ public class StartupRunner implements ApplicationRunner{
         //启动aria2 RPC
         Aria2RPC.start();
 
+        //更新下载器信息
+        updateDownloaderInfo();
+
         //检查未完成下载
         checkForUndownload();
 
         //开始任务调度
-        startUpdateSub();
+        startTaskScheduling();
 
         //获取地址过滤
         UserController.addressFilterTmp = userService.getExtendInfo().getAddressFilter();
 
-        List<Downloader> downloaderList = downloaderMapper.list();
-        if (downloaderList.isEmpty() || downloaderList.size() != 3){
-            log.info("更新下载器信息");
-            downloaderMapper.deleteAll();
-
-            //yt-dlp
-            Downloader downloader = null;
-            if (DownloaderUtils.hasDownloader(DownloaderUtils.Downloader.YtDlp)) {
-                downloader = Downloader.builder()
-                        .name(DownloaderUtils.Downloader.YtDlp.name())
-                        .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.YtDlp))
-                        //只更新yt-dlp
-                        .isUpdate(1)
-                        .refreshDuration(24)
-                        .updateTime(System.currentTimeMillis())
-                        .build();
-                downloaderMapper.insert(downloader);
-            }
-
-
-            //aria2
-            if (DownloaderUtils.hasDownloader(DownloaderUtils.Downloader.Aria2)) {
-                downloader = Downloader.builder()
-                        .name(DownloaderUtils.Downloader.Aria2.name())
-                        .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.Aria2))
-                        .isUpdate(0)
-                        .refreshDuration(24)
-                        .updateTime(System.currentTimeMillis())
-                        .build();
-                downloaderMapper.insert(downloader);
-            }
-
-            //N_m3u8DL-RE
-            if (DownloaderUtils.hasDownloader(DownloaderUtils.Downloader.Nm3u8DlRe)) {
-                downloader = Downloader.builder()
-                        .name(DownloaderUtils.Downloader.Nm3u8DlRe.name())
-                        .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.Nm3u8DlRe))
-                        .isUpdate(0)
-                        .refreshDuration(24)
-                        .updateTime(System.currentTimeMillis())
-                        .build();
-                downloaderMapper.insert(downloader);
-            }
-
-            log.info("下载器信息更新完成");
-        }
-
-        log.info("开启ws推送下载进度");
-        ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
-        executor.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                Set<DownloadProgressVO> downloadProgressVOSet = Task.getDownloadProgressVOSet();
-                for (DownloadProgressVO vo : downloadProgressVOSet) {
-                    if (DownloaderUtils.endStatusCode().contains(vo.getStatus())){
-                        Task.getDownloadProgressVOSet().remove(vo);
-                    }
-                }
-                //排序
-                List<DownloadProgressVO> collect = downloadProgressVOSet.stream().sorted(new Comparator<DownloadProgressVO>() {
-                    @Override
-                    public int compare(DownloadProgressVO o1, DownloadProgressVO o2) {
-                        UUID u1 = UUID.fromString(o1.getUuid());
-                        UUID u2 = UUID.fromString(o2.getUuid());
-                        return u1.compareTo(u2);
-                    }
-                }).collect(Collectors.toList());
-                //清空前端
-                downloadWebSocketServer.sendToAllClient(gson.toJson(collect));
-            }
-        },0,300, TimeUnit.MILLISECONDS);
+        //开启ws推送下载进度
+        pullDownloadProgress();
     }
 
     /**
@@ -293,7 +224,7 @@ public class StartupRunner implements ApplicationRunner{
     /**
      * 开始任务调度
      */
-    private void startUpdateSub(){
+    private void startTaskScheduling(){
        log.info("开始任务调度");
 
        cronTaskManager.add(UUID.randomUUID().toString(), 3600, new Runnable() {
@@ -355,6 +286,85 @@ public class StartupRunner implements ApplicationRunner{
        task.updateSub();
     }
 
+    /**
+     * 更新下载信息
+     */
+    private void updateDownloaderInfo(){
+        List<Downloader> downloaderList = downloaderMapper.list();
+        if (downloaderList.isEmpty() || downloaderList.size() != 3){
+            log.info("更新下载器信息");
+            downloaderMapper.deleteAll();
+
+            //yt-dlp
+            Downloader downloader = null;
+            if (DownloaderUtils.hasDownloader(DownloaderUtils.Downloader.YtDlp)) {
+                downloader = Downloader.builder()
+                        .name(DownloaderUtils.Downloader.YtDlp.name())
+                        .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.YtDlp))
+                        //只更新yt-dlp
+                        .isUpdate(1)
+                        .refreshDuration(24)
+                        .updateTime(System.currentTimeMillis())
+                        .build();
+                downloaderMapper.insert(downloader);
+            }
 
 
+            //aria2
+            if (DownloaderUtils.hasDownloader(DownloaderUtils.Downloader.Aria2)) {
+                downloader = Downloader.builder()
+                        .name(DownloaderUtils.Downloader.Aria2.name())
+                        .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.Aria2))
+                        .isUpdate(0)
+                        .refreshDuration(24)
+                        .updateTime(System.currentTimeMillis())
+                        .build();
+                downloaderMapper.insert(downloader);
+            }
+
+            //N_m3u8DL-RE
+            if (DownloaderUtils.hasDownloader(DownloaderUtils.Downloader.Nm3u8DlRe)) {
+                downloader = Downloader.builder()
+                        .name(DownloaderUtils.Downloader.Nm3u8DlRe.name())
+                        .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.Nm3u8DlRe))
+                        .isUpdate(0)
+                        .refreshDuration(24)
+                        .updateTime(System.currentTimeMillis())
+                        .build();
+                downloaderMapper.insert(downloader);
+            }
+
+            log.info("下载器信息更新完成");
+        }
+    }
+
+    /**
+     * 开启ws推送下载进度
+     */
+    private void pullDownloadProgress(){
+        log.info("开启ws推送下载进度");
+        ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
+        executor.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                Set<DownloadProgressVO> downloadProgressVOSet = Task.getDownloadProgressVOSet();
+                for (DownloadProgressVO vo : downloadProgressVOSet) {
+                    if (DownloaderUtils.endStatusCode().contains(vo.getStatus())){
+                        Task.getDownloadProgressVOSet().remove(vo);
+                    }
+                }
+                //排序
+                List<DownloadProgressVO> collect = downloadProgressVOSet.stream().sorted(new Comparator<DownloadProgressVO>() {
+                    @Override
+                    public int compare(DownloadProgressVO o1, DownloadProgressVO o2) {
+                        UUID u1 = UUID.fromString(o1.getUuid());
+                        UUID u2 = UUID.fromString(o2.getUuid());
+                        return u1.compareTo(u2);
+                    }
+                }).collect(Collectors.toList());
+                //清空前端
+                downloadWebSocketServer.sendToAllClient(gson.toJson(collect));
+            }
+        },0,300, TimeUnit.MILLISECONDS);
+    }
 }
