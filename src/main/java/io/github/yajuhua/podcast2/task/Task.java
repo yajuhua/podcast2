@@ -40,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -106,51 +105,6 @@ public class Task {
         return downloadProgressVOSet;
     }
     public static List<GithubActionWorkflowsDTO> actionWorkflowsDTOList = new ArrayList<>();
-    /**
-     * 每隔分钟检查一次频道是否需要更新
-     */
-//    @Scheduled(fixedDelay = 60000)
-    public void updateSubBak(){
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        long timeout;
-        String uuid = null;
-        try {
-            //1.获取需要更新的订阅
-            List<Sub> subList = subService.selectUpdateList();
-            for (Sub sub : subList) {
-                uuid = sub.getUuid();
-                int downloadItemNum;
-                String[] customEpisodes = sub.getCustomEpisodes().split(",");
-                downloadItemNum = sub.getIsFirst().equals(1) && sub.getEpisodes().equals(-1)?30:1;
-                downloadItemNum = sub.getIsFirst().equals(1) && !sub.getCustomEpisodes().isEmpty()?customEpisodes.length:downloadItemNum;
-                timeout = downloadItemNum * TimeUnit.MINUTES.toMillis(30);
-                Future<?> future = null;
-                try {
-                    future = executor.submit(new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper, settingsMapper,pluginManager));
-                    future.get(timeout,TimeUnit.MILLISECONDS);
-                } catch (Exception e) {
-                    future.cancel(true);
-                    subMapper.update(sub);//保持原样
-                    log.error("更新超时:{}{}",sub.getTitle(),e.getMessage());
-                    collectUpdateLogMessages(sub.getUuid(),"更新超时","error");
-                }
-                collectUpdateLogMessages(sub.getUuid(),"更新成功","info");
-            }
-        } catch (Exception e) {
-            log.error("更新异常:{}详细:{}",e.getMessage(),e.getStackTrace());
-            collectUpdateLogMessages(uuid,e.getMessage(),"error");
-        }finally {
-            Task.updateStatus = false;
-            if (Task.downloadProgressVOSet != null){
-                Task.downloadProgressVOSet.clear();
-            }
-            if(Task.downloadManagerList != null){
-                Task.downloadManagerList.clear();
-            }
-            //关闭所有插件类加载器,释放资源
-            PluginManager.closeAllClassLoader();
-        }
-    }
 
     public void updateSub(){
         log.info("开始检查更新订阅...");
@@ -212,8 +166,8 @@ public class Task {
     /**
      * 每小时删除过期节目
      */
-//    @Scheduled(cron = "0 0 * * * *")
     public void clearExpired(){
+        log.debug("删除过期节目");
         try {
             List<Sub> subList = subMapper.list();
             for (Sub sub : subList) {
@@ -288,8 +242,8 @@ public class Task {
     /**
      * 清除数据库未记录的文件,每小时执行一次
      */
-//    @Scheduled(cron = "0 0 * * * *")
     public void clearNotFoundFile(){
+        log.debug("清除数据库未记录的文件");
         try {
             List<File> files = Arrays.asList(new File(dataPathProperties.getResourcesPath()).listFiles());
             List<Items> list = itemsMapper.list();
@@ -319,7 +273,6 @@ public class Task {
     /**
      * 更新yt-dlp,每小时执行一次
      */
-//    @Scheduled(fixedDelay = 3600000)
     public void updateYtDlp() {
         try {
             log.info("检查更新yt-dlp");
@@ -374,8 +327,8 @@ public class Task {
     /**
      * 每个两分钟检查一次
      */
-//    @Scheduled(fixedDelay = 120000)
     public void autoUpdatePlugin(){
+        log.debug("扫描插件自动更新");
         try {
             List<User> list = userMapper.list();
             if (list.size() != 0){
@@ -414,7 +367,6 @@ public class Task {
     /**
      * 获取GithubActionWorkflows状态
      */
-//    @Scheduled(fixedDelay = 24,timeUnit = TimeUnit.HOURS)
     public void getGithubActionWorkflowsStatus(){
         log.info("Github Action Status 开始更新...");
         List<GithubActionWorkflowsDTO> tmp = new ArrayList<>();
@@ -457,9 +409,8 @@ public class Task {
      * 上传节目资源到AList
      * 每一分钟检查一次
      */
-
-//    @Scheduled(fixedRate = 1,timeUnit = TimeUnit.MINUTES)
     public void uploadResourcesToAList(){
+        log.debug("上传资源到Alist");
         try {
             if (userMapper.list().isEmpty()){
                 //首次部署时可能user还没初始化
@@ -546,8 +497,8 @@ public class Task {
     /**
      * 每24小时刷新一次AList的token
      */
-//    @Scheduled(fixedRate = 24,timeUnit = TimeUnit.HOURS)
     public void refreshAListToken(){
+        log.debug("刷新AList的token");
         try {
             List<User> list = userMapper.list();
             //首次部署时可能user还没初始化
@@ -585,8 +536,8 @@ public class Task {
     /**
      * 点击重新下载后会先提交到reDownloadItems集合中，每分钟轮询一次，如果有就下载
      */
-//    @Scheduled(fixedDelay = 1,timeUnit = TimeUnit.MINUTES)
     public void reDownloadTask(){
+        log.debug("扫描重新下载队列");
         if (!reDownloadItems.isEmpty()){
             for (Items items : reDownloadItems) {
                 try {
@@ -676,8 +627,8 @@ public class Task {
     /**
      * 下载订阅追加节目
      */
-//    @Scheduled(fixedDelay = 1,timeUnit = TimeUnit.MINUTES)
     public void downloadAppendItemList(){
+        log.debug("扫描下载订阅追加姐");
         for (AppendItemDTO appendItem : appendItemList) {
             try {
                 DownloadItem downloadItem = new DownloadItem(appendItem,itemsMapper,subMapper
