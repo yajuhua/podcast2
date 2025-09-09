@@ -177,7 +177,7 @@ public class CronTaskManager {
             Runnable task = (Runnable) context.getJobDetail().getJobDataMap().get("task");
             CronTaskManager manager = (CronTaskManager) context.getJobDetail().getJobDataMap().get("manager");
             TimeUnit timeUnit = (TimeUnit) context.getJobDetail().getJobDataMap().get("timeUnit");
-            long timeout = (Integer) context.getJobDetail().getJobDataMap().get("timeout");
+            long timeout = (Long) context.getJobDetail().getJobDataMap().get("timeout");
             String description = (String) context.getJobDetail().getJobDataMap().get("description");
             if (task != null && manager != null) {
                 try {

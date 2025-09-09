@@ -92,9 +92,14 @@
               </div>
             </el-form-item>
           </span>
-
-          <el-form-item label="更新频率">
-            <el-select v-model="addSub.cron" placeholder="请选择更新频率">
+            <el-form-item label="轮询方式">
+            <el-select v-model="addSub.scheduleType" placeholder="请选择轮询方式">
+              <el-option label="间隔轮询" value="cron"></el-option>
+              <el-option label="Cron表达式" value="cron_expression"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="间隔轮询">
+            <el-select v-model="addSub.cron" placeholder="请选择更新频率" v-if="addSub.scheduleType == 'cron'">
               <el-option label="20分钟" value="1200"></el-option>
               <el-option label="30分钟" value="1800"></el-option>
               <el-option label="60分钟" value="3600"></el-option>
@@ -121,6 +126,10 @@
                 </el-select>
               </el-input>
             </div>
+          </el-form-item>
+          <!-- cron表达式 -->
+          <el-form-item label="Cron表达式" v-if="addSub.scheduleType == 'cron_expression'">
+            <el-input v-model="addSub.cronExpression" placeholder="请输入Cron表达式" type="text" size="medium"/>
           </el-form-item>
           <el-form-item label="过滤器">
             <el-select v-model="addSub.isFilter">
@@ -350,6 +359,9 @@ export default {
         image: '',
         description: '',
         syncWay: 'latest',//同步方式
+        scheduleType: 'cron',
+        cronExpression: ''
+
       },
       //初始数据
       initAddSub: {
@@ -380,6 +392,8 @@ export default {
         keepLast: '',
         subType: 'plugin',//创建订阅方式，默认是plugin
         syncWay: '',//同步方式
+        scheduleType: 'cron',
+        cronExpression: ''
       },
       loading: false,
       addSubStatus: ''

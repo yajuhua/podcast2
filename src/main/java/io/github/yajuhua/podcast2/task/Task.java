@@ -127,7 +127,7 @@ public class Task {
             long initialDelay = 0;
             long duration = System.currentTimeMillis() - cronSub.getCheckTime();
             if (duration < (cronSub.getCron() * 1000) ){
-                initialDelay = (cronSub.getCron() * 1000) - duration;
+                initialDelay = ((cronSub.getCron() * 1000) - duration) / 1000;
             }
             Runnable task = new Update(cronSub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
                     settingsMapper,pluginManager);
@@ -155,7 +155,7 @@ public class Task {
      * @param sub
      * @return
      */
-    private long calculateUpdateSubTimeout(Sub sub){
+    public static long calculateUpdateSubTimeout(Sub sub){
         String[] customEpisodes = sub.getCustomEpisodes().split(",");
         int downloadItemNum = sub.getIsFirst().equals(1) && sub.getEpisodes().equals(-1)?30:1;
         downloadItemNum = sub.getIsFirst().equals(1)

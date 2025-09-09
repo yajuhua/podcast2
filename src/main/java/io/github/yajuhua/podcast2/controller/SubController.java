@@ -29,8 +29,10 @@ import io.github.yajuhua.podcast2.service.ExtendService;
 import io.github.yajuhua.podcast2.service.ItemsService;
 import io.github.yajuhua.podcast2.service.SubService;
 import io.github.yajuhua.podcast2.service.UserService;
+import io.github.yajuhua.podcast2.task.CronTaskManager;
 import io.github.yajuhua.podcast2.task.LogMessage;
 import io.github.yajuhua.podcast2.task.Task;
+import io.github.yajuhua.podcast2.task.Update;
 import io.github.yajuhua.podcast2API.Channel;
 import io.github.yajuhua.podcast2API.Item;
 import io.github.yajuhua.podcast2API.Params;
@@ -102,6 +104,8 @@ public class SubController {
 
     @Autowired
     private PluginManager pluginManager;
+    @Autowired
+    private CronTaskManager cronTaskManager;
 
 
     /**
@@ -519,6 +523,8 @@ public class SubController {
     public Result delete(@RequestParam List<String> uuids) throws Exception {
         log.info("delete uuids:{}",uuids);
         for (String uuid : uuids) {
+            //删除任务队列
+            cronTaskManager.remove(uuid);
             //删除订阅资源线程
             new Thread(new Runnable() {
                 @Override
@@ -582,7 +588,9 @@ public class SubController {
      */
     @ApiOperation("添加订阅")
     @PostMapping("/api/sub/add")
+    @Transactional
     public Result add(@RequestBody AddSubDTO addSubDTO){
+        Sub sub;
         try {
             if (addSubDTO.getSubType().equalsIgnoreCase("plugin")){
                 //构建插件参数
@@ -606,7 +614,7 @@ public class SubController {
                 String descKeywords = String.join(",", addSubDTO.getDescKeywords());
                 String titleKeywords = String.join(",", addSubDTO.getTitleKeywords());
                 String uuid = UUID.randomUUID().toString();
-                Sub sub =  Sub.builder()
+                sub =  Sub.builder()
                         .description(channel.getDescription())
                         .equal("none")
                         .image(channel.getImage())
@@ -635,6 +643,8 @@ public class SubController {
                         .checkTime(0L)
                         .subType(addSubDTO.getSubType())
                         .syncWay(addSubDTO.getSyncWay())
+                        .scheduleType(addSubDTO.getScheduleType())
+                        .cronExpression(addSubDTO.getCronExpression())
                         .build();
 
                 subService.addSub(sub);
@@ -645,7 +655,7 @@ public class SubController {
             }
             else if (addSubDTO.getSubType().equalsIgnoreCase("empty")){
                 //创建空的订阅
-                Sub sub = new Sub();
+                sub = new Sub();
                 BeanUtils.copyProperties(addSubDTO,sub);
                 sub.setUpdateTime(System.currentTimeMillis());
                 sub.setCreateTime(System.currentTimeMillis());
@@ -657,6 +667,27 @@ public class SubController {
                 subService.addSub(sub);
             }else {
                 return Result.error("创建失败");
+            }
+
+            //加入任务队列
+            String scheduleType = sub.getScheduleType();
+            if (scheduleType.equalsIgnoreCase("cron")){
+                long initialDelay = 0;
+                long duration = System.currentTimeMillis() - sub.getCheckTime();
+                if (duration < (sub.getCron() * 1000) ){
+                    initialDelay = ((sub.getCron() * 1000) - duration) / 1000;
+                }
+                Runnable task = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
+                        settingsMapper,pluginManager);
+                cronTaskManager.add(sub.getUuid(), sub.getCron(), task, TimeUnit.SECONDS,
+                        Task.calculateUpdateSubTimeout(sub), "更新: " + sub.getTitle(), initialDelay);
+            }else if (scheduleType.equalsIgnoreCase("cron_expression")){
+                Runnable task = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
+                        settingsMapper,pluginManager);
+                cronTaskManager.add(sub.getUuid(), sub.getCronExpression(),
+                        task, TimeUnit.SECONDS, Task.calculateUpdateSubTimeout(sub), "更新: " + sub.getTitle());
+            }else {
+                throw new Exception("未知scheduleType: " + scheduleType);
             }
             //添加插件信息
             return Result.success();
@@ -728,6 +759,27 @@ public class SubController {
             Sub beforeSub = subService.selectByUuid(editSubVO.getUuid());
             extendService.batchExtend(extendList(inputAndSelectDataList,beforeSub.getPlugin(),sub.getUuid(),
                     sub.getIsExtend(),sub.getLink(),sub.getType()));
+
+            //更新任务队列
+            String scheduleType = sub.getScheduleType();
+            if (scheduleType.equalsIgnoreCase("cron")){
+                long initialDelay = 0;
+                long duration = System.currentTimeMillis() - sub.getCheckTime();
+                if (duration < (sub.getCron() * 1000) ){
+                    initialDelay = ((sub.getCron() * 1000) - duration) / 1000;
+                }
+                Runnable task = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
+                        settingsMapper,pluginManager);
+                cronTaskManager.add(sub.getUuid(), sub.getCron(), task, TimeUnit.SECONDS,
+                        Task.calculateUpdateSubTimeout(sub), "更新: " + sub.getTitle(), initialDelay);
+            }else if (scheduleType.equalsIgnoreCase("cron_expression")){
+                Runnable task = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
+                        settingsMapper,pluginManager);
+                cronTaskManager.add(sub.getUuid(), sub.getCronExpression(),
+                        task, TimeUnit.SECONDS, Task.calculateUpdateSubTimeout(sub), "更新: " + sub.getTitle());
+            }else {
+                throw new Exception("未知scheduleType: " + scheduleType);
+            }
         }else if (editSubVO.getSubType().equalsIgnoreCase("empty")){
             subMapper.update(sub);
         }else {
