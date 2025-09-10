@@ -78,7 +78,7 @@ firewall-cmd --reload
 
 4. 扫描二维码添加到播客APP（如：AntennaPod）
 
-<img width="500" src="https://raw.githubusercontent.com/yajuhua/podcast2/v2/images/AntennaPod-1.jpg" alt="链接地址" style="zoom:25%;" /><img width="500" src="./images/AntennaPod-2.jpg" alt="AntennaPod-2" style="zoom:25%;" />
+<img width="500" src="https://raw.githubusercontent.com/yajuhua/podcast2/v2/images/AntennaPod-1.jpg" alt="链接地址" style="zoom:25%;" /><img width="500" src="https://raw.githubusercontent.com/yajuhua/podcast2/v2/images/AntennaPod-2.jpg" alt="AntennaPod-2" style="zoom:25%;" />
 
 #### 播客APP
 
