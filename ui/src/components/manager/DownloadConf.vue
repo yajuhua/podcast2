@@ -74,9 +74,6 @@ export default {
       },
     };
   },
-  created() {
-    this.fetchDownloadConf();
-  },
   methods: {
     /** 获取配置数据 */
     async fetchDownloadConf() {
