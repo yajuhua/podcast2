@@ -739,7 +739,7 @@ public class SubController {
     public Result editSub(@RequestBody EditSubVO editSubVO) throws Exception{
         log.info("editSubVO:{}",editSubVO);
         //1.更新sub表
-        Sub sub = new Sub();
+        Sub sub = subMapper.selectByUuid(editSubVO.getUuid());
         BeanUtils.copyProperties(editSubVO,sub);
         if (editSubVO.getSubType().equalsIgnoreCase("plugin")){
             String titleKeywords = String.join(",", editSubVO.getTitleKeywords());
@@ -775,7 +775,7 @@ public class SubController {
             }else if (scheduleType.equalsIgnoreCase("cron_expression")){
                 Runnable task = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
                         settingsMapper,pluginManager);
-                cronTaskManager.add(sub.getUuid(), sub.getCronExpression(),
+                cronTaskManager.update(sub.getUuid(), sub.getCronExpression(),
                         task, TimeUnit.SECONDS, Task.calculateUpdateSubTimeout(sub), "更新: " + sub.getTitle());
             }else {
                 throw new Exception("未知scheduleType: " + scheduleType);

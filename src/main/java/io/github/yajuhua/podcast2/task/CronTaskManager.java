@@ -119,7 +119,7 @@ public class CronTaskManager {
      * @param description 描述
      */
     public void update(String taskUUIDStr, String cronExpression, Runnable task, TimeUnit timeUnit
-            , Integer timeout, String description){
+            , long timeout, String description){
         remove(taskUUIDStr);
         add(taskUUIDStr, cronExpression, task, timeUnit, timeout, description);
     }

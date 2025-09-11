@@ -156,6 +156,9 @@ public class Task {
      * @return
      */
     public static long calculateUpdateSubTimeout(Sub sub){
+        if (sub.getCustomEpisodes() == null){
+            return 3 * TimeUnit.MINUTES.toMillis(30);
+        }
         String[] customEpisodes = sub.getCustomEpisodes().split(",");
         int downloadItemNum = sub.getIsFirst().equals(1) && sub.getEpisodes().equals(-1)?30:1;
         downloadItemNum = sub.getIsFirst().equals(1)
