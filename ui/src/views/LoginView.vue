@@ -226,10 +226,9 @@ button:active {
   }
 }
 
-
 @media only screen and (min-width: 1024px) and (max-width: 2160px) {
   .login-form {
-    width: 25%;
+    width: 22%;
     height: 260px;
     zoom: 1.4;
   }
