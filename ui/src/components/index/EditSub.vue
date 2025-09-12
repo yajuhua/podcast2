@@ -133,7 +133,10 @@
                     </el-form-item>
                     <!-- cron表达式 -->
                     <el-form-item label="Cron表达式" v-if="editSubData.scheduleType == 'cron_expression'">
-                       <el-input v-model="editSubData.cronExpression" placeholder="请输入Cron表达式" type="text" size="medium"/>
+                       <el-popover v-model="cronPopover">
+                            <cron @change="changeCronExpression" @close="cronPopover=false" i18n="cn"></cron>
+                            <el-input slot="reference" @click="cronPopover=true" v-model="editSubData.cronExpression" placeholder="请输入定时策略"></el-input>
+                        </el-popover>
                     </el-form-item>
                     <el-form-item label="继续更新">
                         <el-select v-model="editSubData.isUpdate">
@@ -307,10 +310,9 @@
 <script>
 import axios from 'axios'
 import { adaptWidth } from '@/utils/utils';
+import {cron} from 'vue-cron'
 export default {
-    components: {
-        
-    },
+    components: { cron },
     computed: {
     adaptWidth() {
       return adaptWidth(); 
@@ -405,6 +407,7 @@ export default {
                 subType: '',//创建订阅方式
                 syncWay: '',//同步方式
             },
+            cronPopover: false
         }
     },
     methods: {
@@ -512,6 +515,9 @@ export default {
         },
         execForceUpdate() {
             this.$forceUpdate();
+        },
+        changeCronExpression(val){
+            this.addSub.cronExpression=val;
         },
     }
 }

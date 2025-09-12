@@ -98,8 +98,8 @@
               <el-option label="Cron表达式" value="cron_expression"></el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="间隔轮询">
-            <el-select v-model="addSub.cron" placeholder="请选择更新频率" v-if="addSub.scheduleType == 'cron'">
+          <el-form-item label="间隔轮询" v-if="addSub.scheduleType == 'cron'">
+            <el-select v-model="addSub.cron" placeholder="请选择更新频率">
               <el-option label="20分钟" value="1200"></el-option>
               <el-option label="30分钟" value="1800"></el-option>
               <el-option label="60分钟" value="3600"></el-option>
@@ -129,7 +129,10 @@
           </el-form-item>
           <!-- cron表达式 -->
           <el-form-item label="Cron表达式" v-if="addSub.scheduleType == 'cron_expression'">
-            <el-input v-model="addSub.cronExpression" placeholder="请输入Cron表达式" type="text" size="medium"/>
+            <el-popover v-model="cronPopover">
+              <cron @change="changeCronExpression" @close="cronPopover=false" i18n="cn"></cron>
+              <el-input slot="reference" @click="cronPopover=true" v-model="addSub.cronExpression" placeholder="请输入定时策略"></el-input>
+            </el-popover>
           </el-form-item>
           <el-form-item label="过滤器">
             <el-select v-model="addSub.isFilter">
@@ -309,8 +312,10 @@
 </template>
 <script>
 import axios from 'axios'
+import {cron} from 'vue-cron'
 export default {
   name: 'AddSub',
+  components: { cron },
   props: {
     visible: {
       type: Boolean,
@@ -396,7 +401,8 @@ export default {
         cronExpression: ''
       },
       loading: false,
-      addSubStatus: ''
+      addSubStatus: '',
+      cronPopover: false
     }
   },
   methods: {
@@ -595,7 +601,10 @@ export default {
       }else {
         return '40%';
       }
-    }
+    },
+    changeCronExpression(val){
+      this.addSub.cronExpression=val;
+    },
   }
 }
 </script>
