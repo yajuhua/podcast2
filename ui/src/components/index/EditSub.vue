@@ -372,6 +372,8 @@ export default {
                 survivalTimeUnit: '1',//存活时间单位
                 subType: '',//创建订阅方式
                 syncWay: '',//同步方式
+                scheduleType: 'cron',
+                cronExpression: ''
             },
             //初始数据结构
             initEditSubData: {
@@ -406,6 +408,8 @@ export default {
                 survivalTimeUnit: '1',//存活时间单位
                 subType: '',//创建订阅方式
                 syncWay: '',//同步方式
+                scheduleType: 'cron',
+                cronExpression: ''
             },
             cronPopover: false
         }
@@ -517,7 +521,7 @@ export default {
             this.$forceUpdate();
         },
         changeCronExpression(val){
-            this.addSub.cronExpression=val;
+            this.editSubData.cronExpression=val;
         },
     }
 }
