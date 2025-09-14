@@ -36,8 +36,8 @@ public interface DownloaderMapper {
      * 插入下载器信息
      * @param downloader
      */
-    @Insert("insert into downloader(name, version, refresh_duration, update_time, is_update) " +
-            "values (#{name}, #{version}, #{refreshDuration}, #{updateTime}, #{isUpdate})")
+    @Insert("insert into downloader(name, version, refresh_duration, update_time, is_update, update_args) " +
+            "values (#{name}, #{version}, #{refreshDuration}, #{updateTime}, #{isUpdate}, #{updateArgs})")
     void insert(Downloader downloader);
 
     /**

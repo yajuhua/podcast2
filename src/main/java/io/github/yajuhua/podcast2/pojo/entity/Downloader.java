@@ -13,4 +13,5 @@ public class Downloader {
     private Integer refreshDuration; //小时
     private Long updateTime;
     private Integer isUpdate;
+    private String updateArgs;//更新参数
 }

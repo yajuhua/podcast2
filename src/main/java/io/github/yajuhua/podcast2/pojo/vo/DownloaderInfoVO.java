@@ -14,4 +14,5 @@ public class DownloaderInfoVO {
     private String version;
     private String updateTime;
     private Integer isUpdate;
+    private String updateArgs;//更新参数
 }

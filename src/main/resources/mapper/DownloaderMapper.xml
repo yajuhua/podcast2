@@ -15,7 +15,10 @@
                 update_time = #{updateTime},
             </if>
             <if test="isUpdate != null">
-                is_update = #{isUpdate}
+                is_update = #{isUpdate},
+            </if>
+            <if test="updateArgs != null">
+                update_args = #{updateArgs}
             </if>
         </set>
         where name = #{name}

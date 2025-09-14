@@ -285,45 +285,31 @@ public class Task {
             }
             if (!addSubStatus){
                 Downloader ytDlp = downloaderMapper.selectByName("YtDlp");
-                Long latestUpdateTime = ytDlp.getUpdateTime();
-                Integer refreshDuration = ytDlp.getRefreshDuration()*3600*1000;
-                if ((latestUpdateTime + refreshDuration) < System.currentTimeMillis()){
-
-                    //获取最新tag
-                    String apiUrl  = "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest";
-                    String json = Http.get(apiUrl);
-                    String tagName = gson.fromJson(json, JsonObject.class).get("tag_name").getAsString();
-
-                    if (!ytDlp.getVersion().contains(tagName)){
+                if (YtDlpUpdate.isUpdate(ytDlp)){
                         log.info("开始更新yt-dlp");
                         String githubProxyUrl = userService.getExtendInfo().getGithubProxyUrl();
-
-                        if (githubProxyUrl != null){
-                            log.info("使用Github加速站更新yt-dlp");
-                            File filePath = System.getProperty("os.name").contains("Linux") ? new File("/usr/sbin") : new File(System.getProperty("user.dir"));
+                        //使用Github加速站更新yt-dlp,仅支持stable频道
+                        if (githubProxyUrl != null && (ytDlp.getUpdateArgs() == null || ytDlp.getUpdateArgs().isEmpty())){
                             String tmpPath = dataPathProperties.getTmpPath();
-                            YtDlpUpdate ytDlpUpdate = new YtDlpUpdate(githubProxyUrl,filePath.getAbsolutePath(),tmpPath);
-                            boolean rs = ytDlpUpdate.proxy();
-                            log.info("更新yt-dlp{}",rs?"成功":"失败");
+                            YtDlpUpdate.withProxy(githubProxyUrl, tmpPath);
+                        }else if (ytDlp.getUpdateArgs() != null && !ytDlp.getUpdateArgs().isEmpty()){
+                            //更新到指定频道
+                            YtDlpUpdate.withUpdateArgs(ytDlp.getUpdateArgs());
                         }else {
-                            //执行更新
-                            int exitCode = Runtime.getRuntime().exec("yt-dlp -U").waitFor();
-                            log.info("更新yt-dlp{}",exitCode==0?"成功":"失败");
+                            //默认更新到官方stable频道
+                            YtDlpUpdate.updateToStable();
                         }
                         //更新数据库
                         ytDlp.setUpdateTime(System.currentTimeMillis());
-                        ytDlp.setVersion(DownloaderUtils.cmd("yt-dlp --version"));
+                        ytDlp.setVersion(YtDlpUpdate.getCurrentVersion());
                         downloaderMapper.update(ytDlp);
-                    }else {
-                        log.info("当前版本:{}是最新版",tagName);
-                    }
                 }else {
                     log.info("未到更新时间");
                 }
             }
             log.info("已完成检查更新yt-dlp");
         } catch (Exception e) {
-            log.error("检查更新yt-dlp异常");
+            log.error("检查更新yt-dlp异常: {}", e.getMessage());
         }
     }
 
