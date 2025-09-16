@@ -364,4 +364,34 @@ public class DownloadController {
         itemsMapper.update(updateItems);
         return Result.success();
     }
+
+    /**
+     * 获取单个下载器信息
+     * @return
+     */
+    @ApiOperation("获取单个下载器信息")
+    @GetMapping("/downloaderInfo/{name}")
+    public Result<Downloader> getDownloaderInfo(@PathVariable String name){
+        try {
+            Downloader downloader = downloaderMapper.downloader(name);
+            return Result.success(downloader);
+        } catch( Exception e) {
+            return Result.error("获取下载器信息错误: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 更新单个下载配置
+     * @return
+     */
+    @ApiOperation("更新单个下载器信息")
+    @PostMapping("/downloaderInfo")
+    public Result updateDownloaderInfo(@RequestBody Downloader downloader){
+        try {
+            downloaderMapper.update(downloader);
+            return Result.success();
+        } catch (Exception e) {
+            return Result.error("更新下载器信息错误: " + e.getMessage());
+        }
+    }
 }

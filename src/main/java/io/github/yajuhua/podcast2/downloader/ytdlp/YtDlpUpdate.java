@@ -3,7 +3,9 @@ package io.github.yajuhua.podcast2.downloader.ytdlp;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.common.utils.Http;
+import io.github.yajuhua.podcast2.pojo.entity.Downloader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 
@@ -23,18 +25,14 @@ import java.util.Map;
  */
 @Slf4j
 public class YtDlpUpdate {
-    private String proxyUrl;
-    private String filePath;
-    private String tmpPath;
 
-    public YtDlpUpdate(String proxyUrl, String filePath, String tmpPath) {
-        this.proxyUrl = proxyUrl;
-        this.filePath = filePath;
-        this.tmpPath = tmpPath;
-    }
-
-    public boolean proxy(){
-
+    public static boolean withProxy(String proxyUrl, String tmpPath){
+        log.info("使用Github加速站更新yt-dlp stable频道");
+        String currentVersion = getCurrentVersion();
+        if (currentVersion.equalsIgnoreCase(latestTagName())){
+            log.info("当前是stable频道最新版本: {}", currentVersion);
+            return true;
+        }
         try {
             //构建下载URL
             String downloadUrl = proxyUrl + "https://github.com/yt-dlp/yt-dlp/releases/download/" + latestTagName() + "/" + getFileName();
@@ -47,14 +45,15 @@ public class YtDlpUpdate {
             String tmpFile = tmpPath + File.separator + getFileName();
             String checksum = getSHA256Checksum(tmpFile);
 
-            boolean check = getYtDlpSHA256Checksum().equals(checksum);
+            boolean check = getYtDlpSHA256Checksum(proxyUrl).equals(checksum);
             if (!check){
-                log.error("校验失败");
+                log.error("yt-dlp文件校验失败!");
                 return false;
             }
 
             //替换
             String fileName = System.getProperty("os.name").startsWith("Win") ? "yt-dlp.exe.tmp" : "yt-dlp.tmp";
+            File filePath = System.getProperty("os.name").contains("Linux") ? new File("/usr/sbin") : new File(System.getProperty("user.dir"));
             String finalPathTmp = filePath + File.separator + fileName;
             FileUtils.copyFile(new File(tmpFile),new File(finalPathTmp));
             File originFile = new File(finalPathTmp.substring(0,finalPathTmp.lastIndexOf(".")));
@@ -66,14 +65,16 @@ public class YtDlpUpdate {
             FileUtils.moveFile(new File(finalPathTmp),originFile);
             //赋可执行权限
             originFile.setExecutable(true);
+            log.info("更新yt-dlp成功!");
             return true;
         } catch (Exception e) {
             e.printStackTrace();
+            log.error("更新yt-dlp失败!");
             return false;
         }
     }
 
-    public static String getFileName(){
+    private static String getFileName(){
         String arch = System.getProperty("os.arch");
         String name = System.getProperty("os.name");
         String fileName = null;
@@ -102,7 +103,7 @@ public class YtDlpUpdate {
      * 获取SHA-256 散列值
      * @return
      */
-    public static String getSHA256Checksum (String filePath){
+    private static String getSHA256Checksum (String filePath){
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             FileInputStream fis = new FileInputStream(filePath);
@@ -131,7 +132,7 @@ public class YtDlpUpdate {
        return null;
     }
 
-    public String getYtDlpSHA256Checksum(){
+    private static String getYtDlpSHA256Checksum(String proxyUrl){
 
         String last = proxyUrl.substring(proxyUrl.length() -1);
         if (last.equals("/")){
@@ -182,4 +183,44 @@ public class YtDlpUpdate {
         String tagName = gson.fromJson(json, JsonObject.class).get("tag_name").getAsString();
         return tagName;
     }
+
+    /**
+     * 获取当前版本
+     * @return
+     */
+    public static String getCurrentVersion(){
+        return DownloaderUtils.cmd("yt-dlp --version");
+    }
+
+    /**
+     * 携带更新参数 --update-to 切换到不同频道
+     * @param args
+     * @return
+     */
+    public static void withUpdateArgs(String args){
+        String rs = DownloaderUtils.cmd("yt-dlp --update-to " + args.trim());
+        boolean b = (rs == null || rs.isEmpty());
+        if (b){
+            log.error("yt-dlp 更新错误: {}", args.trim());
+        }
+    }
+
+    /**
+     * 更新至稳定版
+     */
+    public static void updateToStable(){
+        withUpdateArgs("stable@latest");
+    }
+
+    /**
+     * 是否到更新时间
+     * @param downloader
+     * @return
+     */
+    public static boolean isUpdate(Downloader downloader){
+        Long latestUpdateTime = downloader.getUpdateTime();
+        Integer refreshDuration = downloader.getRefreshDuration()*3600*1000;
+        return (latestUpdateTime + refreshDuration) < System.currentTimeMillis();
+    }
+
 }

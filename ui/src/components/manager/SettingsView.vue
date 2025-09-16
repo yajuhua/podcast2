@@ -118,6 +118,22 @@
         </el-form-item>
       </el-form>
     </div>
+    <!-- yt-dlp更新参数 --update-to -->
+    <div>
+      <el-form label-position="top">
+        <h4>yt-dlp --update-to</h4>
+        <el-form-item label="--update-to">
+          <el-input v-model="ytDlp.updateArgs"  />
+          <el-tooltip class="item" effect="dark" content="详细请看: https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#update" placement="top-start">
+            <i class="el-icon-question"></i>
+          </el-tooltip>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="updateYtDlpUpdateTo()" size="mini" round>修改</el-button>
+          <el-button type="danger" @click="deleteYtDlpUpdateTo()" size="mini" round>删除</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
     <!--api-->
     <div>
       <div>
@@ -201,7 +217,8 @@ export default {
     this.getApiTokenInfo();
     this.getApiDocStatus();
     this.getPluginUrl();
-    this.getAutoUpdateStatus()
+    this.getAutoUpdateStatus();
+    this.getYtDlpUpdataTo();
   },
   data() {
     return {
@@ -264,6 +281,9 @@ export default {
       plugin: {
         url: '',
         autoUpdate: true
+      },
+      ytDlp: {
+        updateArgs: null
       }
     }
   },
@@ -880,6 +900,37 @@ export default {
         }).catch(err => {
           this.$message.error('获取插件自动更新状态失败！');
           console.log(err);
+        })
+    },
+    updateYtDlpUpdateTo(){
+      this.ytDlp.updateArgs = this.ytDlp.updateArgs.replace(/\s+/g, '');
+      axios.post('/api/download/downloaderInfo', {name: 'YtDlp', updateArgs: this.ytDlp.updateArgs})
+        .then(res => {
+          if (res.data.code == '1') {
+            this.$message.success('修改成功！');
+          } else {
+            this.$message.error(res.data.msg)
+          }
+        }).catch(err => {
+          this.$message.error('修改错误！');
+          console.log(err)
+        })
+    },
+    deleteYtDlpUpdateTo(){
+      this.ytDlp.updateArgs = '';
+      this.updateYtDlpUpdateTo();
+    },
+    getYtDlpUpdataTo(){
+        axios.get('/api/download/downloaderInfo/YtDlp')
+        .then(res => {
+          if (res.data.code == '1') {
+            this.ytDlp = res.data.data;
+          } else {
+            this.$message.error(res.data.msg);
+          }
+        }).catch(err => {
+          console.log(err);
+          this.$message.error('获取yt-dlp更新参数失败!')
         })
     },
   }
