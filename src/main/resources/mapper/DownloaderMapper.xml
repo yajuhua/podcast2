@@ -5,21 +5,23 @@
     <update id="update">
         update downloader
         <set>
-            <if test="version != null">
-                version = #{version},
-            </if>
-            <if test="refreshDuration != null">
-                refresh_duration = #{refreshDuration},
-            </if>
-            <if test="updateTime != null">
-                update_time = #{updateTime},
-            </if>
-            <if test="isUpdate != null">
-                is_update = #{isUpdate},
-            </if>
-            <if test="updateArgs != null">
-                update_args = #{updateArgs}
-            </if>
+            <trim suffixOverrides=",">
+                <if test="version != null">
+                    version = #{version},
+                </if>
+                <if test="refreshDuration != null">
+                    refresh_duration = #{refreshDuration},
+                </if>
+                <if test="updateTime != null">
+                    update_time = #{updateTime},
+                </if>
+                <if test="isUpdate != null">
+                    is_update = #{isUpdate},
+                </if>
+                <if test="updateArgs != null">
+                    update_args = #{updateArgs}
+                </if>
+            </trim>
         </set>
         where name = #{name}
     </update>
