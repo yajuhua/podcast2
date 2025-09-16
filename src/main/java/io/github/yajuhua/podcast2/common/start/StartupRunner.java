@@ -10,13 +10,11 @@ import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.controller.SystemController;
 import io.github.yajuhua.podcast2.controller.UserController;
 import io.github.yajuhua.podcast2.downloader.aria2.Aria2RPC;
-import io.github.yajuhua.podcast2.mapper.DownloaderMapper;
-import io.github.yajuhua.podcast2.mapper.ItemsMapper;
-import io.github.yajuhua.podcast2.mapper.SubMapper;
-import io.github.yajuhua.podcast2.mapper.UserMapper;
+import io.github.yajuhua.podcast2.mapper.*;
 import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
 import io.github.yajuhua.podcast2.service.UserService;
+import io.github.yajuhua.podcast2.task.CronTaskManager;
 import io.github.yajuhua.podcast2.task.Task;
 import io.github.yajuhua.podcast2.websocket.DownloadWebSocketServer;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +47,8 @@ public class StartupRunner implements ApplicationRunner{
     private DownloadWebSocketServer downloadWebSocketServer;
     private UserService userService;
     private ItemsMapper itemsMapper;
+    private Task task;
+    private CronTaskManager cronTaskManager;
 
     public StartupRunner() {
     }
@@ -57,7 +57,7 @@ public class StartupRunner implements ApplicationRunner{
     public StartupRunner(Gson gson, SubMapper subMapper, InfoProperties infoProperties, UserMapper userMapper,
                          DownloaderMapper downloaderMapper, DataPathProperties dataPathProperties,
                          DownloadWebSocketServer downloadWebSocketServer, UserService userService,
-                         ItemsMapper itemsMapper) {
+                         ItemsMapper itemsMapper, Task task, CronTaskManager cronTaskManager) {
         this.gson = gson;
         this.subMapper = subMapper;
         this.infoProperties = infoProperties;
@@ -67,6 +67,9 @@ public class StartupRunner implements ApplicationRunner{
         this.downloadWebSocketServer = downloadWebSocketServer;
         this.userService = userService;
         this.itemsMapper = itemsMapper;
+        this.task = task;
+        this.cronTaskManager = cronTaskManager;
+
     }
 
 
@@ -88,83 +91,20 @@ public class StartupRunner implements ApplicationRunner{
         //启动aria2 RPC
         Aria2RPC.start();
 
+        //更新下载器信息
+        updateDownloaderInfo();
+
         //检查未完成下载
         checkForUndownload();
+
+        //开始任务调度
+        startTaskScheduling();
 
         //获取地址过滤
         UserController.addressFilterTmp = userService.getExtendInfo().getAddressFilter();
 
-        List<Downloader> downloaderList = downloaderMapper.list();
-        if (downloaderList.isEmpty() || downloaderList.size() != 3){
-            log.info("更新下载器信息");
-            downloaderMapper.deleteAll();
-
-            //yt-dlp
-            Downloader downloader = null;
-            if (DownloaderUtils.hasDownloader(DownloaderUtils.Downloader.YtDlp)) {
-                downloader = Downloader.builder()
-                        .name(DownloaderUtils.Downloader.YtDlp.name())
-                        .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.YtDlp))
-                        //只更新yt-dlp
-                        .isUpdate(1)
-                        .refreshDuration(24)
-                        .updateTime(System.currentTimeMillis())
-                        .build();
-                downloaderMapper.insert(downloader);
-            }
-
-
-            //aria2
-            if (DownloaderUtils.hasDownloader(DownloaderUtils.Downloader.Aria2)) {
-                downloader = Downloader.builder()
-                        .name(DownloaderUtils.Downloader.Aria2.name())
-                        .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.Aria2))
-                        .isUpdate(0)
-                        .refreshDuration(24)
-                        .updateTime(System.currentTimeMillis())
-                        .build();
-                downloaderMapper.insert(downloader);
-            }
-
-            //N_m3u8DL-RE
-            if (DownloaderUtils.hasDownloader(DownloaderUtils.Downloader.Nm3u8DlRe)) {
-                downloader = Downloader.builder()
-                        .name(DownloaderUtils.Downloader.Nm3u8DlRe.name())
-                        .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.Nm3u8DlRe))
-                        .isUpdate(0)
-                        .refreshDuration(24)
-                        .updateTime(System.currentTimeMillis())
-                        .build();
-                downloaderMapper.insert(downloader);
-            }
-
-            log.info("下载器信息更新完成");
-        }
-
-        log.info("开启ws推送下载进度");
-        ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
-        executor.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                Set<DownloadProgressVO> downloadProgressVOSet = Task.getDownloadProgressVOSet();
-                for (DownloadProgressVO vo : downloadProgressVOSet) {
-                    if (DownloaderUtils.endStatusCode().contains(vo.getStatus())){
-                        Task.getDownloadProgressVOSet().remove(vo);
-                    }
-                }
-                //排序
-                List<DownloadProgressVO> collect = downloadProgressVOSet.stream().sorted(new Comparator<DownloadProgressVO>() {
-                    @Override
-                    public int compare(DownloadProgressVO o1, DownloadProgressVO o2) {
-                        UUID u1 = UUID.fromString(o1.getUuid());
-                        UUID u2 = UUID.fromString(o2.getUuid());
-                        return u1.compareTo(u2);
-                    }
-                }).collect(Collectors.toList());
-                //清空前端
-                downloadWebSocketServer.sendToAllClient(gson.toJson(collect));
-            }
-        },0,300, TimeUnit.MILLISECONDS);
+        //开启ws推送下载进度
+        pullDownloadProgress();
     }
 
     /**
@@ -279,5 +219,152 @@ public class StartupRunner implements ApplicationRunner{
         ProxySearch proxySearch = ProxySearch.getDefaultProxySearch();
         ProxySelector proxySelector = proxySearch.getProxySelector();
         ProxySelector.setDefault(proxySelector);
+    }
+
+    /**
+     * 开始任务调度
+     */
+    private void startTaskScheduling(){
+       log.info("开始任务调度");
+
+       cronTaskManager.add(UUID.randomUUID().toString(), 3600, new Runnable() {
+           @Override
+           public void run() {
+               task.clearExpired();
+           }
+       }, TimeUnit.SECONDS, 60*30, "删除过期节目", 0);
+
+        cronTaskManager.add(UUID.randomUUID().toString(), 3600, new Runnable() {
+            @Override
+            public void run() {
+                task.clearNotFoundFile();
+            }
+        }, TimeUnit.SECONDS, 60*30, "清除数据库未记录的文件", 0);
+
+        cronTaskManager.add(UUID.randomUUID().toString(), 3600, new Runnable() {
+            @Override
+            public void run() {
+                task.updateYtDlp();
+            }
+        }, TimeUnit.SECONDS, 60*30, "更新yt-dlp", 0);
+
+        cronTaskManager.add(UUID.randomUUID().toString(), 120, new Runnable() {
+            @Override
+            public void run() {
+                task.autoUpdatePlugin();
+            }
+        }, TimeUnit.SECONDS, 60*30, "自动更新插件", 0);
+
+        cronTaskManager.add(UUID.randomUUID().toString(), 60, new Runnable() {
+            @Override
+            public void run() {
+                task.uploadResourcesToAList();
+            }
+        }, TimeUnit.SECONDS, 60*30, "上传资源到alist", 0);
+
+        cronTaskManager.add(UUID.randomUUID().toString(), 24*60*60, new Runnable() {
+            @Override
+            public void run() {
+                task.refreshAListToken();
+            }
+        }, TimeUnit.SECONDS, 60*30, "刷新一次AList的token", 0);
+
+        cronTaskManager.add(UUID.randomUUID().toString(), 60, new Runnable() {
+            @Override
+            public void run() {
+                task.reDownloadTask();
+            }
+        }, TimeUnit.SECONDS, 60*30, "重新下载", 0);
+
+        cronTaskManager.add(UUID.randomUUID().toString(), 60, new Runnable() {
+            @Override
+            public void run() {
+                task.downloadAppendItemList();
+            }
+        }, TimeUnit.SECONDS, 60*30, "下载追加节目", 0);
+
+       task.updateSub();
+    }
+
+    /**
+     * 更新下载信息
+     */
+    private void updateDownloaderInfo(){
+        List<Downloader> downloaderList = downloaderMapper.list();
+        if (downloaderList.isEmpty() || downloaderList.size() != 3){
+            log.info("更新下载器信息");
+            downloaderMapper.deleteAll();
+
+            //yt-dlp
+            Downloader downloader = null;
+            if (DownloaderUtils.hasDownloader(DownloaderUtils.Downloader.YtDlp)) {
+                downloader = Downloader.builder()
+                        .name(DownloaderUtils.Downloader.YtDlp.name())
+                        .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.YtDlp))
+                        //只更新yt-dlp
+                        .isUpdate(1)
+                        .refreshDuration(24)
+                        .updateTime(System.currentTimeMillis())
+                        .build();
+                downloaderMapper.insert(downloader);
+            }
+
+
+            //aria2
+            if (DownloaderUtils.hasDownloader(DownloaderUtils.Downloader.Aria2)) {
+                downloader = Downloader.builder()
+                        .name(DownloaderUtils.Downloader.Aria2.name())
+                        .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.Aria2))
+                        .isUpdate(0)
+                        .refreshDuration(24)
+                        .updateTime(System.currentTimeMillis())
+                        .build();
+                downloaderMapper.insert(downloader);
+            }
+
+            //N_m3u8DL-RE
+            if (DownloaderUtils.hasDownloader(DownloaderUtils.Downloader.Nm3u8DlRe)) {
+                downloader = Downloader.builder()
+                        .name(DownloaderUtils.Downloader.Nm3u8DlRe.name())
+                        .version(DownloaderUtils.getDownloaderVersion(DownloaderUtils.Downloader.Nm3u8DlRe))
+                        .isUpdate(0)
+                        .refreshDuration(24)
+                        .updateTime(System.currentTimeMillis())
+                        .build();
+                downloaderMapper.insert(downloader);
+            }
+
+            log.info("下载器信息更新完成");
+        }
+    }
+
+    /**
+     * 开启ws推送下载进度
+     */
+    private void pullDownloadProgress(){
+        log.info("开启ws推送下载进度");
+        ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
+        executor.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                Set<DownloadProgressVO> downloadProgressVOSet = Task.getDownloadProgressVOSet();
+                for (DownloadProgressVO vo : downloadProgressVOSet) {
+                    if (DownloaderUtils.endStatusCode().contains(vo.getStatus())){
+                        Task.getDownloadProgressVOSet().remove(vo);
+                    }
+                }
+                //排序
+                List<DownloadProgressVO> collect = downloadProgressVOSet.stream().sorted(new Comparator<DownloadProgressVO>() {
+                    @Override
+                    public int compare(DownloadProgressVO o1, DownloadProgressVO o2) {
+                        UUID u1 = UUID.fromString(o1.getUuid());
+                        UUID u2 = UUID.fromString(o2.getUuid());
+                        return u1.compareTo(u2);
+                    }
+                }).collect(Collectors.toList());
+                //清空前端
+                downloadWebSocketServer.sendToAllClient(gson.toJson(collect));
+            }
+        },0,300, TimeUnit.MILLISECONDS);
     }
 }

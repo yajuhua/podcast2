@@ -95,9 +95,14 @@
                             </div>
                         </el-form-item>
                     </span>
-
-                    <el-form-item label="更新频率">
-                        <el-select v-model="editSubData.cron" placeholder="请选择更新频率">
+                    <el-form-item label="轮询方式">
+                        <el-select v-model="editSubData.scheduleType" placeholder="请选择轮询方式">
+                            <el-option label="间隔轮询" value="cron"></el-option>
+                            <el-option label="Cron表达式" value="cron_expression"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="间隔轮询">
+                        <el-select v-model="editSubData.cron" placeholder="请选择间隔轮询">
                             <el-option label="20分钟" value="1200"></el-option>
                             <el-option label="30分钟" value="1800"></el-option>
                             <el-option label="60分钟" value="3600"></el-option>
@@ -126,7 +131,13 @@
                             </el-input>
                         </div>
                     </el-form-item>
-
+                    <!-- cron表达式 -->
+                    <el-form-item label="Cron表达式" v-if="editSubData.scheduleType == 'cron_expression'">
+                       <el-popover v-model="cronPopover">
+                            <cron @change="changeCronExpression" @close="cronPopover=false" i18n="cn"></cron>
+                            <el-input slot="reference" @click="cronPopover=true" v-model="editSubData.cronExpression" placeholder="请输入定时策略"></el-input>
+                        </el-popover>
+                    </el-form-item>
                     <el-form-item label="继续更新">
                         <el-select v-model="editSubData.isUpdate">
                             <el-option label="是" value="1"></el-option>
@@ -299,10 +310,9 @@
 <script>
 import axios from 'axios'
 import { adaptWidth } from '@/utils/utils';
+import {cron} from 'vue-cron'
 export default {
-    components: {
-        
-    },
+    components: { cron },
     computed: {
     adaptWidth() {
       return adaptWidth(); 
@@ -362,6 +372,8 @@ export default {
                 survivalTimeUnit: '1',//存活时间单位
                 subType: '',//创建订阅方式
                 syncWay: '',//同步方式
+                scheduleType: 'cron',
+                cronExpression: ''
             },
             //初始数据结构
             initEditSubData: {
@@ -396,7 +408,10 @@ export default {
                 survivalTimeUnit: '1',//存活时间单位
                 subType: '',//创建订阅方式
                 syncWay: '',//同步方式
+                scheduleType: 'cron',
+                cronExpression: ''
             },
+            cronPopover: false
         }
     },
     methods: {
@@ -504,6 +519,9 @@ export default {
         },
         execForceUpdate() {
             this.$forceUpdate();
+        },
+        changeCronExpression(val){
+            this.editSubData.cronExpression=val;
         },
     }
 }

@@ -44,4 +44,6 @@ public class EditSubVO {
     private String survivalWay;//节目存活方式
     private String subType;
     private String syncWay;
+    private String scheduleType;//轮询方式
+    private String cronExpression;
 }
