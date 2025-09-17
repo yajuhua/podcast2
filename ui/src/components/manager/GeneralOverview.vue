@@ -79,7 +79,7 @@
           <el-button
             v-if="system.update.status.download"
             type="primary"
-            @click="restart()"
+            @click="handleRestart()"
             >立即重启</el-button
           >
         </span>
