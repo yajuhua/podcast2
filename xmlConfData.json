@@ -1,0 +1,72 @@
+{
+  "confList": [
+    {
+      "name": "default",
+      "conf": {
+        "rss": {
+          "_attr": {
+            "xmlns:atom":"http://www.w3.org/2005/Atom",
+            "xmlns:itunes": "http://www.itunes.com/dtds/podcast-1.0.dtd",
+            "version": "2.0",
+            "encoding": "UTF-8"
+          }
+        },
+        "channel": {
+          "title": {
+            "_text": "<![CDATA[ {title} ]]>"
+          },
+          "pubDate": {
+            "_text": "{latestPubDate}"
+          },
+          "link": {
+            "_text": "<![CDATA[ {link} ]]>"
+          },
+          "itunes:image": {
+            "_attr": {
+              "href":"{image}"
+            }
+          },
+          "description": {
+            "_text": "<![CDATA[ {description} ]]>"
+          },
+          "itunes:author": {
+            "_text": "<![CDATA[ {title} ]]>"
+          },
+          "itunes:category": {
+            "_attr": {
+              "text": "null"
+            }
+          }
+        },
+        "item": {
+          "title": {
+            "_text": "<![CDATA[ {title} ]]>"
+          },
+          "pubDate": {
+            "_text": "{publicTime}"
+          },
+          "link": {
+            "_text": "<![CDATA[ {link} ]]>"
+          },
+          "enclosure": {
+            "_attr": {
+              "url": "{enclosure}",
+              "type": "{type}"
+            }
+          },
+          "itunes:duration": {
+            "_text": "{duration}"
+          },
+          "itunes:image": {
+            "_attr": {
+              "href":"{image}"
+            }
+          },
+          "description": {
+            "_text": "<![CDATA[ {description} ]]>"
+          }
+        }
+      }
+    }
+  ]
+}
