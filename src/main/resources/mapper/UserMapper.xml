@@ -45,7 +45,10 @@
                 bot_info = #{botInfo},
             </if>
             <if test="apiDoc != null">
-                api_doc = #{apiDoc}
+                api_doc = #{apiDoc},
+            </if>
+            <if test="xmlConfData != null">
+                xml_conf_data = #{xmlConfData}
             </if>
         </set>
     </update>

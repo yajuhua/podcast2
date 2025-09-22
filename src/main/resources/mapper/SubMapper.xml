@@ -90,7 +90,10 @@
                 schedule_type = #{scheduleType},
             </if>
             <if test="cronExpression != null">
-                cron_expression = #{cronExpression}
+                cron_expression = #{cronExpression},
+            </if>
+            <if test="xmlConfName != null">
+                xml_conf_name = #{xmlConfName}
             </if>
         </set>
         WHERE uuid = #{uuid}

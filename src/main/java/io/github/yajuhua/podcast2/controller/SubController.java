@@ -1,6 +1,9 @@
 package io.github.yajuhua.podcast2.controller;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import io.github.yajuhua.download.commons.Context;
 import io.github.yajuhua.download.manager.DownloadManager;
 import io.github.yajuhua.podcast2.alist.Alist;
@@ -645,6 +648,7 @@ public class SubController {
                         .syncWay(addSubDTO.getSyncWay())
                         .scheduleType(addSubDTO.getScheduleType())
                         .cronExpression(addSubDTO.getCronExpression())
+                        .xmlConfName(addSubDTO.getXmlConfName())
                         .build();
 
                 subService.addSub(sub);
@@ -986,5 +990,54 @@ public class SubController {
         Task.appendItemList.add(appendItemDTO);
         log.info("追加节目已加入列表: {}",appendItemDTO.getUrl());
         return Result.success();
+    }
+
+    /**
+     * 获取xml配置数据
+     * @return
+     */
+    @ApiOperation("获取xml配置数据")
+    @GetMapping("/api/sub/xmlConfData")
+    public Result<String> getXmlConfData(){
+        String xmlConfData = userMapper.list().get(0).getXmlConfData();
+        return Result.success(xmlConfData);
+    }
+
+    /**
+     * 获取xml配置数据
+     * @return
+     */
+    @ApiOperation("更新xml配置数据")
+    @PostMapping("/api/sub/xmlConfData")
+    public Result updateXmlConfData(@RequestBody String xmlConfData){
+        User user = User.builder()
+                .xmlConfData(xmlConfData)
+                .build();
+        userMapper.update(user);
+        return Result.success();
+    }
+
+    /**
+     * 获取xml配置名称
+     * @return
+     */
+    @ApiOperation("获取xml配置名称")
+    @GetMapping("/api/sub/xmlConfName")
+    public Result getXmlConfNames(){
+        try {
+            List<String> names = new ArrayList<>();
+            String data = getXmlConfData().getData();
+            if (data == null || data.isEmpty()){
+                return Result.success(names);
+            }
+            JsonObject jsonObject = gson.fromJson(data, JsonObject.class);
+            for (JsonElement confList : jsonObject.get("confList").getAsJsonArray()) {
+                String name = confList.getAsJsonObject().get("name").getAsString();
+                names.add(name);
+            }
+            return Result.success(names);
+        } catch (JsonSyntaxException e) {
+            return Result.error(e.getMessage());
+        }
     }
 }
