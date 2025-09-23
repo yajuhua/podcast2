@@ -283,7 +283,12 @@ public class CustomXml {
 
         StringWriter writer = new StringWriter();
         transformer.transform(new DOMSource(doc), new StreamResult(writer));
-        return writer.toString();
+        String xmlString = writer.toString();
+        return xmlString.replace("&lt;", "<")
+                        .replace("&gt;", ">")
+                        .replace("&amp;", "&")
+                        .replace("&quot;", "\"")
+                        .replace("&apos;", "'");
     }
 
     private static Element buildElement(Document doc, String tagName, JsonObject obj, Object o) throws IllegalAccessException {
