@@ -196,6 +196,22 @@
         </div>
       </div>
     </div>
+    <!-- xml配置数据 -->
+    <div>
+      <el-form label-position="top">
+        <h4>XML配置数据</h4>
+        <el-form-item label="JSON数据" >
+          <el-input type="textarea" v-model.trim="xmlConfData"/>
+          <el-tooltip class="item" effect="dark" content="请参考: https://github.com/yajuhua/podcast2/blob/feat/custom-xml/xmlConfData.json" placement="top-start">
+            <i class="el-icon-question"></i>
+          </el-tooltip>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="updateXmlConfData()" size="mini" round>修改</el-button>
+          <el-button type="danger" @click="deleteXmlConfData()" size="mini" round>删除</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
 
   </div>
 </template>
@@ -219,6 +235,7 @@ export default {
     this.getPluginUrl();
     this.getAutoUpdateStatus();
     this.getYtDlpUpdataTo();
+    this.getXmlConfData();
   },
   data() {
     return {
@@ -284,7 +301,8 @@ export default {
       },
       ytDlp: {
         updateArgs: null
-      }
+      },
+      xmlConfData: ''
     }
   },
   methods: {
@@ -933,6 +951,59 @@ export default {
           this.$message.error('获取yt-dlp更新参数失败!')
         })
     },
+    //更新插件仓库链接
+    updateXmlConfData() {
+      this.$confirm('此操作将修改XML配置数据, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        axios.post('/api/sub/xmlConfData',{xmlConfData: this.xmlConfData})
+            .then(res => {
+              if (res.data.code == '1') {
+                this.$message.success('修改成功！')
+                this.getXmlConfData();
+              } else {
+                this.$message.error(res.data.msg)
+              }
+            })
+      }).catch(() => {
+        this.$message.info('已取消')
+      })
+    },
+    //更新插件仓库链接
+    deleteXmlConfData() {
+      this.$confirm('此操作将修改XML配置数据, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        axios.post('/api/sub/xmlConfData',{xmlConfData: 'none'})
+            .then(res => {
+              if (res.data.code == '1') {
+                this.$message.success('修改成功！')
+                this.getXmlConfData();
+              } else {
+                this.$message.error(res.data.msg)
+              }
+            })
+      }).catch(() => {
+        this.$message.info('已取消')
+      })
+    },
+    getXmlConfData(){
+      axios.get('/api/sub/xmlConfData')
+          .then(res => {
+            if (res.data.code == '1') {
+              this.xmlConfData =  decodeURIComponent(res.data.data).replace(/\+/g, '');
+            } else {
+              this.$message.error(res.data.msg);
+            }
+          }).catch(err => {
+        console.log(err);
+        this.$message.error('XML配置数据失败！')
+      })
+    }
   }
 };
 </script>

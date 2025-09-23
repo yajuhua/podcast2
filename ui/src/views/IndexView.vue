@@ -54,12 +54,13 @@
       <!-- 展示组订阅二维码 -->
       <el-dialog title="二维码" :visible.sync="subGroupData.qrcodeVisible" width="350px">
         <div>
-          <vue-qr :text="subGroupData.url + encodeURI(subGroupData.group)" :size="300"></vue-qr>
+          <vue-qr :text="subGroupData.url + encodeURI(subGroupData.group) + '&xmlConfName=' + subGroupData.xmlConfName" :size="300"></vue-qr>
         </div>
         <span slot="footer" class="dialog-footer">
           <el-input v-model="subGroupData.group" placeholder="请输入组名"></el-input><br><br>
+          <el-input v-model="subGroupData.xmlConfName" placeholder="xml配置名称"></el-input><br><br>
           <el-button @click="subGroupData.qrcodeVisible = false">取 消</el-button>
-          <el-button type="primary" @click="copy(subGroupData.url + encodeURI(subGroupData.group))">复 制 URL</el-button>
+          <el-button type="primary" @click="copy(subGroupData.url + encodeURI(subGroupData.group) + '&xmlConfName=' + subGroupData.xmlConfName)">复 制 URL</el-button>
         </span>
       </el-dialog>
 
@@ -141,7 +142,8 @@ export default {
         url: '',
         group: '',
         qrcodeVisible: false,
-        uuids: []
+        uuids: [],
+        xmlConfName: ''
       },
       appendItem: {
         channelUuid: '',

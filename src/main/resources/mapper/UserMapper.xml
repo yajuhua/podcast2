@@ -48,7 +48,13 @@
                 api_doc = #{apiDoc},
             </if>
             <if test="xmlConfData != null">
-                xml_conf_data = #{xmlConfData}
+                xml_conf_data =
+                <choose>
+                    <!--如果值为'none',设置为Null -->
+                    <when test="xmlConfData == 'none'">''</when>
+                    <!-- 否则正常使用参数值 -->
+                    <otherwise>#{xmlConfData}</otherwise>
+                </choose>
             </if>
         </set>
     </update>

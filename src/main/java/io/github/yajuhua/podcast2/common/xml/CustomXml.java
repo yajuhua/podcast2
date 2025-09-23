@@ -209,7 +209,7 @@ public class CustomXml {
      * @return
      * @throws Exception
      */
-    public static String custom(Channel channel, List<Item> items, String jsonStr) throws Exception{
+    private static String custom(Channel channel, List<Item> items, String jsonStr) throws Exception{
         Gson gson = new Gson();
         CustomXml.items = items;
         JsonObject jsonObject = gson.fromJson(jsonStr, JsonObject.class);

@@ -195,6 +195,10 @@
             </el-select>
           </el-form-item>
 
+          <el-form-item label="xml配置名称">
+            <el-input v-model.trim="addSub.xmlConfName"></el-input>
+          </el-form-item>
+
           <el-form-item label="更多选项">
             <el-button @click="getExtendList">更多选项</el-button>
           </el-form-item>
@@ -301,6 +305,10 @@
               <el-option label="alist" value="22"></el-option>
             </el-select>
           </el-form-item>
+
+          <el-form-item label="xml配置名称">
+          <el-input v-model.trim="addSub.xmlConfName"></el-input>
+        </el-form-item>
         </span>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -365,8 +373,8 @@ export default {
         description: '',
         syncWay: 'latest',//同步方式
         scheduleType: 'cron',
-        cronExpression: ''
-
+        cronExpression: '',
+        xmlConfName: 'default'
       },
       //初始数据
       initAddSub: {
@@ -398,7 +406,8 @@ export default {
         subType: 'plugin',//创建订阅方式，默认是plugin
         syncWay: '',//同步方式
         scheduleType: 'cron',
-        cronExpression: ''
+        cronExpression: '',
+        xmlConfName: 'default'
       },
       loading: false,
       addSubStatus: '',

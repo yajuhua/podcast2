@@ -17,12 +17,10 @@ import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.common.utils.Episodes;
 import io.github.yajuhua.podcast2.common.utils.ExtendListUtil;
 import io.github.yajuhua.podcast2.common.utils.Http;
+import io.github.yajuhua.podcast2.common.xml.CustomXml;
 import io.github.yajuhua.podcast2.mapper.*;
 import io.github.yajuhua.podcast2.plugin.PluginManager;
-import io.github.yajuhua.podcast2.pojo.dto.AddSubDTO;
-import io.github.yajuhua.podcast2.pojo.dto.AppendItemDTO;
-import io.github.yajuhua.podcast2.pojo.dto.GetExtendListDTO;
-import io.github.yajuhua.podcast2.pojo.dto.GithubActionWorkflowsDTO;
+import io.github.yajuhua.podcast2.pojo.dto.*;
 import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.EditSubVO;
 import io.github.yajuhua.podcast2.pojo.vo.ExtendListVO;
@@ -218,7 +216,7 @@ public class SubController {
             itemList.addAll(items1);
         }
 
-        return Xml.build(channel,itemList);
+        return CustomXml.custom(channel, itemList, user.getXmlConfData(), sub.getXmlConfName());
     }
 
     /**
@@ -228,7 +226,8 @@ public class SubController {
      */
     @ApiOperation("获取组xml")
     @GetMapping(value = "/sub/xml", produces = {MediaType.APPLICATION_XML_VALUE})
-    public String groupXml(@RequestParam("uuids") List<String> uuids, @RequestParam("group") String group, HttpServletRequest request){
+    public String groupXml(@RequestParam("uuids") List<String> uuids, @RequestParam("group") String group, HttpServletRequest request, @RequestParam("xmlConfName") String xmlConfName)
+            throws Exception{
 
         String requestURL = request.getRequestURL() + "?" + request.getQueryString();
 
@@ -317,7 +316,7 @@ public class SubController {
                 itemList.addAll(items);
             }
 
-            return Xml.build(groupChannel,itemList);
+            return CustomXml.custom(groupChannel, itemList, user.getXmlConfData(), xmlConfName);
 
         }else {
             throw new SubNotFoundException( "请求参数不全:" + requestURL);
@@ -1009,9 +1008,9 @@ public class SubController {
      */
     @ApiOperation("更新xml配置数据")
     @PostMapping("/api/sub/xmlConfData")
-    public Result updateXmlConfData(@RequestBody String xmlConfData){
+    public Result updateXmlConfData(@RequestBody XmlConfDataDTO xmlConfData){
         User user = User.builder()
-                .xmlConfData(xmlConfData)
+                .xmlConfData(xmlConfData.getXmlConfData())
                 .build();
         userMapper.update(user);
         return Result.success();
