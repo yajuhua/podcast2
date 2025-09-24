@@ -133,10 +133,26 @@ public class CronTaskManager {
      * @param timeout 超时时间
      * @param description 描述
      */
-    public void update(String taskUUID, long seconds, Runnable task, TimeUnit timeUnit, Integer timeout
+    public void update(String taskUUID, long seconds, Runnable task, TimeUnit timeUnit, long timeout
             , String description){
         remove(taskUUID);
         add(taskUUID, seconds, task, timeUnit, timeout, description, 0);
+    }
+
+    /**
+     * 更新秒级任务
+     * @param taskUUID 唯一ID
+     * @param seconds 时间
+     * @param task 任务
+     * @param timeUnit 时间单位
+     * @param timeout 超时时间
+     * @param description 描述
+     * @param initialDelay 开始时间
+     */
+    public void update(String taskUUID, long seconds, Runnable task, TimeUnit timeUnit, long timeout
+            , String description, Long initialDelay){
+        remove(taskUUID);
+        add(taskUUID, seconds, task, timeUnit, timeout, description, initialDelay);
     }
 
     /** 提供一个公共方法给 Quartz Job 调用，提交任务到串行队列 */

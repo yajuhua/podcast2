@@ -66,7 +66,7 @@ public class Update implements Runnable {
     @Override
     public void run() {
         try {
-            subMapper.update(sub);
+            sub = subMapper.selectByUuid(sub.getUuid());
             List<Extend> anExtends = extendMapper.selectByUuid(sub.getUuid());
             List<InputAndSelectData> inputAndSelectDataList = new ArrayList<>();
             Integer isFirst = sub.getIsFirst();
