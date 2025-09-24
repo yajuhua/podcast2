@@ -5,7 +5,7 @@
       "conf": {
         "rss": {
           "_attr": {
-            "xmlns:atom":"http://www.w3.org/2005/Atom",
+            "xmlns:atom": "http://www.w3.org/2005/Atom",
             "xmlns:itunes": "http://www.itunes.com/dtds/podcast-1.0.dtd",
             "version": "2.0",
             "encoding": "UTF-8"
@@ -23,7 +23,7 @@
           },
           "itunes:image": {
             "_attr": {
-              "href":"{image}"
+              "href": "{image}"
             }
           },
           "description": {
@@ -59,11 +59,57 @@
           },
           "itunes:image": {
             "_attr": {
-              "href":"{image}"
+              "href": "{image}"
             }
           },
           "description": {
             "_text": "<![CDATA[ {description} ]]>"
+          }
+        }
+      }
+    },
+    {
+      "name": "folo",
+      "conf": {
+        "rss": {
+          "_attr": {
+            "xmlns:atom": "http://www.w3.org/2005/Atom",
+            "version": "2.0",
+            "encoding": "UTF-8"
+          }
+        },
+        "channel": {
+          "title": {
+            "_text": "<![CDATA[ {title} ]]>"
+          },
+          "pubDate": {
+            "_text": "{latestPubDate}"
+          },
+          "link": {
+            "_text": "<![CDATA[ {link} ]]>"
+          },
+          "description": {
+            "_text": "<![CDATA[ {description} ]]>"
+          }
+        },
+        "item": {
+          "title": {
+            "_text": "<![CDATA[ {title} ]]>"
+          },
+          "pubDate": {
+            "_text": "{publicTime}"
+          },
+          "link": {
+            "_text": "<![CDATA[ {link} ]]>"
+          },
+          "enclosure": {
+            "_attr": {
+              "url": "{enclosure}",
+              "type": "{enclosureType}"
+            }
+          },
+          "description": {
+            "_text": "<video src=\"{enclosure}\"></video>"
           }
         }
       }
