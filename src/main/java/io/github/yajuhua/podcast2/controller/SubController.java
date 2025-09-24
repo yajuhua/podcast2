@@ -1,6 +1,9 @@
 package io.github.yajuhua.podcast2.controller;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import io.github.yajuhua.download.commons.Context;
 import io.github.yajuhua.download.manager.DownloadManager;
 import io.github.yajuhua.podcast2.alist.Alist;
@@ -14,12 +17,10 @@ import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.common.utils.Episodes;
 import io.github.yajuhua.podcast2.common.utils.ExtendListUtil;
 import io.github.yajuhua.podcast2.common.utils.Http;
+import io.github.yajuhua.podcast2.common.xml.CustomXml;
 import io.github.yajuhua.podcast2.mapper.*;
 import io.github.yajuhua.podcast2.plugin.PluginManager;
-import io.github.yajuhua.podcast2.pojo.dto.AddSubDTO;
-import io.github.yajuhua.podcast2.pojo.dto.AppendItemDTO;
-import io.github.yajuhua.podcast2.pojo.dto.GetExtendListDTO;
-import io.github.yajuhua.podcast2.pojo.dto.GithubActionWorkflowsDTO;
+import io.github.yajuhua.podcast2.pojo.dto.*;
 import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.EditSubVO;
 import io.github.yajuhua.podcast2.pojo.vo.ExtendListVO;
@@ -215,7 +216,7 @@ public class SubController {
             itemList.addAll(items1);
         }
 
-        return Xml.build(channel,itemList);
+        return CustomXml.custom(channel, itemList, user.getXmlConfData(), sub.getXmlConfName());
     }
 
     /**
@@ -225,7 +226,8 @@ public class SubController {
      */
     @ApiOperation("获取组xml")
     @GetMapping(value = "/sub/xml", produces = {MediaType.APPLICATION_XML_VALUE})
-    public String groupXml(@RequestParam("uuids") List<String> uuids, @RequestParam("group") String group, HttpServletRequest request){
+    public String groupXml(@RequestParam("uuids") List<String> uuids, @RequestParam("group") String group, HttpServletRequest request, @RequestParam("xmlConfName") String xmlConfName)
+            throws Exception{
 
         String requestURL = request.getRequestURL() + "?" + request.getQueryString();
 
@@ -314,7 +316,7 @@ public class SubController {
                 itemList.addAll(items);
             }
 
-            return Xml.build(groupChannel,itemList);
+            return CustomXml.custom(groupChannel, itemList, user.getXmlConfData(), xmlConfName);
 
         }else {
             throw new SubNotFoundException( "请求参数不全:" + requestURL);
@@ -645,6 +647,7 @@ public class SubController {
                         .syncWay(addSubDTO.getSyncWay())
                         .scheduleType(addSubDTO.getScheduleType())
                         .cronExpression(addSubDTO.getCronExpression())
+                        .xmlConfName(addSubDTO.getXmlConfName())
                         .build();
 
                 subService.addSub(sub);
@@ -986,5 +989,54 @@ public class SubController {
         Task.appendItemList.add(appendItemDTO);
         log.info("追加节目已加入列表: {}",appendItemDTO.getUrl());
         return Result.success();
+    }
+
+    /**
+     * 获取xml配置数据
+     * @return
+     */
+    @ApiOperation("获取xml配置数据")
+    @GetMapping("/api/sub/xmlConfData")
+    public Result<String> getXmlConfData(){
+        String xmlConfData = userMapper.list().get(0).getXmlConfData();
+        return Result.success(xmlConfData);
+    }
+
+    /**
+     * 获取xml配置数据
+     * @return
+     */
+    @ApiOperation("更新xml配置数据")
+    @PostMapping("/api/sub/xmlConfData")
+    public Result updateXmlConfData(@RequestBody XmlConfDataDTO xmlConfData){
+        User user = User.builder()
+                .xmlConfData(xmlConfData.getXmlConfData())
+                .build();
+        userMapper.update(user);
+        return Result.success();
+    }
+
+    /**
+     * 获取xml配置名称
+     * @return
+     */
+    @ApiOperation("获取xml配置名称")
+    @GetMapping("/api/sub/xmlConfName")
+    public Result getXmlConfNames(){
+        try {
+            List<String> names = new ArrayList<>();
+            String data = getXmlConfData().getData();
+            if (data == null || data.isEmpty()){
+                return Result.success(names);
+            }
+            JsonObject jsonObject = gson.fromJson(data, JsonObject.class);
+            for (JsonElement confList : jsonObject.get("confList").getAsJsonArray()) {
+                String name = confList.getAsJsonObject().get("name").getAsString();
+                names.add(name);
+            }
+            return Result.success(names);
+        } catch (JsonSyntaxException e) {
+            return Result.error(e.getMessage());
+        }
     }
 }

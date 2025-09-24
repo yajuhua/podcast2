@@ -2,7 +2,7 @@
     <div>
         <el-dialog :title="editSubData.title" :visible="visible" :width="adaptWidth" v-loading="editSubData.loading"
             element-loading-text="正在获取数据中..." @close="handleClose">
-            <el-form ref="form" :model="editSubData" label-width="80px">
+            <el-form ref="form" :model="editSubData" label-width="80px" label-position="top">
                 <!-- 默认方式 -->
                 <span v-if="editSubData.subType == 'plugin'">
                     <el-form-item label="名称">
@@ -192,6 +192,10 @@
                                 关键字</el-button>
                         </el-form-item>
                     </div>
+                  <!-- xml配置名称 -->
+                    <el-form-item label="xml配置名称" >
+                      <el-input v-model.trim="editSubData.xmlConfName"></el-input>
+                    </el-form-item>
                     <!-- 扩展选项 -->
                     <div v-if="editSubData.isExtend == '1'">
                         <!-- select选择框 -->
@@ -297,6 +301,10 @@
                             <span v-show="false">{{ editSubData.status += '' }}</span>
                         </el-select>
                     </el-form-item>
+                  <!-- xml配置名称 -->
+                    <el-form-item label="xml配置名称" >
+                      <el-input v-model.trim="editSubData.xmlConfName"></el-input>
+                    </el-form-item>
                 </span>
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -373,7 +381,8 @@ export default {
                 subType: '',//创建订阅方式
                 syncWay: '',//同步方式
                 scheduleType: 'cron',
-                cronExpression: ''
+                cronExpression: '',
+                xmlConfName: 'default'
             },
             //初始数据结构
             initEditSubData: {
@@ -409,7 +418,8 @@ export default {
                 subType: '',//创建订阅方式
                 syncWay: '',//同步方式
                 scheduleType: 'cron',
-                cronExpression: ''
+                cronExpression: '',
+                xmlConfName: 'default'
             },
             cronPopover: false
         }

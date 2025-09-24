@@ -62,6 +62,7 @@ export default {
         { key: 'isExtend', label: '是否扩展' },
         { key: 'survivalWay', label: '存活方式' },
         { key: 'keepLast', label: '保留最近' },
+        { key: 'xmlConfName', label: 'xml配置名称' },
       ],
     };
   },
