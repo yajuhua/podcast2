@@ -46,6 +46,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.quartz.SchedulerException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -329,13 +330,28 @@ public class SubController {
         int subErrorSize = subList.stream().filter(new Predicate<Sub>() {
             @Override
             public boolean test(Sub sub) {
-                Long cron = sub.getCron() * 1000;
-                Integer isUpdate = sub.getIsUpdate();
-                Long checkTime = sub.getCheckTime();
-                Integer isFirst = sub.getIsFirst();
-                //这个应该随订阅数量来定,每个订阅增加10分钟
-                long numberTime = TimeUnit.MINUTES.toMillis(10) * subList.size();
-                return System.currentTimeMillis() - checkTime > numberTime + cron + TimeUnit.MINUTES.toMillis(60) && isUpdate == 1 && isFirst != 1;
+                //间隔轮询的
+                if (sub.getScheduleType().equalsIgnoreCase("cron")) {
+                    Long cron = sub.getCron() * 1000;
+                    Integer isUpdate = sub.getIsUpdate();
+                    Long checkTime = sub.getCheckTime();
+                    Integer isFirst = sub.getIsFirst();
+                    //这个应该随订阅数量来定,每个订阅增加10分钟
+                    long numberTime = TimeUnit.MINUTES.toMillis(10) * subList.size();
+                    return System.currentTimeMillis() - checkTime > numberTime + cron + TimeUnit.MINUTES.toMillis(60)
+                            && isUpdate == 1 && isFirst != 1;
+                } else if (sub.getScheduleType().equalsIgnoreCase("cron_expression")){
+                    //cron表达式
+                    try {
+                        boolean ok = cronTaskManager.isOK(sub.getUuid());
+                        return !ok && sub.getIsUpdate() == 1;
+                    } catch (SchedulerException e) {
+                        log.error("获取任务状态出错: {}", e.getMessage());
+                        return true;
+                    }
+                }
+                log.warn("未知类型: {}", sub.getSubType());
+                return false;
             }
         }).collect(Collectors.toList()).size();
 
