@@ -1,6 +1,6 @@
 <template>
     <div>
-        <el-dialog :title="editSubData.title" :visible="visible" :width="adaptWidth" v-loading="editSubData.loading"
+        <el-dialog :title="editSubData.title" :visible="visible" :width="adaptWidth" v-loading="loading"
             element-loading-text="正在获取数据中..." @close="handleClose">
             <el-form ref="form" :model="editSubData" label-width="80px" label-position="top">
                 <!-- 默认方式 -->
@@ -101,7 +101,7 @@
                             <el-option label="Cron表达式" value="cron_expression"></el-option>
                         </el-select>
                     </el-form-item>
-                    <el-form-item label="间隔轮询">
+                    <el-form-item label="间隔轮询" v-if="editSubData.scheduleType == 'cron'">
                         <el-select v-model="editSubData.cron" placeholder="请选择间隔轮询">
                             <el-option label="20分钟" value="1200"></el-option>
                             <el-option label="30分钟" value="1800"></el-option>
@@ -309,7 +309,7 @@
             </el-form>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="handleClose()">取 消</el-button>
-                <el-button type="primary" @click="editSubCommit" v-if="!editSubData.loading">修改</el-button>
+                <el-button type="primary" @click="editSubCommit" v-if="!loading">修改</el-button>
             </span>
         </el-dialog>
     </div>
@@ -342,7 +342,14 @@ export default {
                 this.getEditSubInfo(uuid);
             },
             deep: true // ✅ 深度监听对象内部变化
-        }
+        },
+      visible: {
+          handler(visible){
+            if (visible){
+              this.getEditSubInfo(null)
+            }
+          }
+      }
     },
     data() {
         return {
@@ -421,7 +428,8 @@ export default {
                 cronExpression: '',
                 xmlConfName: 'default'
             },
-            cronPopover: false
+            cronPopover: false,
+            loading: false
         }
     },
     methods: {
@@ -430,9 +438,12 @@ export default {
         },
         //获取编辑订阅信息
         getEditSubInfo(uuid) {
+          if (uuid == null){
+            uuid = this.uuid;
+          }
             //向清空之前的
-            this.editSubData = this.initEditSubData;
-            this.editSubData.loading = true;
+            //this.editSubData = this.initEditSubData;
+            this.loading = true;
             console.log(uuid)
             this.$emit('update:visible', true); 
             axios.get('/api/sub/edit/' + uuid)
@@ -460,7 +471,9 @@ export default {
                 }).catch(error => {
                     console.log(error)
                     this.$message.error('未知错误！')
-                })
+                }).finally(() => {
+                    this.loading = false;
+                });
         },
         //编辑订阅提交
         editSubCommit() {

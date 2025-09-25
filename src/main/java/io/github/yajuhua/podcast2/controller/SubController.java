@@ -13,10 +13,7 @@ import io.github.yajuhua.podcast2.common.exception.BaseException;
 import io.github.yajuhua.podcast2.common.exception.SubNotFoundException;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.result.Result;
-import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
-import io.github.yajuhua.podcast2.common.utils.Episodes;
-import io.github.yajuhua.podcast2.common.utils.ExtendListUtil;
-import io.github.yajuhua.podcast2.common.utils.Http;
+import io.github.yajuhua.podcast2.common.utils.*;
 import io.github.yajuhua.podcast2.common.xml.CustomXml;
 import io.github.yajuhua.podcast2.mapper.*;
 import io.github.yajuhua.podcast2.plugin.PluginManager;
@@ -743,7 +740,7 @@ public class SubController {
         log.info("editSubVO:{}",editSubVO);
         //1.更新sub表
         Sub sub = subMapper.selectByUuid(editSubVO.getUuid());
-        BeanUtils.copyProperties(editSubVO,sub);
+        BeanUtilsEx.copyNonNullProperties(editSubVO, sub);
         if (editSubVO.getSubType().equalsIgnoreCase("plugin")){
             String titleKeywords = String.join(",", editSubVO.getTitleKeywords());
             String descKeywords = String.join(",", editSubVO.getDescKeywords());
@@ -773,7 +770,7 @@ public class SubController {
                 }
                 Runnable task = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
                         settingsMapper,pluginManager);
-                cronTaskManager.add(sub.getUuid(), sub.getCron(), task, TimeUnit.SECONDS,
+                cronTaskManager.update(sub.getUuid(), sub.getCron(), task, TimeUnit.SECONDS,
                         Task.calculateUpdateSubTimeout(sub), "更新: " + sub.getTitle(), initialDelay);
             }else if (scheduleType.equalsIgnoreCase("cron_expression")){
                 Runnable task = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
