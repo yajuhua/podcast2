@@ -83,7 +83,7 @@ jobs:
         run: |
           wget https://codeload.github.com/yajuhua/podcast2-static-resources/zip/refs/heads/master -O podcast2-static-resources-master.zip
           unzip podcast2-static-resources-master.zip
-          mv podcast2-static-resources-master/podcast2-static-resources-master/platform .  
+          mv podcast2-static-resources-master/platform .  
 
       - name: Build windows
         run: |
