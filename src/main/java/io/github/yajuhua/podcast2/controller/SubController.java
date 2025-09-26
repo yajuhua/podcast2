@@ -41,7 +41,6 @@ import io.github.yajuhua.podcast2API.extension.build.Select;
 import io.github.yajuhua.podcast2API.extension.reception.InputAndSelectData;
 import io.github.yajuhua.podcast2API.setting.Setting;
 import io.github.yajuhua.podcast2API.utils.TimeFormat;
-import io.github.yajuhua.podcast2API.utils.Xml;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +58,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
-import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -422,63 +420,6 @@ public class SubController {
             item.setEnclosure("https://yajuhua.github.io/resources/error.mp3");
             item.setEnclosureType("audio/mp3");
             serveStatusItems.add(item);
-        }
-
-        List<GithubActionWorkflowsDTO> actionWorkflowsDTOList = Task.actionWorkflowsDTOList;
-        //获取订阅插件域名
-        List<String> pluginDomains = subMapper.list().stream().filter(new Predicate<Sub>() {
-            @Override
-            public boolean test(Sub sub) {
-                return subUuids.contains(sub.getUuid());
-            }
-        }).map(Sub::getPlugin).collect(Collectors.toList());
-
-        if (!actionWorkflowsDTOList.isEmpty()){
-            List<GithubActionWorkflowsDTO> collect = actionWorkflowsDTOList.stream().filter(new Predicate<GithubActionWorkflowsDTO>() {
-                @Override
-                public boolean test(GithubActionWorkflowsDTO githubActionWorkflowsDTO) {
-                    GithubActionWorkflowsDTO.WorkflowRunsDTO workflowRunsDTO = githubActionWorkflowsDTO.getWorkflowRuns().get(0);
-                    for (String domain : pluginDomains) {
-                        if (domain.contains(workflowRunsDTO.getName())) {
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-            }).collect(Collectors.toList());
-
-            //格式化时间
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
-            LocalDateTime localDateTime = null;
-            //简单描述
-            StringBuilder desc = new StringBuilder("插件状态由Github Action检查。\n");
-
-            int descLength = desc.length();
-            for (GithubActionWorkflowsDTO workflowsDTO : collect) {
-                GithubActionWorkflowsDTO.WorkflowRunsDTO workflowRunsDTO = workflowsDTO.getWorkflowRuns().get(0);
-                String status = workflowRunsDTO.getStatus();
-                String conclusion = workflowRunsDTO.getConclusion();
-                if ("completed".equals(status) && "failure".equals(conclusion)){
-                    localDateTime = LocalDateTime.parse(workflowRunsDTO.getCreatedAt(), formatter).atZone(Clock.systemUTC().getZone()).
-                            withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
-                    desc.append("插件名称：" + workflowRunsDTO.getName() + "\n");
-                    desc.append("检查时间：" + localDateTime + "\n");
-                    desc.append("详细内容：" + workflowRunsDTO.getUrl() + "\n\n\n");
-                }
-            }
-
-            //如果描述长度不变，可能是没有获取到状态
-            if (desc.length() > descLength) {
-                item = new Item();
-                item.setTitle("插件状态异常");
-                item.setDescription(desc.toString());
-                item.setDuration(10);
-                item.setCreateTime(System.currentTimeMillis());
-                item.setLink("https://github.com/yajuhua/podcast2");
-                item.setImage("https://yajuhua.github.io/images/975x975-logo.png");
-                item.setEnclosure("https://yajuhua.github.io/resources/error.mp3");
-                serveStatusItems.add(item);
-            }
         }
 
         //最近更新错误超过10次
