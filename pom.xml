@@ -141,13 +141,6 @@
             <artifactId>flyway-core</artifactId>
         </dependency>
 
-        <!-- telegrambots -->
-        <dependency>
-            <groupId>org.telegram</groupId>
-            <artifactId>telegrambots</artifactId>
-            <version>6.1.0</version>
-        </dependency>
-
         <!--  读取系统代理信息 https://github.com/akuhtz/proxy-vole -->
         <dependency>
             <groupId>org.bidib.com.github.markusbernhardt</groupId>

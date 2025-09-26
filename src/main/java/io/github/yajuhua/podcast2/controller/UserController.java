@@ -678,29 +678,6 @@ public class UserController {
     }
 
     /**
-     * 获取机器人消息
-     * @return
-     */
-    @ApiOperation("获取机器人信息")
-    @GetMapping("/botInfo")
-    public Result<BotInfo> getBotInfo(){
-        BotInfo botInfo = userService.getBotInfo();
-        return Result.success(botInfo);
-    }
-
-    /**
-     * 更新机器人信息
-     * @param botInfo
-     * @return
-     */
-    @ApiOperation("更新机器人信息")
-    @PutMapping("/botInfo")
-    public Result updateBotInfo(@RequestBody BotInfo botInfo){
-        userService.updateBotInfo(botInfo);
-        return Result.success();
-    }
-
-    /**
      * 获取api文档状态
      * @return
      */
