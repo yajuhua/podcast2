@@ -92,6 +92,12 @@ jobs:
           name: jar
           path: tmp/
 
+      - name: fetch platform static resources
+        run: |
+          wget https://codeload.github.com/yajuhua/podcast2-static-resources/zip/refs/heads/master -O podcast2-static-resources-master.zip
+          unzip podcast2-static-resources-master.zip
+          mv podcast2-static-resources-master/platform .            
+
       - name: Build windows
         run: |
           ls
