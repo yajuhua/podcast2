@@ -40,7 +40,7 @@ RUN set -eux; \
         wget -q https://github.com/P3TERX/Aria2-Pro-Core/releases/download/1.36.0_2021.08.22/aria2-1.36.0-static-linux-arm64.tar.gz && \
         tar -xzf aria2-1.36.0-static-linux-arm64.tar.gz -C ${BIN_DIR} && \
         rm -f aria2-1.36.0-static-linux-arm64.tar.gz && \
-        wget -q https://github.com/yajuhua/podcast2/raw/refs/heads/v2/ffmpeg-package/linux/arm64/ffmpeg -O ${BIN_DIR}/ffmpeg && \
+        wget -q https://github.com/yajuhua/podcast2-static-resources/raw/refs/heads/master/ffmpeg-package/linux/arm64/ffmpeg -O ${BIN_DIR}/ffmpeg && \
         chmod +x ${BIN_DIR}/ffmpeg; \
     elif [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]; then \
         wget -q https://github.com/nilaoda/N_m3u8DL-RE/releases/download/v0.3.0-beta/N_m3u8DL-RE_v0.3.0-beta_linux-x64_20241203.tar.gz && \
@@ -51,7 +51,7 @@ RUN set -eux; \
         wget -q https://github.com/P3TERX/Aria2-Pro-Core/releases/download/1.36.0_2021.08.22/aria2-1.36.0-static-linux-amd64.tar.gz && \
         tar -xzf aria2-1.36.0-static-linux-amd64.tar.gz -C ${BIN_DIR} && \
         rm -f aria2-1.36.0-static-linux-amd64.tar.gz && \
-        wget -q https://github.com/yajuhua/podcast2/raw/refs/heads/v2/ffmpeg-package/linux/amd64/ffmpeg -O ${BIN_DIR}/ffmpeg && \
+        wget -q https://github.com/yajuhua/podcast2-static-resources/raw/refs/heads/master/ffmpeg-package/linux/amd64/ffmpeg -O ${BIN_DIR}/ffmpeg && \
         chmod +x ${BIN_DIR}/ffmpeg; \
     else \
         echo "不支持的架构: $ARCH" >&2 && exit 1; \
