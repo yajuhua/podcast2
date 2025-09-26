@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
@@ -203,6 +204,27 @@ public class CronTaskManager {
                 }
             }
         }
+    }
+
+    /**
+     * 当前任务是否正常,仅支持Cron表达式的
+     * @param uuid
+     * @return
+     */
+    public boolean isOK(String uuid) throws SchedulerException {
+        JobKey key = jobMap.get(UUID.fromString(uuid)).getKey();
+        List<? extends Trigger> triggersOfJob = scheduler.getTriggersOfJob(key);
+
+        boolean ok = false;
+        for (Trigger trigger : triggersOfJob) {
+            Trigger.TriggerState state = scheduler.getTriggerState(trigger.getKey());
+            if (state == Trigger.TriggerState.NORMAL || state == Trigger.TriggerState.BLOCKED) {
+                ok = true;
+            } else {
+                return false;
+            }
+        }
+        return ok;
     }
 }
 
