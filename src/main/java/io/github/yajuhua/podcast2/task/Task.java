@@ -1,7 +1,6 @@
 package io.github.yajuhua.podcast2.task;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import io.github.yajuhua.download.commons.Context;
 import io.github.yajuhua.download.commons.Operation;
@@ -17,7 +16,6 @@ import io.github.yajuhua.podcast2.common.exception.ItemNotFoundException;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.properties.InfoProperties;
 import io.github.yajuhua.podcast2.common.result.Result;
-import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.common.utils.Http;
 import io.github.yajuhua.podcast2.controller.DownloadController;
 import io.github.yajuhua.podcast2.controller.PluginController;
@@ -25,7 +23,6 @@ import io.github.yajuhua.podcast2.downloader.ytdlp.YtDlpUpdate;
 import io.github.yajuhua.podcast2.mapper.*;
 import io.github.yajuhua.podcast2.plugin.PluginManager;
 import io.github.yajuhua.podcast2.pojo.dto.AppendItemDTO;
-import io.github.yajuhua.podcast2.pojo.dto.GithubActionWorkflowsDTO;
 import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadConfVO;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
@@ -104,7 +101,6 @@ public class Task {
     public static Set<DownloadProgressVO> getDownloadProgressVOSet(){
         return downloadProgressVOSet;
     }
-    public static List<GithubActionWorkflowsDTO> actionWorkflowsDTOList = new ArrayList<>();
 
     public void updateSub(){
         log.info("开始检查更新订阅...");
@@ -352,47 +348,6 @@ public class Task {
         }
     }
 
-
-    /**
-     * 获取GithubActionWorkflows状态
-     */
-    public void getGithubActionWorkflowsStatus(){
-        log.info("Github Action Status 开始更新...");
-        List<GithubActionWorkflowsDTO> tmp = new ArrayList<>();
-
-        //获取Github Action 链接
-        List<Plugin> pluginList = pluginMapper.list();
-        List<String> githubActionLinkList = new ArrayList<>();
-        String actionApi = "https://api.github.com/repos/yajuhua/podcast2/actions/workflows/";
-        for (Plugin plugin : pluginList) {
-            String link = actionApi + "plugin-status-" + plugin.getName() + ".yml/runs";
-            githubActionLinkList.add(link);
-        }
-
-        //获取数据并转对象
-        for (String link : githubActionLinkList) {
-            try {
-                if (link != null){
-                    String json = Http.get(link);
-                    GithubActionWorkflowsDTO actionWorkflowsDTO = gson.fromJson(json, GithubActionWorkflowsDTO.class);
-                    if (actionWorkflowsDTO.getTotalCount() != null && actionWorkflowsDTO.getTotalCount() != 0){
-                        tmp.add(actionWorkflowsDTO);
-                    }
-                    Thread.sleep(500);
-                }
-            } catch (Exception e) {
-                log.error("获取插件状态错误：",e.getMessage());
-            }
-        }
-
-        //清空之前的并添加新的
-        if (!tmp.isEmpty()){
-            actionWorkflowsDTOList.clear();
-            actionWorkflowsDTOList.addAll(tmp);
-            log.info("Github Action Status 更新完成");
-        }
-
-    }
 
     /**
      * 上传节目资源到AList
