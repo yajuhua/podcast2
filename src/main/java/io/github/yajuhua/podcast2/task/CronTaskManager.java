@@ -46,9 +46,17 @@ public class CronTaskManager {
         executorService.shutdown();
     }
 
-    /** 添加 Cron 表达式任务，UUID 字符串标识 */
+    /** 添加 Cron 表达式任务，UUID 字符串标识
+     * @param taskUUIDStr
+     * @param cronExpression
+     * @param task
+     * @param timeUnit
+     * @param timeout
+     * @param description
+     * @param startNow 是否立即开始
+     */
     public void add(String taskUUIDStr, String cronExpression, Runnable task, TimeUnit timeUnit
-            , long timeout, String description) {
+            , long timeout, String description, boolean startNow) {
         UUID taskUUID = UUID.fromString(taskUUIDStr);
         try {
             JobDetail jobDetail = JobBuilder.newJob(TaskJob.class)
@@ -62,10 +70,14 @@ public class CronTaskManager {
             jobDetail.getJobDataMap().put("timeout", timeout);
             jobDetail.getJobDataMap().put("description", description);
 
-            Trigger trigger = TriggerBuilder.newTrigger()
+            TriggerBuilder<CronTrigger> cronTriggerTriggerBuilder = TriggerBuilder.newTrigger()
                     .withIdentity(taskUUID.toString())
-                    .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
-                    .build();
+                    .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression));
+            if (startNow){
+                //立即开始
+                cronTriggerTriggerBuilder.startNow();
+            }
+            CronTrigger trigger = cronTriggerTriggerBuilder.build();
 
             scheduler.scheduleJob(jobDetail, trigger);
             jobMap.put(taskUUID, jobDetail);
@@ -118,11 +130,12 @@ public class CronTaskManager {
      * @param timeUnit 时间单位
      * @param timeout 超时时间
      * @param description 描述
+     * @param startNow 是否立即执行
      */
     public void update(String taskUUIDStr, String cronExpression, Runnable task, TimeUnit timeUnit
-            , long timeout, String description){
+            , long timeout, String description, boolean startNow){
         remove(taskUUIDStr);
-        add(taskUUIDStr, cronExpression, task, timeUnit, timeout, description);
+        add(taskUUIDStr, cronExpression, task, timeUnit, timeout, description, startNow);
     }
 
     /**
@@ -225,6 +238,16 @@ public class CronTaskManager {
             }
         }
         return ok;
+    }
+
+    /**
+     * 判断有没有这个任务
+     * @param uuid
+     * @return
+     */
+    public boolean has(String uuid){
+        UUID uuidObject = UUID.fromString(uuid);
+        return jobMap.get(uuidObject) != null || scheduledTasksMap.get(uuidObject) != null;
     }
 }
 
