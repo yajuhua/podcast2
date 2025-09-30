@@ -611,6 +611,22 @@ public class SubController {
                         , uuid, addSubDTO.getIsExtend(),addSubDTO.getUrl(),addSubDTO.getType());
                 //将扩展选项写入数据库
                 extendService.batchExtend(extendList);
+
+                //加入任务队列
+                String scheduleType = sub.getScheduleType();
+                if (scheduleType.equalsIgnoreCase("cron")){
+                    Runnable task = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
+                            settingsMapper,pluginManager);
+                    cronTaskManager.add(sub.getUuid(), sub.getCron(), task, TimeUnit.SECONDS,
+                            Task.calculateUpdateSubTimeout(sub), "更新: " + sub.getTitle(), 0);
+                }else if (scheduleType.equalsIgnoreCase("cron_expression")){
+                    Runnable task = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
+                            settingsMapper,pluginManager);
+                    cronTaskManager.add(sub.getUuid(), sub.getCronExpression(),
+                            task, TimeUnit.SECONDS, Task.calculateUpdateSubTimeout(sub), "更新: " + sub.getTitle(), true);
+                }else {
+                    throw new Exception("未知scheduleType: " + scheduleType);
+                }
             }
             else if (addSubDTO.getSubType().equalsIgnoreCase("empty")){
                 //创建空的订阅
@@ -627,23 +643,6 @@ public class SubController {
             }else {
                 return Result.error("创建失败");
             }
-
-            //加入任务队列
-            String scheduleType = sub.getScheduleType();
-            if (scheduleType.equalsIgnoreCase("cron")){
-                Runnable task = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
-                        settingsMapper,pluginManager);
-                cronTaskManager.add(sub.getUuid(), sub.getCron(), task, TimeUnit.SECONDS,
-                        Task.calculateUpdateSubTimeout(sub), "更新: " + sub.getTitle(), 0);
-            }else if (scheduleType.equalsIgnoreCase("cron_expression")){
-                Runnable task = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
-                        settingsMapper,pluginManager);
-                cronTaskManager.add(sub.getUuid(), sub.getCronExpression(),
-                        task, TimeUnit.SECONDS, Task.calculateUpdateSubTimeout(sub), "更新: " + sub.getTitle(), true);
-            }else {
-                throw new Exception("未知scheduleType: " + scheduleType);
-            }
-            //添加插件信息
             return Result.success();
         }catch (InvocationTargetException e){
             //如果是通过反射 API 获取的异常类型
