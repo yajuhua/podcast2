@@ -85,6 +85,10 @@ public class PluginManager extends ClassLoader{
         this.pluginService = pluginService;
     }
 
+    public void setRemotePluginRepoUrl(String remotePluginRepoUrl) {
+        this.remotePluginRepoUrl = getFinalRepoUrl(remotePluginRepoUrl);
+    }
+
     public Class getPlugin(String name) throws Exception{
         //如果有多个，取最新版本
         List<PluginData> collect = getPluginDataList(name).stream().sorted(new Comparator<PluginData>() {

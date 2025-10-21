@@ -9,6 +9,7 @@ import io.github.yajuhua.podcast2.common.exception.SubNotFoundException;
 import io.github.yajuhua.podcast2.common.exception.UserException;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.properties.JwtProperties;
+import io.github.yajuhua.podcast2.common.properties.RepoProperties;
 import io.github.yajuhua.podcast2.common.result.Result;
 import io.github.yajuhua.podcast2.common.utils.CertUtils;
 import io.github.yajuhua.podcast2.common.utils.JwtUtil;
@@ -16,6 +17,7 @@ import io.github.yajuhua.podcast2.common.utils.NetWorkUtils;
 import io.github.yajuhua.podcast2.mapper.ExtendMapper;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
+import io.github.yajuhua.podcast2.plugin.PluginManager;
 import io.github.yajuhua.podcast2.pojo.dto.ApiDocStatusDTO;
 import io.github.yajuhua.podcast2.pojo.dto.UserLoginDTO;
 import io.github.yajuhua.podcast2.pojo.entity.*;
@@ -63,6 +65,10 @@ public class UserController {
     @Autowired
     private ExtendService extendService;
     public static AddressFilter addressFilterTmp;//临时存放区
+    @Autowired
+    private PluginManager pluginManager;
+    @Autowired
+    private RepoProperties repoProperties;
 
     /**
      * 用户登录
@@ -458,7 +464,12 @@ public class UserController {
     @ApiOperation("更新插件仓库链接")
     @PostMapping("/plugin")
     public Result updatePluginUrl(@RequestParam String pluginUrl){
+        if (pluginUrl == null || pluginUrl.isEmpty()){
+            //如果是null或者空的就使用默认仓库链接
+            pluginUrl = repoProperties.getPluginUrl();
+        }
         userService.updateExtendInfo(ExtendInfo.builder().pluginUrl(pluginUrl).build());
+        pluginManager.setRemotePluginRepoUrl(pluginUrl);
         return Result.success();
     }
 
@@ -470,6 +481,7 @@ public class UserController {
     @DeleteMapping("/plugin")
     public Result deletePluginUrl(){
         userService.deleteExtendInfo(ExtendInfo.builder().pluginUrl("").build());
+        pluginManager.setRemotePluginRepoUrl( repoProperties.getPluginUrl());
         return Result.success();
     }
 
