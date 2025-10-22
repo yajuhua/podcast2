@@ -129,6 +129,8 @@ export default {
             for (let i = 0; i < tempAppendItem.selectListData.length; i++) {
                 tempAppendItem.inputAndSelectDataList.push(this.appendItem.selectListData[i])
             }
+            console.log("appendItemChannelUuid: " + this.channelUuid);
+            tempAppendItem.channelUuid = this.channelUuid;
 
             //将数据发送
             axios.post('/api/sub/appendItem', tempAppendItem)
