@@ -247,31 +247,12 @@ public class SubController {
             String enclosureDomain = user.getHostname()==null || user.getHostname().contains(" ") || user.getHostname().length() == 0?null:user.getHostname();
             enclosureDomain = enclosureDomain==null? request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort():enclosureDomain;
 
-            //生成一个封面https://img.shields.io/badge/-组名-颜色× 太糊了
-            // 将字节数组中的每个字节转换为十六进制表示
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : group.getBytes(StandardCharsets.UTF_8)) {
-                String hex = Integer.toHexString(b & 0xFF);
-                if (hex.length() == 1) {
-                    // 如果转换后的十六进制表示只有一位，则在前面补0
-                    hexString.append('0');
-                }
-                hexString.append(hex);
+            //生成组订阅封面链接
+            String  imageUrl = enclosureDomain + "/api/sub/avatar?uuids=";
+            for (String uuid : uuids) {
+                imageUrl = imageUrl + uuid + ",";
             }
-            String color = "";
-            if (hexString.length() < 6){
-                hexString.reverse();
-            }
-            while (hexString.length() < 6){
-                hexString.append(0);
-            }
-            if (hexString.length() > 6){
-                color = hexString.substring(0,4) + hexString.substring(hexString.length()-2,hexString.length());
-            }
-
-            // ban了 https://face-generator-six.vercel.app/api/generate?bgColor=十六进制颜色&textContent=组名
-            //目前还可以访问 face.lancarjaya.eu.org
-            String imageUrl = "https://face.lancarjaya.eu.org/api/generate?textContent=" + group + "&bgColor=" + color;
+            imageUrl = imageUrl.substring(0, imageUrl.length() - 1);
             //组频道信息
             Channel groupChannel = new Channel();
             groupChannel.setTitle(group);
@@ -992,5 +973,24 @@ public class SubController {
         } catch (JsonSyntaxException e) {
             return Result.error(e.getMessage());
         }
+    }
+
+    /**
+     * 生成九宫格头像
+     * @param uuids 组订阅ids
+     * @return
+     */
+    @GetMapping(value = "/api/sub/avatar", produces = {MediaType.IMAGE_PNG_VALUE})
+    public byte[] getAvatar(@RequestParam("uuids") List<String> uuids){
+        List<String> imageUrls = new ArrayList<>();
+        for (String uuid : uuids) {
+            try {
+                String image = subMapper.selectByUuid(uuid).getImage();
+                imageUrls.add(image);
+            } catch (Exception e) {
+                log.error("获取订阅封面失败: {}",e.getMessage());
+            }
+        }
+       return ImageGrid.createImageGrid(imageUrls);
     }
 }

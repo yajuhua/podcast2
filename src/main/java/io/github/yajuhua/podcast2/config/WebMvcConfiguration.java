@@ -55,7 +55,8 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
                 .addPathPatterns("/ws/**")//拦截
                 .excludePathPatterns("/api/user/login")//不拦截
                 .addPathPatterns("/api/user/**")//拦截
-                .excludePathPatterns("/sub/xml/**")//不拦截
+                .excludePathPatterns("/api/sub/xml/**")//不拦截
+                .excludePathPatterns("/api/sub/avatar/**")//不拦截
                 .addPathPatterns("/api/sub/**");//拦截
 
     }
