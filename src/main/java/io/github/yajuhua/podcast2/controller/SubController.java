@@ -988,7 +988,7 @@ public class SubController {
                 String image = subMapper.selectByUuid(uuid).getImage();
                 imageUrls.add(image);
             } catch (Exception e) {
-                log.error("获取订阅封面失败: {}",e.getMessage());
+                log.error("获取 {} 订阅封面失败: {}",e.getMessage());
             }
         }
        return ImageGrid.createImageGrid(imageUrls);
