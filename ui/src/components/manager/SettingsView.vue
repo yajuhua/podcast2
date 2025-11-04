@@ -220,7 +220,18 @@ import axios from 'axios';
 export default {
   computed: {
     currentHost() {
-      return window.location.origin;
+      // 优先使用 .env 文件里的端口
+      const port = process.env.VUE_APP_API_PORT || window.location.port || "80";
+
+      // 如果端口为空（默认 80/443），就不要拼接 ":"
+      const portPart = port && !["80", "443"].includes(port) ? `:${port}` : "";
+
+      const url =
+          window.location.protocol +
+          "//" +
+          window.location.hostname +
+          portPart;
+      return url;
     }
   },
   mounted() {
