@@ -54,7 +54,10 @@
                     <when test="xmlConfData == 'none'">''</when>
                     <!-- 否则正常使用参数值 -->
                     <otherwise>#{xmlConfData}</otherwise>
-                </choose>
+                </choose>,
+            </if>
+            <if test="cookieCloudInfo != null">
+                cookie_cloud_info = #{cookieCloudInfo,typeHandler=io.github.yajuhua.podcast2.mybatis.typehandler.CookieCloudInfoTypeHandler}
             </if>
         </set>
     </update>

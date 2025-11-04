@@ -25,4 +25,5 @@ public class User implements Serializable {
     private String botInfo;//存放机器人json信息
     private Boolean apiDoc;//是否开放api文档
     private String xmlConfData;//xml配置信息
+    private String cookieCloudInfo;
 }

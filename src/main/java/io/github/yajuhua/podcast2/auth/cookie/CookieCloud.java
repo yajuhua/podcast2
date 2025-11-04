@@ -10,6 +10,8 @@ import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Base64;
 
+//TODO 数据库增删改查待测试
+
 /**
  * https://github.com/easychen/CookieCloud/
  */
@@ -74,14 +76,41 @@ public class CookieCloud {
 
     /**
      * 解密
-     * @param base64CipherText
+     * @param encrypted 加密后的Base64字符串
      * @param uuid
      * @param password
      * @return
      * @throws Exception
      */
-    public static String decrypt(String base64CipherText, String uuid, String password) throws Exception {
+    public static String decrypt(String encrypted, String uuid, String password) throws Exception {
         String key = DigestUtils.md5DigestAsHex((uuid + '-' + password).getBytes(StandardCharsets.UTF_8)).substring(0,16);
-        return decrypt(base64CipherText, key);
+        return decrypt(encrypted, key);
+    }
+
+    /**
+     * 获取所有cookie
+     * @return
+     * TODO
+     */
+    public String getAllCookies(){
+        return null;
+    }
+
+    /**
+     * 根据域名获取对于cookie
+     * @param domainName 网站域名
+     * @return
+     * TODO
+     */
+    public String getCookie(String domainName){
+        return null;
+    }
+
+    /**
+     * 同步cookie数据
+     * TODO
+     */
+    public void syncData(){
+
     }
 }

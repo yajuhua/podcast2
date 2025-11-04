@@ -1,5 +1,7 @@
 package io.github.yajuhua.podcast2.mapper;
 
+import io.github.yajuhua.podcast2.mybatis.typehandler.CookieCloudInfoTypeHandler;
+import io.github.yajuhua.podcast2.pojo.entity.CookieCloudInfo;
 import io.github.yajuhua.podcast2.pojo.entity.User;
 import org.apache.ibatis.annotations.*;
 import org.apache.ibatis.type.BooleanTypeHandler;
@@ -35,6 +37,7 @@ public interface UserMapper {
     @Result(property = "hasSsl", column = "has_ssl", javaType = boolean.class, jdbcType = JdbcType.INTEGER, typeHandler = BooleanTypeHandler.class)
     @Result(property = "autoUpdatePlugin", column = "auto_update_plugin", javaType = boolean.class, jdbcType = JdbcType.INTEGER, typeHandler = BooleanTypeHandler.class)
     @Result(property = "apiDoc", column = "api_doc", javaType = boolean.class, jdbcType = JdbcType.INTEGER, typeHandler = BooleanTypeHandler.class)
+    @Result(property = "cookieCloudInfo", column = "cookie_cloud_info", javaType = CookieCloudInfo.class, jdbcType = JdbcType.VARCHAR, typeHandler = CookieCloudInfoTypeHandler.class)
     @Select("select * from user")
     List<User> list();
 
@@ -44,10 +47,10 @@ public interface UserMapper {
      * @param user
      */
     @Insert("INSERT INTO user (username, password, create_time, uuid, first_version, hostname, auto_update_plugin, " +
-            "is_ssl, has_ssl, api_token, bot_info, api_doc, xml_conf_data) " +
+            "is_ssl, has_ssl, api_token, bot_info, api_doc, xml_conf_data, cookie_cloud_info) " +
             "VALUES (#{username}, #{password}, #{createTime}, #{uuid}, " +
             "#{firstVersion}, #{hostname}, #{autoUpdatePlugin}, #{isSsl}, " +
-            "#{hasSsl}, #{apiToken}, #{botInfo}, #{apiDoc}, #{xmlConfData})")
+            "#{hasSsl}, #{apiToken}, #{botInfo}, #{apiDoc}, #{xmlConfData},#{cookieCloudInfo,typeHandler=io.github.yajuhua.podcast2.mybatis.typehandler.CookieCloudInfoTypeHandler})")
     void insert(User user);
 
     /**
