@@ -123,14 +123,13 @@ public class StartupRunner implements ApplicationRunner{
                     String password = config1.isInitUserNameAndPassword()? Default.PASSWORD:null;
                     user.setUsername(username);
                     user.setPassword(password);
+                    userMapper.update(user);
                     log.info("修改为默认用户名和密码");
                 }
-                if (config1 != null && config1.isInitPath()){
-                    userService.updateExtendInfo(ExtendInfo.builder().path(null).build());
+                if (config1 != null && config1.isInitPath()) {
+                    userService.deleteExtendInfo(ExtendInfo.builder().path("").build());
                     log.info("清空path");
                 }
-
-                userMapper.update(user);
             }
             //初始化
             FileUtils.write(configFile,gson.toJson(new Config()));

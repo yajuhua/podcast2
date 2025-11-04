@@ -42,7 +42,7 @@ public class ViewController {
         if (ban){
             return new ClassPathResource("static/403.html");
         }
-        if (userService.getExtendInfo().getPath() == null ){
+        if (userService.getExtendInfo().getPath() == null  || userService.getExtendInfo().getPath().isEmpty()){
             return new ClassPathResource("static/index.html");
         }
         return new ClassPathResource("static/404.html");
@@ -55,7 +55,7 @@ public class ViewController {
      * @throws IOException
      */
     @ApiOperation("设置路径访问")
-    @GetMapping("/api/p/{path}")
+    @GetMapping("/p/{path}")
     public Resource path(@PathVariable String path, HttpServletRequest request) throws IOException {
         boolean ban = NetWorkUtils.isBan(request.getRemoteAddr(), userService.getExtendInfo().getAddressFilter());
         if (ban){
