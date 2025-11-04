@@ -198,13 +198,30 @@ export default {
         this.copy(this.url);
         this.qrcodeVisible = false;
       } else {
-        let _url = window.location.protocol + '//' + window.location.host + '/sub/xml/' + uuid;
-        this.copy(_url);
+        this.copy(this.generateUrl(uuid));
       }
+    },
+    //生成链接
+    generateUrl(uuid) {
+      // 优先使用 .env 文件里的端口
+      const port = process.env.VUE_APP_API_PORT || window.location.port || "80";
+
+      // 如果端口为空（默认 80/443），就不要拼接 ":"
+      const portPart = port && !["80", "443"].includes(port) ? `:${port}` : "";
+
+      const url =
+          window.location.protocol +
+          "//" +
+          window.location.hostname +
+          portPart +
+          "/sub/xml/" +
+          uuid;
+
+      return url;
     },
     //生成二维码
     qrcode(uuid) {
-      this.url = window.location.protocol + "//" + window.location.host + "/sub/xml/" + uuid
+      this.url = this.generateUrl(uuid);
       this.qrcodeVisible = true;
     },
     batchDelete(uuid) {
@@ -256,7 +273,7 @@ export default {
         text += "  </head>\n";
         text += "  <body>\n";
         for (let i = 0; i < this.multipleSelection.length; i++) {
-          text += "    <outline type=\"rss\"  xmlUrl=\"" + window.location.protocol + "//" + window.location.host + "/sub/xml/" + this.multipleSelection[i].uuid + "\" />\n"
+          text += "    <outline type=\"rss\"  xmlUrl=\"" + this.generateUrl(this.multipleSelection[i].uuid) + "\" />\n"
         }
         text += "  </body>\n";
         text += "</opml>\n";
@@ -324,7 +341,12 @@ export default {
         for (var i = 0; i < this.multipleSelection.length; i++) {
           this.subGroupData.uuids.push(this.multipleSelection[i].uuid)
         }
-        this.subGroupData.url = window.location.protocol + '//' + window.location.host + '/sub/xml?uuids=' + this.subGroupData.uuids + '&group=';
+        // 优先使用 .env 文件里的端口
+        const port = process.env.VUE_APP_API_PORT || window.location.port || "80";
+
+        // 如果端口为空（默认 80/443），就不要拼接 ":"
+        const portPart = port && !["80", "443"].includes(port) ? `:${port}` : "";
+        this.subGroupData.url = window.location.protocol + '//' + window.location.hostname +  portPart + '/sub/xml?uuids=' + this.subGroupData.uuids + '&group=';
         this.subGroupData.qrcodeVisible = true;
       }
     },
