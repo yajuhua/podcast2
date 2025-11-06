@@ -132,7 +132,7 @@ public class Aria2RPC {
             log.info("Aria2 RPC Server " + rpcServer);
             return availablePort;
         } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("获取Aria2 RPC Server 可用端口错误: " + e.getMessage());
         }
     }
 }

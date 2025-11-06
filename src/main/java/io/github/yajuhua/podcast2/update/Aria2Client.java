@@ -46,21 +46,26 @@ public class Aria2Client {
      */
     public Aria2Client(String Aria2_RPO_URL) {
         try {
-            //优先级 环境变量 > 默认6800 > 随机可用端口
+            //优先级 环境变量 > 默认6800
             String aria2cPortEnv = System.getenv("ARIA2C_PORT");
             if (aria2cPortEnv == null) {
                 aria2cPortEnv = System.getenv("aria2c.port");
             }
+            //JVM属性
+            if (aria2cPortEnv == null || aria2cPortEnv.isEmpty()){
+               aria2cPortEnv =  System.getProperty("ARIA2C_PORT");
+            }
+            if (aria2cPortEnv == null || aria2cPortEnv.isEmpty()){
+                aria2cPortEnv =  System.getProperty("aria2c.port");
+            }
             URL url = new URL(Aria2_RPO_URL);
-            int availablePort;
-            if (aria2cPortEnv == null || aria2cPortEnv.isEmpty()) {
-                availablePort = Http.getAvailablePort(url.getPort() != -1 ? url.getPort() : 6800);
-            } else {
+            int availablePort = 0;
+            try {
                 availablePort = Integer.parseInt(aria2cPortEnv);
+            } catch (NumberFormatException e) {
+                throw new RuntimeException("无法获取Aria2 RPC Server 端口号");
             }
             this.Aria2_RPO_URL = url.getProtocol() + "://" + url.getHost() + ":" + availablePort + url.getPath();
-            System.setProperty("aria2c.port",String.valueOf(availablePort));
-            System.setProperty("ARIA2C_PORT",String.valueOf(availablePort));
             log.info("Aria2 RPC Server " + this.Aria2_RPO_URL);
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
