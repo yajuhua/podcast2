@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import io.github.yajuhua.podcast2.common.utils.Http;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringEscapeUtils;
 
 import java.io.BufferedReader;
@@ -11,12 +13,14 @@ import java.io.DataOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
 
 /**
  * 通过RPO调用aria2
  */
+@Slf4j
 public class Aria2Client {
 
     /**
@@ -41,7 +45,26 @@ public class Aria2Client {
      * @param Aria2_RPO_URL
      */
     public Aria2Client(String Aria2_RPO_URL) {
-        this.Aria2_RPO_URL = Aria2_RPO_URL;
+        try {
+            //优先级 环境变量 > 默认6800 > 随机可用端口
+            String aria2cPortEnv = System.getenv("ARIA2C_PORT");
+            if (aria2cPortEnv == null) {
+                aria2cPortEnv = System.getenv("aria2c.port");
+            }
+            URL url = new URL(Aria2_RPO_URL);
+            int availablePort;
+            if (aria2cPortEnv == null || aria2cPortEnv.isEmpty()) {
+                availablePort = Http.getAvailablePort(url.getPort() != -1 ? url.getPort() : 6800);
+            } else {
+                availablePort = Integer.parseInt(aria2cPortEnv);
+            }
+            this.Aria2_RPO_URL = url.getProtocol() + "://" + url.getHost() + ":" + availablePort + "/" + url.getPath();
+            System.setProperty("aria2c.port",String.valueOf(availablePort));
+            System.setProperty("ARIA2C_PORT",String.valueOf(availablePort));
+            log.info("Aria2 RPC Server " + this.Aria2_RPO_URL);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
         this.id = UUID.randomUUID().toString();
     }
 

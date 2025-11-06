@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.ServerSocket;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -163,5 +164,44 @@ public class Http {
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * 检查指定端口是否被占用
+     *
+     * @param port 端口号
+     * @return 如果端口被占用返回 true，否则返回 false
+     */
+    public static boolean isPortInUse(int port) {
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            serverSocket.setReuseAddress(true);
+            return false;
+        } catch (IOException e) {
+            return true;
+        }
+    }
+
+    /**
+     * 获取一个没有被占用的端口号
+     * @param startPort 起始端口号
+     * @param endPort   结束端口号
+     * @return 一个没有被占用的端口号，如果没有找到则返回 -1
+     */
+    public static int getAvailablePort(int startPort, int endPort) {
+        for (int port = startPort; port <= endPort; port++) {
+            if (!isPortInUse(port)) {
+                return port;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * 获取一个没有被占用的端口号
+     * @param startPort 起始端口号
+     * @return 一个没有被占用的端口号，如果没有找到则返回 -1
+     */
+    public static int getAvailablePort(int startPort) {
+        return getAvailablePort(startPort, 65535);
     }
 }

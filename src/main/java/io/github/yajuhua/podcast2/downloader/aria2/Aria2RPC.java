@@ -1,9 +1,13 @@
 package io.github.yajuhua.podcast2.downloader.aria2;
 
+import io.github.yajuhua.download.commons.Context;
 import io.github.yajuhua.download.commons.utils.BuildCmd;
+import io.github.yajuhua.podcast2.common.utils.Http;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
 
 @Slf4j
@@ -96,11 +100,39 @@ public class Aria2RPC {
         map.put("--enable-rpc=true","");
         map.put("--rpc-allow-origin-all=true","");
         map.put("--rpc-listen-all=true","");
-        map.put("--rpc-listen-port=6800","");
         map.put("--rpc-max-request-size=10M","");
         map.put("--rpc-secret=aria2","");
         map.put("--async-dns=true","");
         map.put("--async-dns-server=119.29.29.29,223.5.5.5,1.1.1.1,8.8.8.8,114.114.114.114","");
+        map.put("--rpc-listen-port=" + getAvailablePort(),"");
         return map;
+    }
+
+    /**
+     * 获取RPC可以端口，默认6800
+     * @return
+     */
+    public static int getAvailablePort(){
+        try {
+            //优先级 环境变量 > 默认6800 > 随机可用端口
+            String aria2cPortEnv = System.getenv("ARIA2C_PORT");
+            if (aria2cPortEnv == null) {
+                aria2cPortEnv = System.getenv("aria2c.port");
+            }
+            URL url = new URL(Context.ARIA2C_RPC_HOSTS);
+            int availablePort;
+            if (aria2cPortEnv == null || aria2cPortEnv.isEmpty()) {
+                availablePort = Http.getAvailablePort(url.getPort() != -1 ? url.getPort() : 6800);
+            } else {
+                availablePort = Integer.parseInt(aria2cPortEnv);
+            }
+            String rpcServer = url.getProtocol() + "://" + url.getHost() + ":" + availablePort + "/" + url.getPath();
+            System.setProperty("aria2c.port",String.valueOf(availablePort));
+            System.setProperty("ARIA2C_PORT",String.valueOf(availablePort));
+            log.info("Aria2 RPC Server " + rpcServer);
+            return availablePort;
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
