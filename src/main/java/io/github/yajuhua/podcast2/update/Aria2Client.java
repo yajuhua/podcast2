@@ -58,7 +58,7 @@ public class Aria2Client {
             } else {
                 availablePort = Integer.parseInt(aria2cPortEnv);
             }
-            this.Aria2_RPO_URL = url.getProtocol() + "://" + url.getHost() + ":" + availablePort + "/" + url.getPath();
+            this.Aria2_RPO_URL = url.getProtocol() + "://" + url.getHost() + ":" + availablePort + url.getPath();
             System.setProperty("aria2c.port",String.valueOf(availablePort));
             System.setProperty("ARIA2C_PORT",String.valueOf(availablePort));
             log.info("Aria2 RPC Server " + this.Aria2_RPO_URL);

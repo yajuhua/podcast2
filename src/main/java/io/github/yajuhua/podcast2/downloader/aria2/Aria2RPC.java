@@ -126,7 +126,7 @@ public class Aria2RPC {
             } else {
                 availablePort = Integer.parseInt(aria2cPortEnv);
             }
-            String rpcServer = url.getProtocol() + "://" + url.getHost() + ":" + availablePort + "/" + url.getPath();
+            String rpcServer = url.getProtocol() + "://" + url.getHost() + ":" + availablePort + url.getPath();
             System.setProperty("aria2c.port",String.valueOf(availablePort));
             System.setProperty("ARIA2C_PORT",String.valueOf(availablePort));
             log.info("Aria2 RPC Server " + rpcServer);
