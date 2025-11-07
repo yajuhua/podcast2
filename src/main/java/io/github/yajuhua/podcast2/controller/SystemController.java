@@ -142,6 +142,9 @@ public class SystemController {
     @GetMapping("/update/jarStatus")
     public Result<ProjectUpdate.DownloadStatus> downloadJarFileStatus(@RequestParam String version) throws Exception {
         if (projectUpdate != null){
+            if (projectUpdate.getStatus().isError()){
+                return Result.error("Jar包下载错误: " + projectUpdate.getStatus());
+            }
             return Result.success(projectUpdate.getStatus());
         }else {
             boolean download = ProjectUpdate.isDownload(version, dataPathProperties.getDataPath());
