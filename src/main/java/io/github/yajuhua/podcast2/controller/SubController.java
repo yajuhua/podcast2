@@ -335,9 +335,9 @@ public class SubController {
                     Trigger.TriggerState state = taskStatus.getStatus();
                     if ((state == Trigger.TriggerState.NORMAL || state == Trigger.TriggerState.BLOCKED)
                             && nextTime != null) {
-                        return true;
+                        return false;
                     }
-                    return false;
+                    return true;
                 } catch (SchedulerException e) {
                     throw new RuntimeException(e);
                 }
