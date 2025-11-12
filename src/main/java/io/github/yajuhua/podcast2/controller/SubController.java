@@ -993,4 +993,16 @@ public class SubController {
             return Result.error(e.getMessage());
         }
     }
+
+    /**
+     * 获取任务状态
+     * @return
+     */
+    @ApiOperation("获取任务状态")
+    @GetMapping("/api/sub/status/{uuid}")
+    public Result<CronTaskManager.TaskStatus> getTaskStatus(@PathVariable String uuid) throws Exception {
+        CronTaskManager.TaskStatus taskStatus = cronTaskManager.getTaskStatus(uuid);
+        return Result.success(taskStatus);
+    }
+
 }
