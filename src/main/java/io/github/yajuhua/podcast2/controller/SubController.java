@@ -46,6 +46,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.quartz.SchedulerException;
+import org.quartz.Trigger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -328,28 +329,18 @@ public class SubController {
         int subErrorSize = subList.stream().filter(new Predicate<Sub>() {
             @Override
             public boolean test(Sub sub) {
-                //间隔轮询的
-                if (sub.getScheduleType().equalsIgnoreCase("cron")) {
-                    Long cron = sub.getCron() * 1000;
-                    Integer isUpdate = sub.getIsUpdate();
-                    Long checkTime = sub.getCheckTime();
-                    Integer isFirst = sub.getIsFirst();
-                    //这个应该随订阅数量来定,每个订阅增加10分钟
-                    long numberTime = TimeUnit.MINUTES.toMillis(10) * subList.size();
-                    return System.currentTimeMillis() - checkTime > numberTime + cron + TimeUnit.MINUTES.toMillis(60)
-                            && isUpdate == 1 && isFirst != 1;
-                } else if (sub.getScheduleType().equalsIgnoreCase("cron_expression")){
-                    //cron表达式
-                    try {
-                        boolean ok = cronTaskManager.isOK(sub.getUuid());
-                        return !ok && sub.getIsUpdate() == 1;
-                    } catch (SchedulerException e) {
-                        log.error("获取任务状态出错: {}", e.getMessage());
+                try {
+                    CronTaskManager.TaskStatus taskStatus = cronTaskManager.getTaskStatus(sub.getUuid());
+                    Date nextTime = taskStatus.getNextFireTime();
+                    Trigger.TriggerState state = taskStatus.getStatus();
+                    if ((state == Trigger.TriggerState.NORMAL || state == Trigger.TriggerState.BLOCKED)
+                            && nextTime != null) {
                         return true;
                     }
+                    return false;
+                } catch (SchedulerException e) {
+                    throw new RuntimeException(e);
                 }
-                log.warn("未知类型: {}", sub.getSubType());
-                return false;
             }
         }).collect(Collectors.toList()).size();
 
@@ -377,7 +368,7 @@ public class SubController {
         if (subErrorSize != 0) {
             item = new Item();
             item.setTitle("服务异常");
-            item.setDescription("订阅超过一个小时未检查更新,详细情况请查看日志");
+            item.setDescription("订阅检查更新异常,详细情况请查看日志");
             item.setDuration(10);
             item.setCreateTime(System.currentTimeMillis());
             item.setLink("https://github.com/yajuhua/podcast2");
@@ -1003,6 +994,17 @@ public class SubController {
     public Result<CronTaskManager.TaskStatus> getTaskStatus(@PathVariable String uuid) throws Exception {
         CronTaskManager.TaskStatus taskStatus = cronTaskManager.getTaskStatus(uuid);
         return Result.success(taskStatus);
+    }
+
+    /**
+     * 立即执行任务
+     * @return
+     */
+    @ApiOperation("立即执行任务")
+    @PostMapping("/api/sub/status/{uuid}")
+    public Result startNowTask(@PathVariable String uuid){
+        cronTaskManager.startNow(uuid);
+        return Result.success();
     }
 
 }

@@ -118,7 +118,7 @@ public class CronTaskManager {
                     .withIdentity(taskUUID.toString())
                     .withSchedule(
                             SimpleScheduleBuilder.simpleSchedule()
-                            .withIntervalInSeconds((int)seconds)
+                            .withIntervalInSeconds((int)seconds).repeatForever()
                     ).build();
 
             scheduler.scheduleJob(jobDetail, trigger);
@@ -278,7 +278,7 @@ public class CronTaskManager {
         JobKey jobKey = jobDetail.getKey();
         List<? extends Trigger> triggers = scheduler.getTriggersOfJob(jobKey);
         if (triggers == null || triggers.isEmpty()) {
-            throw new IllegalStateException("任务没有关联的触发器: " + taskUUIDStr);
+            throw new BaseException("任务没有关联的触发器: " + taskUUIDStr);
         }
 
         Trigger trigger = triggers.get(0); // 假设每个任务只有一个触发器
@@ -292,6 +292,36 @@ public class CronTaskManager {
 
         // 返回封装任务状态信息的对象
         return new TaskStatus(triggerState, lastFireTime, nextFireTime);
+    }
+
+    /**
+     * 立即执行任务
+     * @param taskUUIDStr 任务UUID
+     */
+    public void startNow(String taskUUIDStr){
+        try {
+            JobDetail jobDetail = jobMap.get(UUID.fromString(taskUUIDStr));
+            if (jobDetail == null) {
+                throw new BaseException("任务未找到: " + taskUUIDStr);
+            }
+            // 获取任务的Trigger
+            JobKey jobKey = jobDetail.getKey();
+            List<? extends Trigger> triggers = scheduler.getTriggersOfJob(jobKey);
+            if (triggers == null || triggers.isEmpty()) {
+                throw new IllegalStateException("任务没有关联的触发器: " + taskUUIDStr);
+            }
+            Trigger trigger = triggers.get(0); // 每个任务只有一个触发器
+            if (trigger instanceof SimpleTrigger) {
+                //间隔轮询触发器,0秒开始执行
+               trigger = trigger.getTriggerBuilder().startNow().build();
+            }
+            remove(taskUUIDStr);
+            scheduler.scheduleJob(jobDetail, trigger);
+            jobMap.put(UUID.fromString(taskUUIDStr), jobDetail);
+        } catch (Exception e) {
+            log.info("立即执行任务错误: {}", e);
+            throw new BaseException(e.getMessage());
+        }
     }
 }
 
