@@ -1,11 +1,16 @@
 package io.github.yajuhua.podcast2.task;
 
+import io.github.yajuhua.podcast2.common.exception.BaseException;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -21,11 +26,9 @@ public class CronTaskManager {
     private final ScheduledExecutorService executorService; // 秒级任务调度器
     private Thread taskExecutorThread;                 // 串行执行线程
     private volatile boolean running = true;           // 控制线程退出
-    private final Map<UUID, ScheduledFuture<?>> scheduledTasksMap; // 秒级任务的管理
 
     public CronTaskManager(Scheduler scheduler) {
         this.scheduler = scheduler;
-        this.scheduledTasksMap = new ConcurrentHashMap<>();
         this.taskQueue = new LinkedBlockingQueue<>();
         this.jobMap = new ConcurrentHashMap<>();
         this.executorService = Executors.newScheduledThreadPool(1);
@@ -46,17 +49,9 @@ public class CronTaskManager {
         executorService.shutdown();
     }
 
-    /** 添加 Cron 表达式任务，UUID 字符串标识
-     * @param taskUUIDStr
-     * @param cronExpression
-     * @param task
-     * @param timeUnit
-     * @param timeout
-     * @param description
-     * @param startNow 是否立即开始
-     */
+    /** 添加 Cron 表达式任务，UUID 字符串标识 */
     public void add(String taskUUIDStr, String cronExpression, Runnable task, TimeUnit timeUnit
-            , long timeout, String description, boolean startNow) {
+            , long timeout, String description) {
         UUID taskUUID = UUID.fromString(taskUUIDStr);
         try {
             JobDetail jobDetail = JobBuilder.newJob(TaskJob.class)
@@ -70,14 +65,11 @@ public class CronTaskManager {
             jobDetail.getJobDataMap().put("timeout", timeout);
             jobDetail.getJobDataMap().put("description", description);
 
-            TriggerBuilder<CronTrigger> cronTriggerTriggerBuilder = TriggerBuilder.newTrigger()
+            Trigger trigger = TriggerBuilder.newTrigger()
                     .withIdentity(taskUUID.toString())
-                    .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression));
-            if (startNow){
-                //立即开始
-                cronTriggerTriggerBuilder.startNow();
-            }
-            CronTrigger trigger = cronTriggerTriggerBuilder.build();
+                    .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
+                    .startNow()
+                    .build();
 
             scheduler.scheduleJob(jobDetail, trigger);
             jobMap.put(taskUUID, jobDetail);
@@ -88,38 +80,52 @@ public class CronTaskManager {
 
     /** 移除任务，通过 UUID 字符串 */
     public void remove(String taskUUIDStr) {
-        UUID taskUUID = UUID.fromString(taskUUIDStr);
         try {
-            //cron表达式任务
+            UUID taskUUID = UUID.fromString(taskUUIDStr);
             JobDetail jobDetail = jobMap.get(taskUUID);
-            ScheduledFuture<?> scheduledTask = scheduledTasksMap.get(taskUUID);
             if (jobDetail != null) {
                 scheduler.deleteJob(jobDetail.getKey());
                 jobMap.remove(taskUUID);
-            }else if (scheduledTask != null && !scheduledTask.isCancelled()) {
-                //秒级任务
-                scheduledTask.cancel(true);  // 取消任务
-                scheduledTasksMap.remove(taskUUID);
             } else {
                 log.error("找不到 - {}", taskUUID);
             }
-
         } catch (SchedulerException e) {
-            log.error("移除错误: {}",e);
+            log.error("移除任务 {} 移除：{}",taskUUIDStr, e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 
-    /** 添加秒级任务，每隔 seconds 秒执行一次，串行 */
-    public void add(String taskUUID, long seconds, Runnable task, TimeUnit timeUnit, long timeout
+    /** 添加秒级任务，每隔 seconds 秒执行一次，串行
+     * @param initialDelay 单位秒
+     * */
+    public void add(String taskUUIDStr, long seconds, Runnable task, TimeUnit timeUnit, long timeout
             , String description, long initialDelay) {
-        ScheduledFuture<?> scheduledTask = executorService.scheduleAtFixedRate(() -> {
-            try {
-                taskQueue.put(new TaskPackage(task, timeUnit, timeout, description));
-            } catch (InterruptedException e) {
-                log.error("添加秒级任务出错: {}", e);
-            }
-        }, initialDelay, seconds, TimeUnit.SECONDS);
-        scheduledTasksMap.put(UUID.fromString(taskUUID), scheduledTask);
+        UUID taskUUID = UUID.fromString(taskUUIDStr);
+        Date startTime = new Date(System.currentTimeMillis() + initialDelay * 1000);
+        try {
+            JobDetail jobDetail = JobBuilder.newJob(TaskJob.class)
+                    .withIdentity(taskUUID.toString(), "group1")
+                    .build();
+            // 把任务和 CronTaskManager 本身一起放进 JobDataMap
+            jobDetail.getJobDataMap().put("task", task);
+            jobDetail.getJobDataMap().put("manager", this);
+            jobDetail.getJobDataMap().put("timeUnit", timeUnit);
+            jobDetail.getJobDataMap().put("timeout", timeout);
+            jobDetail.getJobDataMap().put("description", description);
+
+            Trigger trigger = TriggerBuilder.newTrigger()
+                    .startAt(startTime)
+                    .withIdentity(taskUUID.toString())
+                    .withSchedule(
+                            SimpleScheduleBuilder.simpleSchedule()
+                                    .withIntervalInSeconds((int)seconds).repeatForever()
+                    ).build();
+
+            scheduler.scheduleJob(jobDetail, trigger);
+            jobMap.put(taskUUID, jobDetail);
+        } catch (SchedulerException e) {
+            log.error("添加任务错误: {}", e);
+        }
     }
 
     /**
@@ -130,12 +136,11 @@ public class CronTaskManager {
      * @param timeUnit 时间单位
      * @param timeout 超时时间
      * @param description 描述
-     * @param startNow 是否立即执行
      */
     public void update(String taskUUIDStr, String cronExpression, Runnable task, TimeUnit timeUnit
-            , long timeout, String description, boolean startNow){
+            , long timeout, String description){
         remove(taskUUIDStr);
-        add(taskUUIDStr, cronExpression, task, timeUnit, timeout, description, startNow);
+        add(taskUUIDStr, cronExpression, task, timeUnit, timeout, description);
     }
 
     /**
@@ -241,13 +246,81 @@ public class CronTaskManager {
     }
 
     /**
-     * 判断有没有这个任务
-     * @param uuid
-     * @return
+     * 封装任务状态、上次和下次执行时间的对象
      */
-    public boolean has(String uuid){
-        UUID uuidObject = UUID.fromString(uuid);
-        return jobMap.get(uuidObject) != null || scheduledTasksMap.get(uuidObject) != null;
+    @Data
+    @AllArgsConstructor
+    @ToString
+    public static class TaskStatus {
+        private final Trigger.TriggerState status;
+        private final Date lastFireTime;
+        private final Date nextFireTime;
+    }
+
+    /**
+     * 根据UUID获取任务的状态、上次和下次执行时间
+     *
+     * @param taskUUIDStr 任务的UUID字符串
+     * @return 任务的状态、上次和下次执行时间的封装对象
+     * @throws SchedulerException 调度器异常
+     */
+    public TaskStatus getTaskStatus(String taskUUIDStr) throws SchedulerException {
+        // 获取任务的UUID
+        UUID taskUUID = UUID.fromString(taskUUIDStr);
+
+        // 从jobMap中获取JobDetail
+        JobDetail jobDetail = jobMap.get(taskUUID);
+        if (jobDetail == null) {
+            throw new BaseException("任务未找到: " + taskUUIDStr);
+        }
+
+        // 获取任务的Trigger
+        JobKey jobKey = jobDetail.getKey();
+        List<? extends Trigger> triggers = scheduler.getTriggersOfJob(jobKey);
+        if (triggers == null || triggers.isEmpty()) {
+            throw new BaseException("任务没有关联的触发器: " + taskUUIDStr);
+        }
+
+        Trigger trigger = triggers.get(0); // 假设每个任务只有一个触发器
+
+        // 获取任务的状态
+        Trigger.TriggerState triggerState = scheduler.getTriggerState(trigger.getKey());
+
+        // 获取上次执行时间和下次执行时间
+        Date lastFireTime = trigger.getPreviousFireTime();
+        Date nextFireTime = trigger.getNextFireTime();
+
+        // 返回封装任务状态信息的对象
+        return new TaskStatus(triggerState, lastFireTime, nextFireTime);
+    }
+
+    /**
+     * 立即执行任务
+     * @param taskUUIDStr 任务UUID
+     */
+    public void startNow(String taskUUIDStr){
+        try {
+            JobDetail jobDetail = jobMap.get(UUID.fromString(taskUUIDStr));
+            if (jobDetail == null) {
+                throw new BaseException("任务未找到: " + taskUUIDStr);
+            }
+            // 获取任务的Trigger
+            JobKey jobKey = jobDetail.getKey();
+            List<? extends Trigger> triggers = scheduler.getTriggersOfJob(jobKey);
+            if (triggers == null || triggers.isEmpty()) {
+                throw new IllegalStateException("任务没有关联的触发器: " + taskUUIDStr);
+            }
+            Trigger trigger = triggers.get(0); // 每个任务只有一个触发器
+            if (trigger instanceof SimpleTrigger) {
+                //间隔轮询触发器,0秒开始执行
+                trigger = trigger.getTriggerBuilder().startNow().build();
+            }
+            remove(taskUUIDStr);
+            scheduler.scheduleJob(jobDetail, trigger);
+            jobMap.put(UUID.fromString(taskUUIDStr), jobDetail);
+        } catch (Exception e) {
+            log.info("立即执行任务错误: {}", e);
+            throw new BaseException(e.getMessage());
+        }
     }
 }
-
