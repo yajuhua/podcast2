@@ -19,10 +19,7 @@ import io.github.yajuhua.podcast2.mapper.*;
 import io.github.yajuhua.podcast2.plugin.PluginManager;
 import io.github.yajuhua.podcast2.pojo.dto.*;
 import io.github.yajuhua.podcast2.pojo.entity.*;
-import io.github.yajuhua.podcast2.pojo.vo.EditSubVO;
-import io.github.yajuhua.podcast2.pojo.vo.ExtendListVO;
-import io.github.yajuhua.podcast2.pojo.vo.SubDetailVO;
-import io.github.yajuhua.podcast2.pojo.vo.SubVO;
+import io.github.yajuhua.podcast2.pojo.vo.*;
 import io.github.yajuhua.podcast2.service.ExtendService;
 import io.github.yajuhua.podcast2.service.ItemsService;
 import io.github.yajuhua.podcast2.service.SubService;
@@ -46,6 +43,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.quartz.SchedulerException;
+import org.quartz.Trigger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +56,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -309,28 +308,18 @@ public class SubController {
         int subErrorSize = subList.stream().filter(new Predicate<Sub>() {
             @Override
             public boolean test(Sub sub) {
-                //间隔轮询的
-                if (sub.getScheduleType().equalsIgnoreCase("cron")) {
-                    Long cron = sub.getCron() * 1000;
-                    Integer isUpdate = sub.getIsUpdate();
-                    Long checkTime = sub.getCheckTime();
-                    Integer isFirst = sub.getIsFirst();
-                    //这个应该随订阅数量来定,每个订阅增加10分钟
-                    long numberTime = TimeUnit.MINUTES.toMillis(10) * subList.size();
-                    return System.currentTimeMillis() - checkTime > numberTime + cron + TimeUnit.MINUTES.toMillis(60)
-                            && isUpdate == 1 && isFirst != 1;
-                } else if (sub.getScheduleType().equalsIgnoreCase("cron_expression")){
-                    //cron表达式
-                    try {
-                        boolean ok = cronTaskManager.isOK(sub.getUuid());
-                        return !ok && sub.getIsUpdate() == 1;
-                    } catch (SchedulerException e) {
-                        log.error("获取任务状态出错: {}", e.getMessage());
-                        return true;
+                try {
+                    CronTaskManager.TaskStatus taskStatus = cronTaskManager.getTaskStatus(sub.getUuid());
+                    Date nextTime = taskStatus.getNextFireTime();
+                    Trigger.TriggerState state = taskStatus.getStatus();
+                    if ((state == Trigger.TriggerState.NORMAL || state == Trigger.TriggerState.BLOCKED)
+                            && nextTime != null) {
+                        return false;
                     }
+                    return true;
+                } catch (SchedulerException e) {
+                    throw new RuntimeException(e);
                 }
-                log.warn("未知类型: {}", sub.getSubType());
-                return false;
             }
         }).collect(Collectors.toList()).size();
 
@@ -358,7 +347,7 @@ public class SubController {
         if (subErrorSize != 0) {
             item = new Item();
             item.setTitle("服务异常");
-            item.setDescription("订阅超过一个小时未检查更新,详细情况请查看日志");
+            item.setDescription("订阅检查更新异常,详细情况请查看日志");
             item.setDuration(10);
             item.setCreateTime(System.currentTimeMillis());
             item.setLink("https://github.com/yajuhua/podcast2");
@@ -604,7 +593,7 @@ public class SubController {
                     Runnable task = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
                             settingsMapper,pluginManager);
                     cronTaskManager.add(sub.getUuid(), sub.getCronExpression(),
-                            task, TimeUnit.SECONDS, Task.calculateUpdateSubTimeout(sub), "更新: " + sub.getTitle(), true);
+                            task, TimeUnit.SECONDS, Task.calculateUpdateSubTimeout(sub), "更新: " + sub.getTitle());
                 }else {
                     throw new Exception("未知scheduleType: " + scheduleType);
                 }
@@ -705,7 +694,7 @@ public class SubController {
                 Runnable task = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
                         settingsMapper,pluginManager);
                 cronTaskManager.update(sub.getUuid(), sub.getCronExpression(),
-                        task, TimeUnit.SECONDS, Task.calculateUpdateSubTimeout(sub), "更新: " + sub.getTitle(), true);
+                        task, TimeUnit.SECONDS, Task.calculateUpdateSubTimeout(sub), "更新: " + sub.getTitle());
             }else {
                 throw new Exception("未知scheduleType: " + scheduleType);
             }
@@ -983,5 +972,60 @@ public class SubController {
             }
         }
        return ImageGrid.createImageGrid(imageUrls);
+    }
+
+    /**
+     * 获取任务状态
+     * @return
+     */
+    @ApiOperation("获取任务状态")
+    @GetMapping("/api/sub/status/{uuid}")
+    public Result<TaskStatusVO> getTaskStatus(@PathVariable String uuid) throws Exception {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        String lastFireTime = "未知";
+        String nextFireTime = "未知";
+
+        Map statusMap = new HashMap();
+        statusMap.put("NONE", "无状态");
+        statusMap.put("NORMAL", "正常");
+        statusMap.put("PAUSED", "暂停");
+        statusMap.put("COMPLETE", "完成");
+        statusMap.put("ERROR", "错误");
+        statusMap.put("BLOCKED", "被阻塞");
+
+        Map colorMap = new HashMap();
+        colorMap.put("NONE","#D3D3D3");//灰色
+        colorMap.put("NORMAL", "#28a745");//绿色
+        colorMap.put("PAUSED", "#ffc107");//黄色
+        colorMap.put("COMPLETE", "#007bff");//蓝色
+        colorMap.put("ERROR", "#dc3545");//红色
+        colorMap.put("BLOCKED", "#8a2be2");//紫色
+
+        CronTaskManager.TaskStatus taskStatus = cronTaskManager.getTaskStatus(uuid);
+        if (taskStatus.getLastFireTime() != null){
+            lastFireTime = sdf.format(taskStatus.getLastFireTime());
+        }
+        if (taskStatus.getNextFireTime() != null){
+            nextFireTime = sdf.format(taskStatus.getNextFireTime());
+        }
+        TaskStatusVO statusVO = TaskStatusVO.builder()
+                .status(statusMap.get(taskStatus.getStatus().name()).toString())
+                .lastFireTime(lastFireTime)
+                .nextFireTime(nextFireTime)
+                .statusColor(colorMap.get(taskStatus.getStatus().name()).toString())
+                .title(subMapper.selectByUuid(uuid).getTitle())
+                .build();
+        return Result.success(statusVO);
+    }
+
+    /**
+     * 立即执行任务
+     * @return
+     */
+    @ApiOperation("立即执行任务")
+    @PostMapping("/api/sub/status/{uuid}")
+    public Result startNowTask(@PathVariable String uuid){
+        cronTaskManager.startNow(uuid);
+        return Result.success();
     }
 }
