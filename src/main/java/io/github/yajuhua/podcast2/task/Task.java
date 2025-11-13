@@ -142,7 +142,7 @@ public class Task {
             Runnable task = new Update(cronExSub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
                     settingsMapper,pluginManager);
             cronTaskManager.add(cronExSub.getUuid(), cronExSub.getCronExpression(),
-                    task, TimeUnit.SECONDS, calculateUpdateSubTimeout(cronExSub), "更新: " + cronExSub.getTitle());
+                    task, TimeUnit.SECONDS, calculateUpdateSubTimeout(cronExSub), "更新: " + cronExSub.getTitle(), false);
         }
     }
 
@@ -203,7 +203,7 @@ public class Task {
                         }).collect(Collectors.toList());
                         //排除信息不完整
                         if ((sub.getKeepLast() != null) && (itemsList.size() > sub.getKeepLast())){
-                            itemsDeleteList = itemsList.subList(sub.getKeepLast(),itemsList.size());
+                             itemsDeleteList = itemsList.subList(sub.getKeepLast(),itemsList.size());
                         }
                     }
 
@@ -282,23 +282,23 @@ public class Task {
             if (!addSubStatus){
                 Downloader ytDlp = downloaderMapper.selectByName("YtDlp");
                 if (YtDlpUpdate.isUpdate(ytDlp)){
-                    log.info("开始更新yt-dlp");
-                    String githubProxyUrl = userService.getExtendInfo().getGithubProxyUrl();
-                    //使用Github加速站更新yt-dlp,仅支持stable频道
-                    if (githubProxyUrl != null && (ytDlp.getUpdateArgs() == null || ytDlp.getUpdateArgs().isEmpty())){
-                        String tmpPath = dataPathProperties.getTmpPath();
-                        YtDlpUpdate.withProxy(githubProxyUrl, tmpPath);
-                    }else if (ytDlp.getUpdateArgs() != null && !ytDlp.getUpdateArgs().isEmpty()){
-                        //更新到指定频道
-                        YtDlpUpdate.withUpdateArgs(ytDlp.getUpdateArgs());
-                    }else {
-                        //默认更新到官方stable频道
-                        YtDlpUpdate.updateToStable();
-                    }
-                    //更新数据库
-                    ytDlp.setUpdateTime(System.currentTimeMillis());
-                    ytDlp.setVersion(YtDlpUpdate.getCurrentVersion());
-                    downloaderMapper.update(ytDlp);
+                        log.info("开始更新yt-dlp");
+                        String githubProxyUrl = userService.getExtendInfo().getGithubProxyUrl();
+                        //使用Github加速站更新yt-dlp,仅支持stable频道
+                        if (githubProxyUrl != null && (ytDlp.getUpdateArgs() == null || ytDlp.getUpdateArgs().isEmpty())){
+                            String tmpPath = dataPathProperties.getTmpPath();
+                            YtDlpUpdate.withProxy(githubProxyUrl, tmpPath);
+                        }else if (ytDlp.getUpdateArgs() != null && !ytDlp.getUpdateArgs().isEmpty()){
+                            //更新到指定频道
+                            YtDlpUpdate.withUpdateArgs(ytDlp.getUpdateArgs());
+                        }else {
+                            //默认更新到官方stable频道
+                            YtDlpUpdate.updateToStable();
+                        }
+                        //更新数据库
+                        ytDlp.setUpdateTime(System.currentTimeMillis());
+                        ytDlp.setVersion(YtDlpUpdate.getCurrentVersion());
+                        downloaderMapper.update(ytDlp);
                 }else {
                     log.info("未到更新时间");
                 }
@@ -388,7 +388,7 @@ public class Task {
                         //排除异常情况
                         Integer aListState = putDTO.getData().getTask().getState();
                         if (200 != putDTO.getCode() || (0!=aListState && 1!=aListState && 2!=aListState)){
-                            throw new RuntimeException();
+                           throw new RuntimeException();
                         }
 
                         //获取上传任务状态
@@ -448,7 +448,7 @@ public class Task {
             //首次部署时可能user还没初始化
             if (list.isEmpty()){
                 log.warn("用户信息未初始化");
-                return;
+               return;
             }
             AlistInfo alistInfo = userService.getExtendInfo().getAlistInfo();
             if (alistInfo.isOpen()){
@@ -558,7 +558,7 @@ public class Task {
                     }
 
                 } catch (Exception e) {
-                    log.error("{}重新下载移除: {}",items.getUuid(),e.getMessage());
+                   log.error("{}重新下载移除: {}",items.getUuid(),e.getMessage());
                 }
             }
             //清空
