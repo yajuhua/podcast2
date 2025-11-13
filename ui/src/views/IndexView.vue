@@ -14,8 +14,8 @@
       <!-- 订阅列表展示 -->
       <div style="display: flex;justify-content: center; padding-left: 5%;padding-right: 5%">
         <el-table ref="multipleTable" :data="filteredSubListData" tooltip-effect="dark" style="width: 100%"
-          @selection-change="handleSelectionChange" :header-cell-style="{ textAlign: 'center' }"
-          :cell-style="{ 'text-align': 'center' }" empty-text="暂无订阅">
+                  @selection-change="handleSelectionChange" :header-cell-style="{ textAlign: 'center' }"
+                  :cell-style="{ 'text-align': 'center' }" empty-text="暂无订阅">
           <el-table-column type="selection" width="auto" v-if="selectionVisible"></el-table-column>
           <el-table-column type="index"></el-table-column>
           <el-table-column label="更新" prop="updateTime"></el-table-column>
@@ -30,17 +30,19 @@
                 </span>
                 <el-dropdown-menu slot="dropdown">
                   <el-dropdown-item icon="el-icon-document-copy"
-                    @click.native="copyUrl(scope.row.uuid)">复制URL</el-dropdown-item>
+                                    @click.native="copyUrl(scope.row.uuid)">复制URL</el-dropdown-item>
                   <el-dropdown-item icon="el-icon-full-screen"
-                    @click.native="qrcode(scope.row.uuid)">二维码</el-dropdown-item>
+                                    @click.native="qrcode(scope.row.uuid)">二维码</el-dropdown-item>
                   <el-dropdown-item icon="el-icon-delete"
-                    @click.native="batchDelete(scope.row.uuid)">删除</el-dropdown-item>
+                                    @click.native="batchDelete(scope.row.uuid)">删除</el-dropdown-item>
                   <el-dropdown-item icon="el-icon-edit-outline"
-                    @click.native="(editSubUuid = scope.row.uuid) && (editSubVisible = true)">编辑</el-dropdown-item>
+                                    @click.native="(editSubUuid = scope.row.uuid) && (editSubVisible = true)">编辑</el-dropdown-item>
                   <el-dropdown-item icon="el-icon-info"
-                    @click.native="subDetailShow(scope.row.uuid)">详细</el-dropdown-item>
+                                    @click.native="subDetailShow(scope.row.uuid)">详细</el-dropdown-item>
                   <el-dropdown-item icon="el-icon-circle-plus"
-                    @click.native="(appendItem.channelUuid = scope.row.uuid) && (appendItem.visible = true)">追加节目</el-dropdown-item>
+                                    @click.native="(appendItem.channelUuid = scope.row.uuid) && (appendItem.visible = true)">追加节目</el-dropdown-item>
+                  <el-dropdown-item icon="el-icon-time"
+                                    @click.native="(taskStatus.uuid = scope.row.uuid) && (taskStatus.visible = true)">状态</el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
             </template>
@@ -48,6 +50,8 @@
         </el-table>
       </div>
 
+      <!--  task状态展示  -->
+      <TaskStatusCard :uuid="taskStatus.uuid" :visible.sync="taskStatus.visible"/>
       <!-- 展示二维码 -->
       <quick-code :url="url" :visible.sync="qrcodeVisible"></quick-code>
 
@@ -73,7 +77,7 @@
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item icon="el-icon-circle-plus" @click.native="addSubVisible = true">添加订阅</el-dropdown-item>
             <el-dropdown-item icon="el-icon-position"
-              @click.native="selectionVisible = !selectionVisible">选择</el-dropdown-item>
+                              @click.native="selectionVisible = !selectionVisible">选择</el-dropdown-item>
             <el-dropdown-item icon="el-icon-delete" @click.native="batchDelete('')">批量删除</el-dropdown-item>
             <el-dropdown-item icon="el-icon-document-add" @click.native="downloadOPML">生成OPML</el-dropdown-item>
             <el-dropdown-item icon="el-icon-folder-add" @click.native="subGroup()">订阅组</el-dropdown-item>
@@ -108,6 +112,7 @@ import EditSub from '../components/index/EditSub'
 import OperationButton from '../components/operation/OperationButton'
 import { copy } from '@/utils/utils';
 import { debounce } from 'lodash';
+import TaskStatusCard from "@/components/index/TaskStatusCard.vue";
 
 export default {
   components: {
@@ -118,7 +123,8 @@ export default {
     AddSub,
     AppendItem,
     EditSub,
-    OperationButton
+    OperationButton,
+    TaskStatusCard
   },
   data() {
     return {
@@ -153,6 +159,10 @@ export default {
       operationButton: {
         realTimelogVisible: false,
         historyLogVisible: false
+      },
+      taskStatus: {
+        uuid: null,
+        visible: false
       }
     }
   },
@@ -198,30 +208,13 @@ export default {
         this.copy(this.url);
         this.qrcodeVisible = false;
       } else {
-        this.copy(this.generateUrl(uuid));
+        let _url = window.location.protocol + '//' + window.location.host + '/sub/xml/' + uuid;
+        this.copy(_url);
       }
-    },
-    //生成链接
-    generateUrl(uuid) {
-      // 优先使用 .env 文件里的端口
-      const port = process.env.VUE_APP_API_PORT || window.location.port || "80";
-
-      // 如果端口为空（默认 80/443），就不要拼接 ":"
-      const portPart = port && !["80", "443"].includes(port) ? `:${port}` : "";
-
-      const url =
-          window.location.protocol +
-          "//" +
-          window.location.hostname +
-          portPart +
-          "/sub/xml/" +
-          uuid;
-
-      return url;
     },
     //生成二维码
     qrcode(uuid) {
-      this.url = this.generateUrl(uuid);
+      this.url = window.location.protocol + "//" + window.location.host + "/sub/xml/" + uuid
       this.qrcodeVisible = true;
     },
     batchDelete(uuid) {
@@ -273,7 +266,7 @@ export default {
         text += "  </head>\n";
         text += "  <body>\n";
         for (let i = 0; i < this.multipleSelection.length; i++) {
-          text += "    <outline type=\"rss\"  xmlUrl=\"" + this.generateUrl(this.multipleSelection[i].uuid) + "\" />\n"
+          text += "    <outline type=\"rss\"  xmlUrl=\"" + window.location.protocol + "//" + window.location.host + "/sub/xml/" + this.multipleSelection[i].uuid + "\" />\n"
         }
         text += "  </body>\n";
         text += "</opml>\n";
@@ -293,35 +286,35 @@ export default {
     subSearch() {
       this.searchIng = 'el-icon-loading';
       axios.get('/api/sub/search?keywords=' + this.searchKeyword)
-        .then(res => {
-          if (res.data.code == '1') {
-            this.subData = res.data.data;
+          .then(res => {
+            if (res.data.code == '1') {
+              this.subData = res.data.data;
+              this.searchIng = '';
+            } else {
+              this.$message.error(res.data.msg);
+              this.searchIng = '';
+            }
+          })
+          .catch(err => {
+            this.$message.error(err);
             this.searchIng = '';
-          } else {
-            this.$message.error(res.data.msg);
-            this.searchIng = '';
-          }
-        })
-        .catch(err => {
-          this.$message.error(err);
-          this.searchIng = '';
-        })
+          })
     },
     //获取订阅详细信息
     subDetailShow(uuid) {
       this.subDetail.detail = {}
       this.subDetail.visible = true
       axios.get('/api/sub/detail/' + uuid)
-        .then(res => {
-          if (res.data.code == '1') {
-            this.subDetail.detail = res.data.data;
-          } else {
-            this.$message.error(res.data.msg);
-          }
-        }).catch(err => {
-          this.$message.error('获取订阅详细信息失败！');
-          console.log(err);
-        })
+          .then(res => {
+            if (res.data.code == '1') {
+              this.subDetail.detail = res.data.data;
+            } else {
+              this.$message.error(res.data.msg);
+            }
+          }).catch(err => {
+        this.$message.error('获取订阅详细信息失败！');
+        console.log(err);
+      })
     },
     //复制内容到粘贴板
     copy(content) {
@@ -341,18 +334,13 @@ export default {
         for (var i = 0; i < this.multipleSelection.length; i++) {
           this.subGroupData.uuids.push(this.multipleSelection[i].uuid)
         }
-        // 优先使用 .env 文件里的端口
-        const port = process.env.VUE_APP_API_PORT || window.location.port || "80";
-
-        // 如果端口为空（默认 80/443），就不要拼接 ":"
-        const portPart = port && !["80", "443"].includes(port) ? `:${port}` : "";
-        this.subGroupData.url = window.location.protocol + '//' + window.location.hostname +  portPart + '/sub/xml?uuids=' + this.subGroupData.uuids + '&group=';
+        this.subGroupData.url = window.location.protocol + '//' + window.location.host + '/sub/xml?uuids=' + this.subGroupData.uuids + '&group=';
         this.subGroupData.qrcodeVisible = true;
       }
     },
     handleSearchInput: debounce(function() {
       console.log('搜索关键词:', this.searchQuery);
-    }, 500), 
+    }, 500),
   }
 }
 </script>
