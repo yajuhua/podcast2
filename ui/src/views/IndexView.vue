@@ -41,6 +41,8 @@
                     @click.native="subDetailShow(scope.row.uuid)">详细</el-dropdown-item>
                   <el-dropdown-item icon="el-icon-circle-plus"
                     @click.native="(appendItem.channelUuid = scope.row.uuid) && (appendItem.visible = true)">追加节目</el-dropdown-item>
+                  <el-dropdown-item icon="el-icon-time"
+                                    @click.native="(taskStatus.uuid = scope.row.uuid) && (taskStatus.visible = true)">状态</el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
             </template>
@@ -48,6 +50,8 @@
         </el-table>
       </div>
 
+      <!--  task状态展示  -->
+      <TaskStatusCard :uuid="taskStatus.uuid" :visible.sync="taskStatus.visible"/>
       <!-- 展示二维码 -->
       <quick-code :url="url" :visible.sync="qrcodeVisible"></quick-code>
 
@@ -108,6 +112,7 @@ import EditSub from '../components/index/EditSub'
 import OperationButton from '../components/operation/OperationButton'
 import { copy } from '@/utils/utils';
 import { debounce } from 'lodash';
+import TaskStatusCard from "@/components/index/TaskStatusCard.vue";
 
 export default {
   components: {
@@ -118,7 +123,8 @@ export default {
     AddSub,
     AppendItem,
     EditSub,
-    OperationButton
+    OperationButton,
+    TaskStatusCard
   },
   data() {
     return {
@@ -153,6 +159,10 @@ export default {
       operationButton: {
         realTimelogVisible: false,
         historyLogVisible: false
+      },
+      taskStatus: {
+        uuid: null,
+        visible: false
       }
     }
   },

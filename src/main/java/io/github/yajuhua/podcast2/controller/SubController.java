@@ -19,10 +19,7 @@ import io.github.yajuhua.podcast2.mapper.*;
 import io.github.yajuhua.podcast2.plugin.PluginManager;
 import io.github.yajuhua.podcast2.pojo.dto.*;
 import io.github.yajuhua.podcast2.pojo.entity.*;
-import io.github.yajuhua.podcast2.pojo.vo.EditSubVO;
-import io.github.yajuhua.podcast2.pojo.vo.ExtendListVO;
-import io.github.yajuhua.podcast2.pojo.vo.SubDetailVO;
-import io.github.yajuhua.podcast2.pojo.vo.SubVO;
+import io.github.yajuhua.podcast2.pojo.vo.*;
 import io.github.yajuhua.podcast2.service.ExtendService;
 import io.github.yajuhua.podcast2.service.ItemsService;
 import io.github.yajuhua.podcast2.service.SubService;
@@ -59,6 +56,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -991,9 +989,42 @@ public class SubController {
      */
     @ApiOperation("获取任务状态")
     @GetMapping("/api/sub/status/{uuid}")
-    public Result<CronTaskManager.TaskStatus> getTaskStatus(@PathVariable String uuid) throws Exception {
+    public Result<TaskStatusVO> getTaskStatus(@PathVariable String uuid) throws Exception {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        String lastFireTime = "未知";
+        String nextFireTime = "未知";
+
+        Map statusMap = new HashMap();
+        statusMap.put("NONE", "无状态");
+        statusMap.put("NORMAL", "正常");
+        statusMap.put("PAUSED", "暂停");
+        statusMap.put("COMPLETE", "完成");
+        statusMap.put("ERROR", "错误");
+        statusMap.put("BLOCKED", "被阻塞");
+
+        Map colorMap = new HashMap();
+        colorMap.put("NONE","#D3D3D3");//灰色
+        colorMap.put("NORMAL", "#28a745");//绿色
+        colorMap.put("PAUSED", "#ffc107");//黄色
+        colorMap.put("COMPLETE", "#007bff");//蓝色
+        colorMap.put("ERROR", "#dc3545");//红色
+        colorMap.put("BLOCKED", "#8a2be2");//紫色
+
         CronTaskManager.TaskStatus taskStatus = cronTaskManager.getTaskStatus(uuid);
-        return Result.success(taskStatus);
+        if (taskStatus.getLastFireTime() != null){
+            lastFireTime = sdf.format(taskStatus.getLastFireTime());
+        }
+        if (taskStatus.getNextFireTime() != null){
+            nextFireTime = sdf.format(taskStatus.getNextFireTime());
+        }
+        TaskStatusVO statusVO = TaskStatusVO.builder()
+                .status(statusMap.get(taskStatus.getStatus().name()).toString())
+                .lastFireTime(lastFireTime)
+                .nextFireTime(nextFireTime)
+                .statusColor(colorMap.get(taskStatus.getStatus().name()).toString())
+                .title(subMapper.selectByUuid(uuid).getTitle())
+                .build();
+        return Result.success(statusVO);
     }
 
     /**
