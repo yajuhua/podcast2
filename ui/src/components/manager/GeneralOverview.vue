@@ -40,7 +40,7 @@
       <el-dialog
         title="检查更新"
         :visible.sync="system.update.windowsVisible"
-        width="50%"
+        :width="adaptWidth"
         v-loading="system.update.windowsLoading"
         :before-close="handleCloseUpdateWindow"
         :element-loading-text="system.update.loadingTip"
@@ -90,8 +90,13 @@
 
 <script>
 import axios from "axios";
-
+import { adaptWidth } from '@/utils/utils';
 export default {
+  computed: {
+    adaptWidth() {
+      return adaptWidth();
+    }
+  },
   data() {
     return {
       infoList: [],

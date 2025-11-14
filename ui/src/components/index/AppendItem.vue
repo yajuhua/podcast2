@@ -4,7 +4,7 @@
         v-loading="appendItem.loading" 
         title="追加节目" 
         :visible="visible" 
-        width="audo"
+        :width="adaptWidth"
         @change="execForceUpdate()" 
         @close="handleClose()">
             <el-form ref="form" label-width="80px" label-position="top">
@@ -53,9 +53,15 @@
 
 <script>
 import axios from 'axios'
+import { adaptWidth } from '@/utils/utils';
 export default {
     components: {
 
+    },
+    computed: {
+    adaptWidth() {
+      return adaptWidth();
+    }
     },
     name: 'AppendItem',
     props: {
