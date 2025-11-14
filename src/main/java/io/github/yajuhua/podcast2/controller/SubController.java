@@ -309,6 +309,10 @@ public class SubController {
             @Override
             public boolean test(Sub sub) {
                 try {
+                    if (sub.getSubType().equalsIgnoreCase("empty")){
+                        //空订阅
+                        return false;
+                    }
                     CronTaskManager.TaskStatus taskStatus = cronTaskManager.getTaskStatus(sub.getUuid());
                     Date nextTime = taskStatus.getNextFireTime();
                     Trigger.TriggerState state = taskStatus.getStatus();
@@ -985,35 +989,49 @@ public class SubController {
         String lastFireTime = "未知";
         String nextFireTime = "未知";
 
-        Map statusMap = new HashMap();
+        Map<String,String> statusMap = new HashMap();
         statusMap.put("NONE", "无状态");
         statusMap.put("NORMAL", "正常");
+        statusMap.put("EMPTY", "空订阅");
         statusMap.put("PAUSED", "暂停");
         statusMap.put("COMPLETE", "完成");
         statusMap.put("ERROR", "错误");
         statusMap.put("BLOCKED", "被阻塞");
 
-        Map colorMap = new HashMap();
+        Map<String,String> colorMap = new HashMap();
         colorMap.put("NONE","#D3D3D3");//灰色
         colorMap.put("NORMAL", "#28a745");//绿色
+        colorMap.put("EMPTY", "#28a745");//绿色
         colorMap.put("PAUSED", "#ffc107");//黄色
         colorMap.put("COMPLETE", "#007bff");//蓝色
         colorMap.put("ERROR", "#dc3545");//红色
         colorMap.put("BLOCKED", "#8a2be2");//紫色
 
-        CronTaskManager.TaskStatus taskStatus = cronTaskManager.getTaskStatus(uuid);
-        if (taskStatus.getLastFireTime() != null){
-            lastFireTime = sdf.format(taskStatus.getLastFireTime());
-        }
-        if (taskStatus.getNextFireTime() != null){
-            nextFireTime = sdf.format(taskStatus.getNextFireTime());
+        String taskStatusName = null;
+        Sub sub = subMapper.selectByUuid(uuid);
+        if (sub.getSubType().equalsIgnoreCase("plugin")) {
+            CronTaskManager.TaskStatus taskStatus = cronTaskManager.getTaskStatus(uuid);
+            taskStatusName = taskStatus.getStatus().name();
+            if (taskStatus.getLastFireTime() != null){
+                lastFireTime = sdf.format(taskStatus.getLastFireTime());
+            }
+            if (taskStatus.getNextFireTime() != null){
+                nextFireTime = sdf.format(taskStatus.getNextFireTime());
+            }
+        }else if (sub.getSubType().equalsIgnoreCase("empty")){
+            //空订阅
+            taskStatusName = "EMPTY";
+            lastFireTime = "无需更新";
+            nextFireTime = "无需更新";
+        }else {
+            return Result.error("未知订阅类型: " + sub.getSubType());
         }
         TaskStatusVO statusVO = TaskStatusVO.builder()
-                .status(statusMap.get(taskStatus.getStatus().name()).toString())
+                .status(statusMap.get(taskStatusName))
                 .lastFireTime(lastFireTime)
                 .nextFireTime(nextFireTime)
-                .statusColor(colorMap.get(taskStatus.getStatus().name()).toString())
-                .title(subMapper.selectByUuid(uuid).getTitle())
+                .statusColor(colorMap.get(taskStatusName))
+                .title(sub.getTitle())
                 .build();
         return Result.success(statusVO);
     }
@@ -1025,6 +1043,10 @@ public class SubController {
     @ApiOperation("立即执行任务")
     @PostMapping("/api/sub/status/{uuid}")
     public Result startNowTask(@PathVariable String uuid){
+        Sub sub = subMapper.selectByUuid(uuid);
+        if (sub != null &&  sub.getSubType().equalsIgnoreCase("empty")){
+            return Result.error("空订阅无需更新！");
+        }
         cronTaskManager.startNow(uuid);
         return Result.success();
     }
