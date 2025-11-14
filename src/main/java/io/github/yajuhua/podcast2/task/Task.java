@@ -142,7 +142,7 @@ public class Task {
             Runnable task = new Update(cronExSub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
                     settingsMapper,pluginManager);
             cronTaskManager.add(cronExSub.getUuid(), cronExSub.getCronExpression(),
-                    task, TimeUnit.SECONDS, calculateUpdateSubTimeout(cronExSub), "更新: " + cronExSub.getTitle(), false);
+                    task, TimeUnit.SECONDS, calculateUpdateSubTimeout(cronExSub), "更新: " + cronExSub.getTitle());
         }
     }
 
