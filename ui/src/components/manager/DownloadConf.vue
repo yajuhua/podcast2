@@ -3,7 +3,7 @@
     <el-dialog
       title="更新下载配置"
       :visible="visible"
-      width="30%"
+      :width="adaptWidth"
       :before-close="handleClose"
     >
       <span>
@@ -48,8 +48,14 @@
 
 <script>
 import axios from "axios";
+import { adaptWidth } from '@/utils/utils';
 export default {
   name: "DownloadConf",
+  computed: {
+    adaptWidth() {
+      return adaptWidth();
+    }
+  },
   props: {
     uuid: {
       type: String,
