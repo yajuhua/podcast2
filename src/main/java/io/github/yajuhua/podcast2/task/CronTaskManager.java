@@ -60,6 +60,10 @@ public class CronTaskManager {
     public void add(String taskUUIDStr, String cronExpression, Runnable task, TimeUnit timeUnit
             , long timeout, String description) {
         UUID taskUUID = UUID.fromString(taskUUIDStr);
+        if (jobMap.containsKey(taskUUID)){
+            log.info("该任务已经存在: {}", taskUUID);
+            return;
+        }
         try {
             JobDetail jobDetail = JobBuilder.newJob(TaskJob.class)
                     .withIdentity(taskUUID.toString(), "group1")
@@ -108,6 +112,10 @@ public class CronTaskManager {
     public void add(String taskUUIDStr, long seconds, Runnable task, TimeUnit timeUnit, long timeout
             , String description, long initialDelay) {
         UUID taskUUID = UUID.fromString(taskUUIDStr);
+        if (jobMap.containsKey(taskUUID)){
+            log.info("该任务已经存在: {}", taskUUID);
+            return;
+        }
         Date startTime = new Date(System.currentTimeMillis() + initialDelay * 1000);
         try {
             JobDetail jobDetail = JobBuilder.newJob(TaskJob.class)

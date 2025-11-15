@@ -26,6 +26,7 @@ import io.github.yajuhua.podcast2.pojo.vo.ApiTokenVO;
 import io.github.yajuhua.podcast2.pojo.vo.UserLoginVO;
 import io.github.yajuhua.podcast2.service.ExtendService;
 import io.github.yajuhua.podcast2.service.UserService;
+import io.github.yajuhua.podcast2.task.Task;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -75,6 +76,8 @@ public class UserController {
     private RepoProperties repoProperties;
     @Autowired
     private JwtTokenInterceptor jwtTokenInterceptor;
+    @Autowired
+    private Task task;
 
     /**
      * 用户登录
@@ -244,6 +247,8 @@ public class UserController {
             subMapper.addSub(export.getSub());
             extendService.batchExtend(export.getExtendList());
         }
+        //加入任务队列
+        task.updateSub();
         return Result.success();
     }
 
