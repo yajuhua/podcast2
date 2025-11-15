@@ -308,6 +308,10 @@ public class DownloadController {
     @GetMapping("/conf/{uuid}")
     public Result<DownloadConfVO> getDownloadConf(@PathVariable String uuid) throws Exception {
         Items items = itemsMapper.selectByUuid(uuid);
+        Sub sub = subMapper.selectByUuid(items.getChannelUuid());
+        if (sub != null && sub.getSubType().equalsIgnoreCase("empty")){
+            return Result.error("空订阅不支持更新下载配置！");
+        }
         EditSubVO editSubVO = subController.getEditSubInfo(items.getChannelUuid()).getData();
 
         DownloadConfVO downloadConfVO = new DownloadConfVO();
@@ -353,6 +357,11 @@ public class DownloadController {
     @ApiOperation("更新下载配置")
     @PostMapping("/conf")
     public Result updateDownloadConf(@RequestBody DownloadConfDTO confDTO){
+        Items items = itemsMapper.selectByUuid(confDTO.getUuid());
+        Sub sub = subMapper.selectByUuid(items.getChannelUuid());
+        if (sub.getSubType().equalsIgnoreCase("empty")){
+            return Result.error("空订阅不支持更新下载配置！");
+        }
         List<InputAndSelectData> inputAndSelectDataList =  new ArrayList<>();
         inputAndSelectDataList.addAll(confDTO.getInputListData());
         inputAndSelectDataList.addAll(confDTO.getSelectListData());
