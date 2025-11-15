@@ -31,7 +31,6 @@ mybatis:
 
 podcast2:
   jwt:
-    user-secret-key: podcast2
     user-ttl: 7200000
     user-token-name: token
   data:

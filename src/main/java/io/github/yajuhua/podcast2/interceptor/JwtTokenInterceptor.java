@@ -6,17 +6,20 @@ import io.github.yajuhua.podcast2.common.utils.JwtUtil;
 import io.github.yajuhua.podcast2.common.utils.NetWorkUtils;
 import io.github.yajuhua.podcast2.controller.UserController;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
+import io.github.yajuhua.podcast2.pojo.entity.User;
 import io.github.yajuhua.podcast2.service.UserService;
 import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.UUID;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 @Component
 @Slf4j
@@ -28,6 +31,7 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
     private UserService userService;
     @Autowired
     private UserMapper userMapper;
+    public Set<String> banTokenList = new HashSet<>();
 
 
     /**
@@ -66,9 +70,17 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
                 }
             }else {
                 String token = request.getHeader(jwtProperties.getUserTokenName());
+                if (banTokenList.contains(token)){
+                    response.setStatus(401);
+                    return false;
+                }
                 //2.校验令牌
                 log.debug("jwt校验:{}",token);
-                Claims claims = JwtUtil.parseJWT(jwtProperties.getUserSecretKey(),token);
+                User user = userMapper.list().get(0);
+                String secretKey = DigestUtils
+                        .md5DigestAsHex((user.getUsername() + user.getPassword() + userService.getExtendInfo().getUuid())
+                        .getBytes(StandardCharsets.UTF_8));
+                Claims claims = JwtUtil.parseJWT(secretKey,token);
                 //如果解析不出来就会抛异常
                 UUID uuid = UUID.fromString(claims.get(JwtClaimsConstant.UUID).toString());
                 log.debug("系统uuid:{}",uuid);

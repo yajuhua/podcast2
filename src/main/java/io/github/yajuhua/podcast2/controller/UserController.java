@@ -14,6 +14,7 @@ import io.github.yajuhua.podcast2.common.result.Result;
 import io.github.yajuhua.podcast2.common.utils.CertUtils;
 import io.github.yajuhua.podcast2.common.utils.JwtUtil;
 import io.github.yajuhua.podcast2.common.utils.NetWorkUtils;
+import io.github.yajuhua.podcast2.interceptor.JwtTokenInterceptor;
 import io.github.yajuhua.podcast2.mapper.ExtendMapper;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
@@ -33,10 +34,13 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -69,6 +73,8 @@ public class UserController {
     private PluginManager pluginManager;
     @Autowired
     private RepoProperties repoProperties;
+    @Autowired
+    private JwtTokenInterceptor jwtTokenInterceptor;
 
     /**
      * 用户登录
@@ -90,7 +96,11 @@ public class UserController {
         Map<String, Object> claims = new HashMap<>();
 
         claims.put(JwtClaimsConstant.UUID,userService.getExtendInfo().getUuid());
-        String token = JwtUtil.createJWT(jwtProperties.getUserSecretKey(), jwtProperties.getUserTtl(), claims);
+        // secretKey = 用户名＋密码+UUID
+        String secretKey = DigestUtils
+                .md5DigestAsHex((username + password + userService.getExtendInfo().getUuid())
+                .getBytes(StandardCharsets.UTF_8));
+        String token = JwtUtil.createJWT(secretKey, jwtProperties.getUserTtl(), claims);
         UserLoginVO userLoginVO = UserLoginVO.builder()
                 .username(user.getUsername())
                 .token(token)
@@ -106,7 +116,10 @@ public class UserController {
      */
     @ApiOperation("登出")
     @PostMapping("/logout")
-    public Result<String> logout(){
+    public Result<String> logout(HttpServletRequest request){
+        String token = request.getHeader(jwtProperties.getUserTokenName());
+        //加入黑名单
+        jwtTokenInterceptor.banTokenList.add(token);
         return Result.success();
     }
 
