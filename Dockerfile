@@ -12,12 +12,14 @@ ENV LC_ALL=zh_CN.UTF-8
 ENV RUNNING_IN_DOCKER=true
 ENV BIN_DIR=/usr/local/bin
 ENV WORKDIR=/tmp/setup_tools
+ENV PATH=${PATH}:/root/.deno/bin
 
 ARG TARGETARCH
 
 RUN set -eux; \
     apt update && \
-    apt install -y --no-install-recommends gnupg ca-certificates curl wget tar fonts-wqy-microhei locales && \
+    apt install -y --no-install-recommends gnupg ca-certificates curl wget tar fonts-wqy-microhei locales unzip && \
+    curl -fsSL https://deno.land/install.sh | sh -s -- -y && \
     sed -i '/zh_CN.UTF-8/s/^# //g' /etc/locale.gen && \
     locale-gen zh_CN.UTF-8 && \
     curl -s https://repos.azul.com/azul-repo.key | gpg --dearmor -o /usr/share/keyrings/azul.gpg && \
