@@ -19,7 +19,7 @@ ARG TARGETARCH
 RUN set -eux; \
     apt update && \
     apt install unzip && \
-    curl -fsSL https://deno.land/install.sh | sh && \
+    curl -fsSL https://deno.land/install.sh | sh -s -- -y && \
     apt install -y --no-install-recommends gnupg ca-certificates curl wget tar fonts-wqy-microhei locales && \
     sed -i '/zh_CN.UTF-8/s/^# //g' /etc/locale.gen && \
     locale-gen zh_CN.UTF-8 && \
