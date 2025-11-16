@@ -12,6 +12,7 @@ ENV LC_ALL=zh_CN.UTF-8
 ENV RUNNING_IN_DOCKER=true
 ENV BIN_DIR=/usr/local/bin
 ENV WORKDIR=/tmp/setup_tools
+ENV PATH=${PATH}:/root/.deno/bin
 
 ARG TARGETARCH
 
