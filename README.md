@@ -76,19 +76,6 @@ firewall-cmd --reload
 3. 点击二维码
    ![二维码](https://raw.githubusercontent.com/yajuhua/podcast2/v2/images/QRcode.png)
 
-4. 扫描二维码添加到播客APP（如：AntennaPod）
-
-<img width="500" src="https://raw.githubusercontent.com/yajuhua/podcast2/v2/images/AntennaPod-1.jpg" alt="链接地址" style="zoom:25%;" /><img width="500" src="https://raw.githubusercontent.com/yajuhua/podcast2/v2/images/AntennaPod-2.jpg" alt="AntennaPod-2" style="zoom:25%;" />
-
-#### 播客APP
-
-<a href="https://www.apple.com/apple-podcasts/" target="_blank">
-   <img src="https://www.apple.com/v/apple-podcasts/c/images/overview/hero_icon__c135x5gz14mu_large.png" width="35" alt="Apple Podcasts">
-</a> 
-<a href="https://antennapod.org/" target="_blank">
-      <img src="https://antennapod.org/assets/branding/logo-full-horizontal-dynamic.svg" width="230" alt="AntennaPod">
-</a>
-
 ## Star History
 ![Star History](https://api.star-history.com/svg?repos=yajuhua/podcast2)
 ## 使用到的项目
