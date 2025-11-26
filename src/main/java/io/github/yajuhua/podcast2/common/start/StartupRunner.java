@@ -226,61 +226,84 @@ public class StartupRunner implements ApplicationRunner{
     private void startTaskScheduling(){
        log.info("开始任务调度");
 
-       cronTaskManager.add(UUID.randomUUID().toString(), 3600, new Runnable() {
+       UUID uuid = UUID.randomUUID();
+       String desc = "删除过期节目";
+       cronTaskManager.add(uuid.toString(), 3600, new Runnable() {
            @Override
            public void run() {
                task.clearExpired();
            }
-       }, TimeUnit.SECONDS, 60*30, "删除过期节目", 0);
+       }, TimeUnit.SECONDS, 60*30, desc, 0);
+       Task.backgroundTask.put(uuid, desc);
 
-        cronTaskManager.add(UUID.randomUUID().toString(), 3600, new Runnable() {
+       uuid = UUID.randomUUID();
+       desc = "清除数据库未记录的文件";
+        cronTaskManager.add(uuid.toString(), 3600, new Runnable() {
             @Override
             public void run() {
                 task.clearNotFoundFile();
             }
-        }, TimeUnit.SECONDS, 60*30, "清除数据库未记录的文件", 0);
+        }, TimeUnit.SECONDS, 60*30, desc, 0);
+        Task.backgroundTask.put(uuid, desc);
 
-        cronTaskManager.add(UUID.randomUUID().toString(), 3600, new Runnable() {
+        uuid = UUID.randomUUID();
+        desc = "更新yt-dlp";
+        cronTaskManager.add(uuid.toString(), 3600, new Runnable() {
             @Override
             public void run() {
                 task.updateYtDlp();
             }
-        }, TimeUnit.SECONDS, 60*30, "更新yt-dlp", 0);
+        }, TimeUnit.SECONDS, 60*30, desc, 0);
+        Task.backgroundTask.put(uuid, desc);
 
-        cronTaskManager.add(UUID.randomUUID().toString(), 120, new Runnable() {
+        uuid = UUID.randomUUID();
+        desc = "自动更新插件";
+        cronTaskManager.add(uuid.toString(), 120, new Runnable() {
             @Override
             public void run() {
                 task.autoUpdatePlugin();
             }
-        }, TimeUnit.SECONDS, 60*30, "自动更新插件", 0);
+        }, TimeUnit.SECONDS, 60*30, desc, 0);
+        Task.backgroundTask.put(uuid, desc);
 
-        cronTaskManager.add(UUID.randomUUID().toString(), 60, new Runnable() {
+        uuid = UUID.randomUUID();
+        desc = "上传资源到alist";
+        cronTaskManager.add(uuid.toString(), 60, new Runnable() {
             @Override
             public void run() {
                 task.uploadResourcesToAList();
             }
-        }, TimeUnit.SECONDS, 60*30, "上传资源到alist", 0);
+        }, TimeUnit.SECONDS, 60*30, desc, 0);
+        Task.backgroundTask.put(uuid, desc);
 
-        cronTaskManager.add(UUID.randomUUID().toString(), 24*60*60, new Runnable() {
+        uuid = UUID.randomUUID();
+        desc = "刷新一次AList的token";
+        cronTaskManager.add(uuid.toString(), 24*60*60, new Runnable() {
             @Override
             public void run() {
                 task.refreshAListToken();
             }
-        }, TimeUnit.SECONDS, 60*30, "刷新一次AList的token", 0);
+        }, TimeUnit.SECONDS, 60*30, desc, 0);
+        Task.backgroundTask.put(uuid, desc);
 
-        cronTaskManager.add(UUID.randomUUID().toString(), 60, new Runnable() {
+        uuid = UUID.randomUUID();
+        desc = "重新下载";
+        cronTaskManager.add(uuid.toString(), 60, new Runnable() {
             @Override
             public void run() {
                 task.reDownloadTask();
             }
-        }, TimeUnit.SECONDS, 60*30, "重新下载", 0);
+        }, TimeUnit.SECONDS, 60*30, desc, 0);
+        Task.backgroundTask.put(uuid, desc);
 
-        cronTaskManager.add(UUID.randomUUID().toString(), 60, new Runnable() {
+        uuid = UUID.randomUUID();
+        desc = "下载追加节目";
+        cronTaskManager.add(uuid.toString(), 60, new Runnable() {
             @Override
             public void run() {
                 task.downloadAppendItemList();
             }
-        }, TimeUnit.SECONDS, 60*30, "下载追加节目", 0);
+        }, TimeUnit.SECONDS, 60*30, desc, 0);
 
        task.updateSub();
     }

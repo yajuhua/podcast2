@@ -15,4 +15,5 @@ public class TaskStatusVO {
     private String nextFireTime;
     private String statusColor;
     private String title;
+    private String uuid;
 }

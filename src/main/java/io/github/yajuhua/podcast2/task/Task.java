@@ -58,6 +58,7 @@ public class Task {
     public static Map<String,List<LogMessage>> collectUpdateLogMessagesMap = new HashMap<>();//存放订阅更新日志
     public static List<Items> reDownloadItems = new ArrayList<>();//点击重新下载后会先存放到这
     public static List<AppendItemDTO> appendItemList = new ArrayList<>();//订阅追加节目
+    public static final Map<UUID,String> backgroundTask = new HashMap<>();//后台任务
     @Autowired
     private UserMapper userMapper;
     @Autowired
