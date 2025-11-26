@@ -7,6 +7,7 @@ import io.github.yajuhua.podcast2.Podcast2Application;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.properties.InfoProperties;
 import io.github.yajuhua.podcast2.common.result.Result;
+import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.common.utils.LogUtils;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
 import io.github.yajuhua.podcast2.pojo.vo.KeyValue;
@@ -192,9 +193,20 @@ public class SystemController {
         keyValueList.add(new KeyValue("更新时间",infoProperties.getUpdate()));
         keyValueList.add(new KeyValue("运行时间",runningTime));
         keyValueList.add(new KeyValue("commit",getCommitID()));
-
+        keyValueList.add(new KeyValue("Java版本", System.getProperty("java.vendor")
+                +" "+ System.getProperty("java.runtime.version")));
+        keyValueList.add(new KeyValue("Deno版本", getDenoVersion()));
         return Result.success(keyValueList);
     }
+
+    private String getDenoVersion(){
+        String version = DownloaderUtils.cmd("deno --version");
+        if (version == null || version.isEmpty()){
+            return "未安装,yt-dlp依赖";
+        }
+        return version;
+    }
+
 
     /**
      * 根据时间区间获取历史日志
