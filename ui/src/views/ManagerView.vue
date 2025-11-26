@@ -40,6 +40,11 @@
       </el-menu-item>
 
       <el-menu-item index="7">
+        <i class="el-icon-s-order"></i>
+        <span slot="title">后台任务</span>
+      </el-menu-item>
+
+      <el-menu-item index="8">
         <i class="el-icon-info"></i>
         <span slot="title">关于</span>
       </el-menu-item>
@@ -76,6 +81,11 @@
       </div>
 
       <div v-show="activeMenu == '7'">
+        <h2>后台任务</h2>
+        <BackgroundTasks/>
+      </div>
+
+      <div v-show="activeMenu == '8'">
         <ReadmeReader url="https://raw.githubusercontent.com/yajuhua/podcast2/refs/heads/v2/README.md" />
       </div>
     </div>
@@ -89,8 +99,9 @@ import PluginManager from '../components/manager/PluginManager.vue'
 import DownloadUpload from '../components/manager/DownloadUpload.vue'
 import User from '@/components/manager/User.vue';
 import SettingsView from '@/components/manager/SettingsView.vue';
+import BackgroundTasks from "@/components/manager/BackgroundTasks.vue";
 export default {
-  components: { GeneralOverview, ReadmeReader, PluginManager, DownloadUpload, User, SettingsView },
+  components: {BackgroundTasks, GeneralOverview, ReadmeReader, PluginManager, DownloadUpload, User, SettingsView },
   data() {
     return {
       isCollapse: false, // 是否收起
