@@ -351,6 +351,7 @@ public class Update implements Runnable {
             //加入当前时间浮动，让每次检查时间不一样 往后
             sub.setCheckTime(nowTimeFloat(1,1,10,Units.Minutes));
             subMapper.update(sub);
+            Task.updateStatus = false;
             log.info("{}:更新完成",sub.getTitle());
         }
     }
