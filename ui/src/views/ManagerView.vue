@@ -40,7 +40,7 @@
       </el-menu-item>
 
       <el-menu-item index="7">
-        <i class="el-icon-s-home"></i>
+        <i class="el-icon-s-order"></i>
         <span slot="title">后台任务</span>
       </el-menu-item>
 
