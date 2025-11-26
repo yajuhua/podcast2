@@ -248,7 +248,7 @@ public class StartupRunner implements ApplicationRunner{
 
         uuid = UUID.randomUUID();
         desc = "更新yt-dlp";
-        cronTaskManager.add(uuid.toString(), 3600, new Runnable() {
+        cronTaskManager.add(uuid.toString(), 3600*10, new Runnable() {
             @Override
             public void run() {
                 task.updateYtDlp();

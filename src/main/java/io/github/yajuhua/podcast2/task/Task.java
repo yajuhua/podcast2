@@ -282,27 +282,23 @@ public class Task {
             }
             if (!addSubStatus){
                 Downloader ytDlp = downloaderMapper.selectByName("YtDlp");
-                if (YtDlpUpdate.isUpdate(ytDlp)){
-                        log.info("开始更新yt-dlp");
-                        String githubProxyUrl = userService.getExtendInfo().getGithubProxyUrl();
-                        //使用Github加速站更新yt-dlp,仅支持stable频道
-                        if (githubProxyUrl != null && (ytDlp.getUpdateArgs() == null || ytDlp.getUpdateArgs().isEmpty())){
-                            String tmpPath = dataPathProperties.getTmpPath();
-                            YtDlpUpdate.withProxy(githubProxyUrl, tmpPath);
-                        }else if (ytDlp.getUpdateArgs() != null && !ytDlp.getUpdateArgs().isEmpty()){
-                            //更新到指定频道
-                            YtDlpUpdate.withUpdateArgs(ytDlp.getUpdateArgs());
-                        }else {
-                            //默认更新到官方stable频道
-                            YtDlpUpdate.updateToStable();
-                        }
-                        //更新数据库
-                        ytDlp.setUpdateTime(System.currentTimeMillis());
-                        ytDlp.setVersion(YtDlpUpdate.getCurrentVersion());
-                        downloaderMapper.update(ytDlp);
+                log.info("开始更新yt-dlp");
+                String githubProxyUrl = userService.getExtendInfo().getGithubProxyUrl();
+                //使用Github加速站更新yt-dlp,仅支持stable频道
+                if (githubProxyUrl != null && (ytDlp.getUpdateArgs() == null || ytDlp.getUpdateArgs().isEmpty())){
+                    String tmpPath = dataPathProperties.getTmpPath();
+                    YtDlpUpdate.withProxy(githubProxyUrl, tmpPath);
+                }else if (ytDlp.getUpdateArgs() != null && !ytDlp.getUpdateArgs().isEmpty()){
+                    //更新到指定频道
+                    YtDlpUpdate.withUpdateArgs(ytDlp.getUpdateArgs());
                 }else {
-                    log.info("未到更新时间");
+                    //默认更新到官方stable频道
+                    YtDlpUpdate.updateToStable();
                 }
+                //更新数据库
+                ytDlp.setUpdateTime(System.currentTimeMillis());
+                ytDlp.setVersion(YtDlpUpdate.getCurrentVersion());
+                downloaderMapper.update(ytDlp);
             }
             log.info("已完成检查更新yt-dlp");
         } catch (Exception e) {
