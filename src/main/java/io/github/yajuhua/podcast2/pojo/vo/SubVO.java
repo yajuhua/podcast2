@@ -14,4 +14,5 @@ public class SubVO implements Serializable {
     private String updateTime;
     private String title;
     private String uuid;
+    private String statusColor;
 }

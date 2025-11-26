@@ -110,7 +110,7 @@ public class SubController {
      */
     @ApiOperation("获取订阅列表")
     @GetMapping("/api/sub/list")
-    public Result<List<SubVO>> list(){
+    public Result<List<SubVO>> list() throws Exception {
         List<Sub> list = subService.list();
         list = list.stream().sorted(new Comparator<Sub>() {
             @Override
@@ -121,8 +121,9 @@ public class SubController {
 
         List<SubVO> subVOList = new ArrayList<>();
         for (Sub channel : list) {
+            String statusColor = getTaskStatus(channel.getUuid()).getData().getStatusColor();
             subVOList.add(new SubVO(TimeFormat.formatDate(channel.getUpdateTime()/1000)
-                    ,channel.getTitle(),channel.getUuid()));
+                    ,channel.getTitle(),channel.getUuid(), statusColor));
         }
         return Result.success(subVOList);
     }
@@ -134,7 +135,7 @@ public class SubController {
      */
     @ApiOperation("搜索订阅")
     @GetMapping("/api/sub/search")
-    public Result<List<SubVO>> search(String keywords){
+    public Result<List<SubVO>> search(String keywords) throws Exception {
         List<Sub> list = subService.list();
 
         //关键词过滤
@@ -155,8 +156,9 @@ public class SubController {
         //封装
         List<SubVO> subVOList = new ArrayList<>();
         for (Sub channel : list) {
+            String statusColor = getTaskStatus(channel.getUuid()).getData().getStatusColor();
             subVOList.add(new SubVO(TimeFormat.formatDate(channel.getUpdateTime()/1000)
-                    ,channel.getTitle(),channel.getUuid()));
+                    ,channel.getTitle(),channel.getUuid(), statusColor));
         }
         return Result.success(subVOList);
     }

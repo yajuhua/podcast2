@@ -18,7 +18,12 @@
           :cell-style="{ 'text-align': 'center' }" empty-text="暂无订阅">
           <el-table-column type="selection" width="auto" v-if="selectionVisible"></el-table-column>
           <el-table-column type="index"></el-table-column>
-          <el-table-column label="更新" prop="updateTime"></el-table-column>
+          <el-table-column label="更新">
+            <template slot-scope="scope">
+              <span class="status-dot" :style="{ background: scope.row.statusColor }"></span>
+              {{scope.row.updateTime}}
+            </template>
+          </el-table-column>
           <el-table-column label="名称" prop="title" show-overflow-tooltip></el-table-column>
 
           <!-- 相关操作 -->
@@ -407,5 +412,12 @@ export default {
   flex-direction: column;
   gap: 10px;
   z-index: 999;
+}
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.03);
 }
 </style>
