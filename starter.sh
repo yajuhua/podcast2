@@ -13,6 +13,33 @@ else
   echo "Java Options: $JAVA_OPTS"
 fi
 
+# 仅当 /init 存在时执行初始化逻辑
+if [ -f "/init" ]; then
+
+    # 查找 BASE_DIR 下数字目录（升序）
+    DIRS=$(find "$BASE_DIR" -maxdepth 1 -mindepth 1 -regex '.*/[0-9]+' | sort -V)
+
+    # 若没有数字目录，从 0 开始
+    if [ -z "$DIRS" ]; then
+        NEW_NUM=0
+    else
+        MAX_NUM=$(basename "$(echo "$DIRS" | tail -n 1)")
+        NEW_NUM=$((MAX_NUM + 1))
+    fi
+
+    NEW_DIR="$BASE_DIR/$NEW_NUM"
+
+    # 创建新目录
+    mkdir -p "$NEW_DIR"
+
+    # 链接 /app.jar
+    ln -s /app.jar "$NEW_DIR/app.jar"
+
+    echo "Created new directory: $NEW_DIR"
+    echo "Linked /app.jar → $NEW_DIR/app.jar"
+	rm -rf /init
+fi
+
 # 初始化变量
 JAR_FOUND=0
 

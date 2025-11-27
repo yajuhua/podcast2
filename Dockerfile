@@ -17,6 +17,7 @@ ENV PATH=${PATH}:/root/.deno/bin
 ARG TARGETARCH
 
 RUN set -eux; \
+    touch init && \
     apt update && \
     apt install -y --no-install-recommends gnupg ca-certificates curl wget tar fonts-wqy-microhei locales unzip && \
     curl -fsSL https://deno.land/install.sh | sh -s -- -y && \
