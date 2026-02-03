@@ -23,10 +23,9 @@ import io.github.yajuhua.podcast2.task.Task;
 import io.github.yajuhua.podcast2API.Params;
 import io.github.yajuhua.podcast2API.Podcast2;
 import io.github.yajuhua.podcast2API.setting.Setting;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -45,7 +44,7 @@ import java.util.stream.Collectors;
 //TODO
 @RestController
 @Slf4j
-@Api(tags = "插件相关接口")
+@Tag(name = "插件相关接口")
 @RequestMapping("/api/plugin")
 public class PluginController {
 
@@ -77,7 +76,7 @@ public class PluginController {
      * 获取插件列表(安装与未安装的)
      * @return
      */
-    @ApiOperation("获取插件列表")
+    @Operation(summary = "获取插件列表")
     @GetMapping("/list")
     public Result<List<PluginVO>> list() throws Exception{
         //1.获取本地插件列表
@@ -207,7 +206,7 @@ public class PluginController {
      * 查看插件安装状态
      * @return
      */
-    @ApiOperation("查看插件安装状态")
+    @Operation(summary = "查看插件安装状态")
     @GetMapping("/install/status/{uuid}")
     public Result status(@PathVariable String uuid) throws Exception {
         List<PluginVO> collect = list().getData().stream().filter(new Predicate<PluginVO>() {
@@ -226,7 +225,7 @@ public class PluginController {
      * 插件更新状态
      * @return
      */
-    @ApiOperation("查看插件更新状态")
+    @Operation(summary = "查看插件更新状态")
     @GetMapping("/update/status/{name}")
     public Result updateStatus(@PathVariable String name) throws Exception {
         List<PluginVO> collect = list().getData().stream().filter(new Predicate<PluginVO>() {
@@ -246,7 +245,7 @@ public class PluginController {
      * @param uuids
      * @return
      */
-    @ApiOperation("安装插件")
+    @Operation(summary = "安装插件")
     @GetMapping("/install")
     @Transactional
     public Result install(@RequestParam List<String> uuids) throws Exception {
@@ -275,7 +274,7 @@ public class PluginController {
      * @param uuids
      * @return
      */
-    @ApiOperation("删除插件")
+    @Operation(summary = "删除插件")
     @DeleteMapping
     @Transactional
     public Result delete(@RequestParam List<String> uuids) throws Exception{
@@ -326,7 +325,7 @@ public class PluginController {
      * 获取插件详细信息
      * @return
      */
-    @ApiOperation("获取插件详细信息")
+    @Operation(summary = "获取插件详细信息")
     @GetMapping("/info/{uuid}")
     public Result<Map> info(@PathVariable String uuid) throws Exception{
         Plugin plugin = pluginMapper.selectByUuid(uuid);
@@ -341,7 +340,7 @@ public class PluginController {
      * 搜索插件
      * @return
      */
-    @ApiOperation("搜索插件")
+    @Operation(summary = "搜索插件")
     @GetMapping("/search")
     public Result<List<PluginVO>> search(@RequestParam String keyword) throws Exception {
         List<PluginVO> data = list().getData();
@@ -353,7 +352,7 @@ public class PluginController {
      * 更新插件
      * @return
      */
-    @ApiOperation("更新插件")
+    @Operation(summary = "更新插件")
     @PostMapping("/update")
     public Result update(@RequestParam List<String> names) throws Exception{
         if(Task.updateStatus){
@@ -433,7 +432,7 @@ public class PluginController {
      * 设置自动更新插件
      * @return
      */
-    @ApiOperation("设置自动插件更新")
+    @Operation(summary = "设置自动插件更新")
     @PostMapping("/autoUpdate")
     @Transactional
     public Result setAutoUpdate(@RequestParam Boolean status){
@@ -447,7 +446,7 @@ public class PluginController {
      * 获取自动更新插件状态
      * @return
      */
-    @ApiOperation("获取自动更新插件状态")
+    @Operation(summary = "获取自动更新插件状态")
     @GetMapping("autoUpdate")
     public Result getAutoUpdateStatus(){
         return Result.success(userMapper.list().get(0).getAutoUpdatePlugin());
@@ -458,7 +457,7 @@ public class PluginController {
      * @param uuid
      * @return
      */
-    @ApiOperation("获取插件详细信息")
+    @Operation(summary = "获取插件详细信息")
     @GetMapping("/detail/{uuid}")
     public Result pluginDetail(@PathVariable String uuid) throws Exception {
         boolean hasPlugin = pluginManager.hasPlugin(UUID.fromString(uuid));
@@ -487,7 +486,7 @@ public class PluginController {
      * 获取插件更新列表
      * @return
      */
-    @ApiOperation("获取插件更新列表")
+    @Operation(summary = "获取插件更新列表")
     @GetMapping("/updateList")
     public Result<List<PluginVO>> updateList() throws Exception {
         List<PluginVO> data = list().getData();
@@ -501,7 +500,7 @@ public class PluginController {
      * 获取插件设置
      * @return
      */
-    @ApiOperation("获取插件设置")
+    @Operation(summary = "获取插件设置")
     @GetMapping("/settings/{pluginName}")
     public Result<List<Settings>> settings(@PathVariable String pluginName){
         return Result.success(settingsMapper.selectByPluginName(pluginName));
@@ -513,7 +512,7 @@ public class PluginController {
      * @param settings
      * @return
      */
-    @ApiOperation("更新插件设置")
+    @Operation(summary = "更新插件设置")
     @PutMapping("/settings")
     @Transactional
     public Result updateSettings(@RequestBody List<Settings> settings){

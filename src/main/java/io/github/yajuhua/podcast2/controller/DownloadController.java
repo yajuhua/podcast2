@@ -24,8 +24,8 @@ import io.github.yajuhua.podcast2API.extension.build.Input;
 import io.github.yajuhua.podcast2API.extension.build.Select;
 import io.github.yajuhua.podcast2API.extension.reception.InputAndSelectData;
 import io.github.yajuhua.podcast2API.utils.TimeFormat;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.BeanUtils;
@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @Slf4j
-@Api(tags = "下载相关接口")
+@Tag(name = "下载相关接口")
 @RequestMapping("/api/download")
 public class DownloadController {
     @Autowired
@@ -77,7 +77,7 @@ public class DownloadController {
      * 获取下载器信息
      * @return
      */
-    @ApiOperation("获取下载器信息")
+    @Operation(summary = "获取下载器信息")
     @GetMapping("/info")
     public Result<List<DownloaderInfoVO>> downloaderInfo(){
         List<DownloaderInfoVO> downloaderInfoVOList = new ArrayList<>();
@@ -146,7 +146,7 @@ public class DownloadController {
      * 获取下载和上传完成的信息
      * @return
      */
-    @ApiOperation("获取完成下载和上传的信息")
+    @Operation(summary = "获取完成下载和上传的信息")
     @GetMapping("/completed")
     public Result<List<DownloadCompletedVO>> downloadDone(){
         return Result.success(downloadCompleted().getData().stream().filter(new Predicate<DownloadCompletedVO>() {
@@ -163,7 +163,7 @@ public class DownloadController {
      * 获取下载和上传错误的信息
      * @return
      */
-    @ApiOperation("获取上传和下载错误的信息")
+    @Operation(summary = "获取上传和下载错误的信息")
     @GetMapping("/error")
     public Result<List<DownloadCompletedVO>> downloadError(){
      return Result.success(downloadCompleted().getData().stream().filter(new Predicate<DownloadCompletedVO>() {
@@ -179,7 +179,7 @@ public class DownloadController {
      * 获取下载详细信息
      * @return
      */
-    @ApiOperation("获取上传和下载详细信息")
+    @Operation(summary = "获取上传和下载详细信息")
     @GetMapping("/detail/{uuid}")
     public Result<DownloadDetailVO> detail(@PathVariable String uuid, HttpServletRequest request){
         Map map = new HashMap<>();
@@ -217,7 +217,7 @@ public class DownloadController {
      * @param uuid
      * @return
      */
-    @ApiOperation("重新下载和上传")
+    @Operation(summary = "重新下载和上传")
     @GetMapping("/reDownload/{uuid}")
     public Result reDownload(@PathVariable String uuid){
         Items items = itemsMapper.selectByUuid(uuid);
@@ -245,7 +245,7 @@ public class DownloadController {
      * @param uuids
      * @return
      */
-    @ApiOperation("删除下载节目")
+    @Operation(summary = "删除下载节目")
     @DeleteMapping
     @Transactional
     public Result delete(@RequestParam List<String> uuids){
@@ -285,7 +285,7 @@ public class DownloadController {
      * @param uuids
      * @return
      */
-    @ApiOperation("移除正在下载的")
+    @Operation(summary = "移除正在下载的")
     @DeleteMapping("/downloading")
     public Result removeDownload(@RequestParam List<String> uuids){
         for (String uuid : uuids) {
@@ -304,7 +304,7 @@ public class DownloadController {
      * 获取下载配置 type和扩展选项
      * @return 类型和扩展选项
      */
-    @ApiOperation("获取下载配置")
+    @Operation(summary = "获取下载配置")
     @GetMapping("/conf/{uuid}")
     public Result<DownloadConfVO> getDownloadConf(@PathVariable String uuid) throws Exception {
         Items items = itemsMapper.selectByUuid(uuid);
@@ -354,7 +354,7 @@ public class DownloadController {
      * 更新下载配置
      * @return
      */
-    @ApiOperation("更新下载配置")
+    @Operation(summary = "更新下载配置")
     @PostMapping("/conf")
     public Result updateDownloadConf(@RequestBody DownloadConfDTO confDTO){
         Items items = itemsMapper.selectByUuid(confDTO.getUuid());
@@ -378,7 +378,7 @@ public class DownloadController {
      * 获取单个下载器信息
      * @return
      */
-    @ApiOperation("获取单个下载器信息")
+    @Operation(summary = "获取单个下载器信息")
     @GetMapping("/downloaderInfo/{name}")
     public Result<Downloader> getDownloaderInfo(@PathVariable String name){
         try {
@@ -393,7 +393,7 @@ public class DownloadController {
      * 更新单个下载配置
      * @return
      */
-    @ApiOperation("更新单个下载器信息")
+    @Operation(summary = "更新单个下载器信息")
     @PostMapping("/downloaderInfo")
     public Result updateDownloaderInfo(@RequestBody Downloader downloader){
         try {

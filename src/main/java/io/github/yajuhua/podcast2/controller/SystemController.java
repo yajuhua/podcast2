@@ -14,8 +14,8 @@ import io.github.yajuhua.podcast2.service.UserService;
 import io.github.yajuhua.podcast2.task.CronTaskManager;
 import io.github.yajuhua.podcast2.task.Task;
 import io.github.yajuhua.podcast2.update.ProjectUpdate;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 @RestController
 @Slf4j
-@Api(tags = "系统相关接口")
+@Tag(name = "系统相关接口")
 @RequestMapping("/api/system")
 public class SystemController {
 
@@ -59,7 +59,7 @@ public class SystemController {
      * 重启项目
      * @return
      */
-    @ApiOperation("重启项目")
+    @Operation(summary = "重启项目")
     @GetMapping("/restart")
     public Result restart() {
 
@@ -91,7 +91,7 @@ public class SystemController {
      * 检查更新
      * @return
      */
-    @ApiOperation("检查更新")
+    @Operation(summary = "检查更新")
     @GetMapping("/update/has")
     public Result<ProjectUpdate.UpdateInfo> hasUpdate() throws Exception {
         ProjectUpdate.UpdateInfo updateInfo = ProjectUpdate.getUpdateInfo(infoProperties.getVersion());
@@ -102,7 +102,7 @@ public class SystemController {
      * 下载最新jar包
      * @return
      */
-    @ApiOperation("下载最新版本的Jar包")
+    @Operation(summary = "下载最新版本的Jar包")
     @GetMapping("/update/download")
     public Result downloadLatestJarFile(@RequestParam String version) throws Exception {
         try {
@@ -127,7 +127,7 @@ public class SystemController {
      * @param version
      * @return
      */
-    @ApiOperation("删除最新版本的Jar文件")
+    @Operation(summary = "删除最新版本的Jar文件")
     @GetMapping("/update/delete")
     public Result<Boolean> deleteDownloadLatestJarFile(@RequestParam String version){
         projectUpdate = null;
@@ -139,7 +139,7 @@ public class SystemController {
      * 获取Jar包下载状态
      * @return
      */
-    @ApiOperation("获取Jar包下载状态")
+    @Operation(summary = "获取Jar包下载状态")
     @GetMapping("/update/jarStatus")
     public Result<ProjectUpdate.DownloadStatus> downloadJarFileStatus(@RequestParam String version) throws Exception {
         if (projectUpdate != null){
@@ -157,7 +157,7 @@ public class SystemController {
      * 取消下载Jar文件
      * @return
      */
-    @ApiOperation("取消下载Jar包")
+    @Operation(summary = "取消下载Jar包")
     @GetMapping("/update/cancel")
     public Result cancelDownloadJarFile(){
         if (projectUpdate != null){
@@ -175,7 +175,7 @@ public class SystemController {
      * 系统概况信息
      * @return
      */
-    @ApiOperation("系统概况信息")
+    @Operation(summary = "系统概况信息")
     @GetMapping("/info")
     public Result info() throws Exception{
         Duration duration = Duration.between(startTime, LocalDateTime.now());
@@ -212,7 +212,7 @@ public class SystemController {
      * 根据时间区间获取历史日志
      * @return
      */
-    @ApiOperation("根据时间区间获取历史日志")
+    @Operation(summary = "根据时间区间获取历史日志")
     @GetMapping("/logs/history/between")
     public Result<List<String>> historyLogsByDate(@RequestParam String start, @RequestParam String end, @RequestParam String level) throws Exception{
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -226,7 +226,7 @@ public class SystemController {
      * 根据时间区间获取历史日志
      * @return
      */
-    @ApiOperation("获取最近日志")
+    @Operation(summary = "获取最近日志")
     @GetMapping("/logs/history/latest")
     public Result<List<String>> historyLogsByLatest(@RequestParam Long minutes, @RequestParam String level) throws Exception{
         List<String> logs = LogUtils.getRecent(minutes, TimeUnit.MINUTES, new File(dataPathProperties.getLogsPath()), level);
@@ -268,7 +268,7 @@ public class SystemController {
      * 获取后台任务列表
      * @return
      */
-    @ApiOperation("获取后台任务列表")
+    @Operation(summary = "获取后台任务列表")
     @GetMapping("/backgroundTasks")
     public Result<List<TaskStatusVO>> backgroundTasks() throws SchedulerException {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
@@ -322,7 +322,7 @@ public class SystemController {
      * 立即执行任务
      * @return
      */
-    @ApiOperation("立即执行任务")
+    @Operation(summary = "立即执行任务")
     @PostMapping("/backgroundTasks/{uuid}")
     public Result startNowTask(@PathVariable String uuid){
         cronTaskManager.startNow(uuid);

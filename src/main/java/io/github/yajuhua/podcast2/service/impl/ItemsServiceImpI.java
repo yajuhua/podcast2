@@ -3,7 +3,6 @@ package io.github.yajuhua.podcast2.service.impl;
 import io.github.yajuhua.podcast2.mapper.ItemsMapper;
 import io.github.yajuhua.podcast2.pojo.entity.Items;
 import io.github.yajuhua.podcast2.service.ItemsService;
-import io.swagger.annotations.Authorization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

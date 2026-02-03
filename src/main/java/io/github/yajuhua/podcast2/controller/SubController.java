@@ -38,8 +38,8 @@ import io.github.yajuhua.podcast2API.extension.build.Select;
 import io.github.yajuhua.podcast2API.extension.reception.InputAndSelectData;
 import io.github.yajuhua.podcast2API.setting.Setting;
 import io.github.yajuhua.podcast2API.utils.TimeFormat;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.quartz.SchedulerException;
@@ -68,7 +68,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @Slf4j
-@Api(tags = "订阅相关接口")
+@Tag(name = "订阅相关接口")
 public class SubController {
 
     @Autowired
@@ -108,7 +108,7 @@ public class SubController {
      * 获取订阅列表
      * @return
      */
-    @ApiOperation("获取订阅列表")
+    @Operation(summary = "获取订阅列表")
     @GetMapping("/api/sub/list")
     public Result<List<SubVO>> list() throws Exception {
         List<Sub> list = subService.list();
@@ -133,7 +133,7 @@ public class SubController {
      * @param keywords
      * @return
      */
-    @ApiOperation("搜索订阅")
+    @Operation(summary = "搜索订阅")
     @GetMapping("/api/sub/search")
     public Result<List<SubVO>> search(String keywords) throws Exception {
         List<Sub> list = subService.list();
@@ -168,7 +168,7 @@ public class SubController {
      * @param uuid
      * @return
      */
-    @ApiOperation("根据uuid获取订阅xml")
+    @Operation(summary = "根据uuid获取订阅xml")
     @GetMapping(value = "/sub/xml/{uuid}", produces = {MediaType.APPLICATION_XML_VALUE})
     public String xml(@PathVariable String uuid, HttpServletRequest request){
         Sub sub = subService.selectByUuid(uuid);
@@ -221,7 +221,7 @@ public class SubController {
      * @param uuids group
      * @return
      */
-    @ApiOperation("获取组xml")
+    @Operation(summary = "获取组xml")
     @GetMapping(value = "/sub/xml", produces = {MediaType.APPLICATION_XML_VALUE})
     public String groupXml(@RequestParam("uuids") List<String> uuids, @RequestParam("group") String group, HttpServletRequest request, @RequestParam("xmlConfName") String xmlConfName)
             throws Exception{
@@ -450,7 +450,7 @@ public class SubController {
      * @return
      */
     @DeleteMapping("/api/sub")
-    @ApiOperation("删除订阅")
+    @Operation(summary = "删除订阅")
     @Transactional
     public Result delete(@RequestParam List<String> uuids) throws Exception {
         log.info("delete uuids:{}",uuids);
@@ -520,7 +520,7 @@ public class SubController {
      * 添加订阅
      * @return
      */
-    @ApiOperation("添加订阅")
+    @Operation(summary = "添加订阅")
     @PostMapping("/api/sub/add")
     @Transactional
     public Result add(@RequestBody AddSubDTO addSubDTO){
@@ -637,7 +637,7 @@ public class SubController {
      * @return
      */
     @GetMapping("/api/sub/extendList")
-    @ApiOperation("获取插件扩展")
+    @Operation(summary = "获取插件扩展")
     public Result<ExtendListVO> extendList(GetExtendListDTO getExtendListDTO) throws Exception {
         log.info("getExtendListDTO:{}",getExtendListDTO);
         Params params = new Params();
@@ -662,7 +662,7 @@ public class SubController {
      * 提交编辑订阅
      * @return
      */
-    @ApiOperation("提交编辑订阅")
+    @Operation(summary = "提交编辑订阅")
     @PutMapping("/api/sub")
     @Transactional
     public Result editSub(@RequestBody EditSubVO editSubVO) throws Exception{
@@ -716,7 +716,7 @@ public class SubController {
      * 获取编辑订阅信息
      * @return
      */
-    @ApiOperation("获取编辑订阅信息")
+    @Operation(summary = "获取编辑订阅信息")
     @GetMapping("/api/sub/edit/{uuid}")
     public Result<EditSubVO> getEditSubInfo(@PathVariable String uuid)throws Exception{
         //1.获取sub
@@ -880,7 +880,7 @@ public class SubController {
      * @param uuid
      * @return
      */
-    @ApiOperation("获取订阅详细信息")
+    @Operation(summary = "获取订阅详细信息")
     @GetMapping("/api/sub/detail/{uuid}")
     public Result<SubDetailVO> subDetail(@PathVariable String uuid){
         Sub sub = subMapper.selectByUuid(uuid);
@@ -904,7 +904,7 @@ public class SubController {
      * 订阅追加节目
      * @return
      */
-    @ApiOperation("订阅追加节目")
+    @Operation(summary = "订阅追加节目")
     @PostMapping("/api/sub/appendItem")
     public Result appendItem(@RequestBody AppendItemDTO appendItemDTO){
         Task.appendItemList.add(appendItemDTO);
@@ -916,7 +916,7 @@ public class SubController {
      * 获取xml配置数据
      * @return
      */
-    @ApiOperation("获取xml配置数据")
+    @Operation(summary = "获取xml配置数据")
     @GetMapping("/api/sub/xmlConfData")
     public Result<String> getXmlConfData(){
         String xmlConfData = userMapper.list().get(0).getXmlConfData();
@@ -927,7 +927,7 @@ public class SubController {
      * 获取xml配置数据
      * @return
      */
-    @ApiOperation("更新xml配置数据")
+    @Operation(summary = "更新xml配置数据")
     @PostMapping("/api/sub/xmlConfData")
     public Result updateXmlConfData(@RequestBody XmlConfDataDTO xmlConfData){
         User user = User.builder()
@@ -941,7 +941,7 @@ public class SubController {
      * 获取xml配置名称
      * @return
      */
-    @ApiOperation("获取xml配置名称")
+    @Operation(summary = "获取xml配置名称")
     @GetMapping("/api/sub/xmlConfName")
     public Result getXmlConfNames(){
         try {
@@ -984,7 +984,7 @@ public class SubController {
      * 获取任务状态
      * @return
      */
-    @ApiOperation("获取任务状态")
+    @Operation(summary = "获取任务状态")
     @GetMapping("/api/sub/status/{uuid}")
     public Result<TaskStatusVO> getTaskStatus(@PathVariable String uuid) throws Exception {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
@@ -1042,7 +1042,7 @@ public class SubController {
      * 立即执行任务
      * @return
      */
-    @ApiOperation("立即执行任务")
+    @Operation(summary = "立即执行任务")
     @PostMapping("/api/sub/status/{uuid}")
     public Result startNowTask(@PathVariable String uuid){
         Sub sub = subMapper.selectByUuid(uuid);
