@@ -5,6 +5,9 @@ org:
       worker-count: 1
     dashboard:
       enabled: true
+podcast2:
+  data:
+    data-path: "D:/Tmp"
 
 
 
