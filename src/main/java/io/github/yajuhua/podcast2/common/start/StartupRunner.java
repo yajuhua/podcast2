@@ -295,7 +295,7 @@ public class StartupRunner implements ApplicationRunner{
         TaskRegistry.backgroundTask.put(uuid, desc);
 
         log.info("开始调度订阅");
-        jobs.updateSubList();
+        jobs.updateSubList(subMapper.list());
     }
 
     /**

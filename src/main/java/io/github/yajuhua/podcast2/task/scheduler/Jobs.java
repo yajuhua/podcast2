@@ -826,8 +826,7 @@ public class Jobs {
      * 更新订阅集合
      * @throws Exception
      */
-    public void updateSubList() throws Exception {
-        List<Sub> subList = subMapper.list();
+    public void updateSubList(List<Sub> subList) throws Exception {
         for (Sub sub : subList) {
             String scheduleType = sub.getScheduleType();
             if (scheduleType.equalsIgnoreCase("cron")){

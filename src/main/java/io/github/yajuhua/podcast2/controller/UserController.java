@@ -251,7 +251,8 @@ public class UserController {
             extendService.batchExtend(export.getExtendList());
         }
         //加入任务队列
-        jobs.updateSubList();
+        List<Sub> exportSubList = dataExportList.stream().map(DataExport::getSub).collect(Collectors.toList());
+        jobs.updateSubList(exportSubList);
         return Result.success();
     }
 
