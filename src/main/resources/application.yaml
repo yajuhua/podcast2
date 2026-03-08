@@ -41,7 +41,13 @@ podcast2:
     update: ${timestamp}
     version: ${project.version}
 
-
+org:
+  jobrunr:
+    background-job-server:
+      enabled: true
+      worker-count: 1
+    dashboard:
+      enabled: false
 
 
 

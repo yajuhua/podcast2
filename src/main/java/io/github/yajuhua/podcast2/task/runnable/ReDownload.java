@@ -1,4 +1,4 @@
-package io.github.yajuhua.podcast2.task;
+package io.github.yajuhua.podcast2.task.runnable;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -18,6 +18,7 @@ import io.github.yajuhua.podcast2.pojo.entity.Items;
 import io.github.yajuhua.podcast2.pojo.entity.Settings;
 import io.github.yajuhua.podcast2.pojo.entity.Sub;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
+import io.github.yajuhua.podcast2.task.TaskRegistry;
 import io.github.yajuhua.podcast2API.Params;
 import io.github.yajuhua.podcast2API.Podcast2;
 import io.github.yajuhua.podcast2API.Type;
@@ -61,7 +62,7 @@ public class ReDownload implements Runnable{
     public void run() {
 
         DownloadManager downloadManager = new DownloadManager();
-        Task.downloadManagerList.add(downloadManager);
+        TaskRegistry.downloadManagerList.add(downloadManager);
         Sub sub = subMapper.selectByUuid(request.getChannelUuid());
         //更新items状态码
         Items items = itemsMapper.selectByUuid(request.getUuid());
@@ -157,8 +158,8 @@ public class ReDownload implements Runnable{
                         .itemName(items1.getTitle())
                         .build();
 
-                Task.getDownloadProgressVOSet().remove(build);//去重
-                Task.getDownloadProgressVOSet().add(build);
+                TaskRegistry.getDownloadProgressVOSet().remove(build);//去重
+                TaskRegistry.getDownloadProgressVOSet().add(build);
 
                 //remove操作
                 if (progress.getStatus().equals(Context.REMOVE)) {

@@ -1,4 +1,4 @@
-package io.github.yajuhua.podcast2.task;
+package io.github.yajuhua.podcast2.task.runnable;
 
 import com.google.gson.Gson;
 import io.github.yajuhua.download.commons.Context;
@@ -19,6 +19,7 @@ import io.github.yajuhua.podcast2.pojo.entity.Settings;
 import io.github.yajuhua.podcast2.pojo.entity.Sub;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
 import io.github.yajuhua.podcast2.service.SubService;
+import io.github.yajuhua.podcast2.task.TaskRegistry;
 import io.github.yajuhua.podcast2API.Channel;
 import io.github.yajuhua.podcast2API.Item;
 import io.github.yajuhua.podcast2API.Params;
@@ -76,7 +77,7 @@ public class Update implements Runnable {
             log.info("开始检查更新: {}",sub.getTitle());
 
             //标记更新状态
-            Task.updateStatus = true;
+            TaskRegistry.updateStatus = true;
 
             if (isFirst == StatusCode.YES) {
                 log.info("进入首次更新: {}",sub.getTitle());
@@ -157,7 +158,7 @@ public class Update implements Runnable {
 
             //构建下载
             DownloadManager downloadManager = new DownloadManager(1,1,items.size());
-            Task.downloadManagerList.add(downloadManager);
+            TaskRegistry.downloadManagerList.add(downloadManager);
             //过滤器
             List<String> titlekeyWords = Arrays.asList(sub.getTitleKeywords());
             List<String> desckeyWords = Arrays.asList(sub.getDescKeywords());
@@ -311,8 +312,8 @@ public class Update implements Runnable {
                             .channelName(sub.getTitle())
                             .itemName(itemName)
                             .build();
-                    Task.getDownloadProgressVOSet().remove(build);
-                    Task.getDownloadProgressVOSet().add(build);
+                    TaskRegistry.getDownloadProgressVOSet().remove(build);
+                    TaskRegistry.getDownloadProgressVOSet().add(build);
                     if (DownloaderUtils.endStatusCode().contains(progress.getStatus())){
 
                         Items items1 = itemsMapper.selectByUuid(progress.getUuid());
@@ -351,7 +352,7 @@ public class Update implements Runnable {
             //加入当前时间浮动，让每次检查时间不一样 往后
             sub.setCheckTime(nowTimeFloat(1,1,10,Units.Minutes));
             subMapper.update(sub);
-            Task.updateStatus = false;
+            TaskRegistry.updateStatus = false;
             log.info("{}:更新完成",sub.getTitle());
         }
     }
@@ -427,8 +428,6 @@ public class Update implements Runnable {
                 && !localLatestEqual.equalsIgnoreCase("none")
                 && equalList.contains(localLatestEqual)){
             int index = equalList.indexOf(localLatestEqual);
-            //0 1 2 3 4 5
-            //TODO 待测试
             return recentItems.subList(index + 1,recentItems.size());
         }else {
             //该订阅在本地还没节目

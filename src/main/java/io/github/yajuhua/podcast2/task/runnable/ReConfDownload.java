@@ -1,4 +1,4 @@
-package io.github.yajuhua.podcast2.task;
+package io.github.yajuhua.podcast2.task.runnable;
 
 import io.github.yajuhua.download.commons.Context;
 import io.github.yajuhua.download.commons.progress.DownloadProgress;
@@ -12,6 +12,7 @@ import io.github.yajuhua.podcast2.plugin.PluginManager;
 import io.github.yajuhua.podcast2.pojo.entity.Items;
 import io.github.yajuhua.podcast2.pojo.entity.Sub;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
+import io.github.yajuhua.podcast2.task.TaskRegistry;
 import lombok.extern.slf4j.Slf4j;
 import java.util.Set;
 
@@ -41,7 +42,7 @@ public class ReConfDownload implements Runnable{
     public void run() {
 
         DownloadManager downloadManager = new DownloadManager();
-        Task.downloadManagerList.add(downloadManager);
+        TaskRegistry.downloadManagerList.add(downloadManager);
         Items items = itemsMapper.selectByUuid(request.getUuid());
         Sub sub = subMapper.selectByUuid(items.getChannelUuid());
         items.setStatus(Context.DOWNLOADING);
@@ -75,8 +76,8 @@ public class ReConfDownload implements Runnable{
                         .itemName(items1.getTitle())
                         .build();
 
-                Task.getDownloadProgressVOSet().remove(build);//去重
-                Task.getDownloadProgressVOSet().add(build);
+                TaskRegistry.getDownloadProgressVOSet().remove(build);//去重
+                TaskRegistry.getDownloadProgressVOSet().add(build);
 
                 //remove操作
                 if (progress.getStatus().equals(Context.REMOVE)) {

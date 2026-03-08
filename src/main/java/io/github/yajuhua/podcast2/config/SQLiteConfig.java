@@ -53,9 +53,10 @@ public class SQLiteConfig {
         dataSource.setDriverClassName("org.sqlite.JDBC");
         dataSource.setMaximumPoolSize(10);
         dataSource.setMinimumIdle(10);
-        dataSource.setMaxLifetime(0);
         dataSource.setIdleTimeout(60000);
         dataSource.setConnectionTimeout(60000);
+        dataSource.addDataSourceProperty("busy_timeout", "5000");
+        dataSource.addDataSourceProperty("journal_mode", "WAL");
         dataSource.setJdbcUrl(dataPathProperties.getSqliteUrl());
         return dataSource;
     }

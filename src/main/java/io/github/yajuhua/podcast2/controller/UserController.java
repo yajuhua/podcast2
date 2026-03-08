@@ -26,7 +26,8 @@ import io.github.yajuhua.podcast2.pojo.vo.ApiTokenVO;
 import io.github.yajuhua.podcast2.pojo.vo.UserLoginVO;
 import io.github.yajuhua.podcast2.service.ExtendService;
 import io.github.yajuhua.podcast2.service.UserService;
-import io.github.yajuhua.podcast2.task.Task;
+import io.github.yajuhua.podcast2.task.TaskRegistry;
+import io.github.yajuhua.podcast2.task.scheduler.Jobs;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -77,7 +78,9 @@ public class UserController {
     @Autowired
     private JwtTokenInterceptor jwtTokenInterceptor;
     @Autowired
-    private Task task;
+    private TaskRegistry taskRegistry;
+    @Autowired
+    private Jobs jobs;
 
     /**
      * 用户登录
@@ -226,7 +229,7 @@ public class UserController {
     @Operation(summary = "数据导入")
     @PostMapping("/dataImport")
     @Transactional
-    public Result dataImport(@RequestBody List<DataExport> dataExportList){
+    public Result dataImport(@RequestBody List<DataExport> dataExportList) throws Exception {
         log.info("数据导入");
         List<Sub> subList = subMapper.list();
         int noExist = dataExportList.stream().filter(dataExport -> {
@@ -248,7 +251,7 @@ public class UserController {
             extendService.batchExtend(export.getExtendList());
         }
         //加入任务队列
-        task.updateSub();
+        jobs.updateSubList();
         return Result.success();
     }
 

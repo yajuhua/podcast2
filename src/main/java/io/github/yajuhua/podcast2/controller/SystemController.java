@@ -7,17 +7,17 @@ import io.github.yajuhua.podcast2.common.result.Result;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.common.utils.LogUtils;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
-import io.github.yajuhua.podcast2.pojo.entity.Sub;
 import io.github.yajuhua.podcast2.pojo.vo.KeyValue;
 import io.github.yajuhua.podcast2.pojo.vo.TaskStatusVO;
 import io.github.yajuhua.podcast2.service.UserService;
-import io.github.yajuhua.podcast2.task.CronTaskManager;
-import io.github.yajuhua.podcast2.task.Task;
+import io.github.yajuhua.podcast2.task.TaskRegistry;
 import io.github.yajuhua.podcast2.update.ProjectUpdate;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.quartz.SchedulerException;
+import org.jobrunr.jobs.Job;
+import org.jobrunr.jobs.RecurringJob;
+import org.jobrunr.storage.StorageProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -26,7 +26,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -52,7 +51,9 @@ public class SystemController {
     @Autowired
     private UserService userService;
     @Autowired
-    private CronTaskManager cronTaskManager;
+    private StorageProvider storageProvider;
+    @Autowired
+    private  SubController subController;
 
 
     /**
@@ -270,48 +271,11 @@ public class SystemController {
      */
     @Operation(summary = "获取后台任务列表")
     @GetMapping("/backgroundTasks")
-    public Result<List<TaskStatusVO>> backgroundTasks() throws SchedulerException {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        String lastFireTime = "未知";
-        String nextFireTime = "未知";
-
-        Map<String,String> statusMap = new HashMap();
-        statusMap.put("NONE", "无状态");
-        statusMap.put("NORMAL", "正常");
-        statusMap.put("EMPTY", "空订阅");
-        statusMap.put("PAUSED", "暂停");
-        statusMap.put("COMPLETE", "完成");
-        statusMap.put("ERROR", "错误");
-        statusMap.put("BLOCKED", "被阻塞");
-
-        Map<String,String> colorMap = new HashMap();
-        colorMap.put("NONE","#D3D3D3");//灰色
-        colorMap.put("NORMAL", "#28a745");//绿色
-        colorMap.put("EMPTY", "#28a745");//绿色
-        colorMap.put("PAUSED", "#ffc107");//黄色
-        colorMap.put("COMPLETE", "#007bff");//蓝色
-        colorMap.put("ERROR", "#dc3545");//红色
-        colorMap.put("BLOCKED", "#8a2be2");//紫色
-
-        String taskStatusName;
+    public Result<List<TaskStatusVO>> backgroundTasks(){
         List<TaskStatusVO> taskStatusVOList = new ArrayList<>();
-        for (UUID uuid : Task.backgroundTask.keySet()) {
-            CronTaskManager.TaskStatus taskStatus = cronTaskManager.getTaskStatus(uuid.toString());
-            taskStatusName = taskStatus.getStatus().name();
-            if (taskStatus.getLastFireTime() != null){
-                lastFireTime = sdf.format(taskStatus.getLastFireTime());
-            }
-            if (taskStatus.getNextFireTime() != null){
-                nextFireTime = sdf.format(taskStatus.getNextFireTime());
-            }
-            TaskStatusVO statusVO = TaskStatusVO.builder()
-                    .status(statusMap.get(taskStatusName))
-                    .lastFireTime(lastFireTime)
-                    .nextFireTime(nextFireTime)
-                    .statusColor(colorMap.get(taskStatusName))
-                    .title(Task.backgroundTask.get(uuid))
-                    .uuid(uuid.toString())
-                    .build();
+        for (UUID uuid : TaskRegistry.backgroundTask.keySet()) {
+            String title = TaskRegistry.backgroundTask.get(uuid);
+            TaskStatusVO statusVO = subController.getTaskStatusByUUID(uuid.toString(), "backTask", title);
             taskStatusVOList.add(statusVO);
         }
 
@@ -325,9 +289,15 @@ public class SystemController {
     @Operation(summary = "立即执行任务")
     @PostMapping("/backgroundTasks/{uuid}")
     public Result startNowTask(@PathVariable String uuid){
-        cronTaskManager.startNow(uuid);
-        log.info("立即执行任务: {}", Task.backgroundTask.get(UUID.fromString(uuid)));
-        return Result.success();
+        for (RecurringJob recurringJob : storageProvider.getRecurringJobs()) {
+            if (recurringJob.getId().equals(uuid)){
+                Job job = recurringJob.toEnqueuedJob();
+                storageProvider.save(job);
+                log.info("立即执行任务: {}", TaskRegistry.backgroundTask.get(UUID.fromString(uuid)));
+                return Result.success();
+            }
+        }
+        return Result.error("未找到该任务: " + TaskRegistry.backgroundTask.get(UUID.fromString(uuid)));
     }
 
 }

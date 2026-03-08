@@ -155,11 +155,6 @@
             <version>1.1.6</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-quartz</artifactId>
-        </dependency>
-
         <!-- https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-core -->
         <dependency>
             <groupId>com.twelvemonkeys.imageio</groupId>
@@ -171,6 +166,18 @@
             <groupId>com.twelvemonkeys.imageio</groupId>
             <artifactId>imageio-webp</artifactId>
             <version>3.11.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cronutils</groupId>
+            <artifactId>cron-utils</artifactId>
+            <version>9.2.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jobrunr</groupId>
+            <artifactId>jobrunr-spring-boot-2-starter</artifactId>
+            <version>7.5.0</version>
         </dependency>
 
     </dependencies>

@@ -4,8 +4,10 @@ import com.github.markusbernhardt.proxy.ProxySearch;
 import com.google.gson.Gson;
 import io.github.yajuhua.download.commons.Context;
 import io.github.yajuhua.podcast2.common.constant.Default;
+import io.github.yajuhua.podcast2.common.context.JobTimeoutContext;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.properties.InfoProperties;
+import io.github.yajuhua.podcast2.common.utils.CronUtils;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.controller.SystemController;
 import io.github.yajuhua.podcast2.controller.UserController;
@@ -13,12 +15,17 @@ import io.github.yajuhua.podcast2.downloader.aria2.Aria2RPC;
 import io.github.yajuhua.podcast2.mapper.*;
 import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
+import io.github.yajuhua.podcast2.service.JobRunrService;
 import io.github.yajuhua.podcast2.service.UserService;
-import io.github.yajuhua.podcast2.task.CronTaskManager;
-import io.github.yajuhua.podcast2.task.Task;
+import io.github.yajuhua.podcast2.task.scheduler.Jobs;
+import io.github.yajuhua.podcast2.task.TaskRegistry;
 import io.github.yajuhua.podcast2.websocket.DownloadWebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.jobrunr.jobs.RecurringJob;
+import org.jobrunr.jobs.lambdas.JobLambda;
+import org.jobrunr.scheduling.JobScheduler;
+import org.jobrunr.storage.StorageProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -27,6 +34,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.net.ProxySelector;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -47,8 +56,11 @@ public class StartupRunner implements ApplicationRunner{
     private DownloadWebSocketServer downloadWebSocketServer;
     private UserService userService;
     private ItemsMapper itemsMapper;
-    private Task task;
-    private CronTaskManager cronTaskManager;
+    private TaskRegistry taskRegistry;
+    private JobScheduler jobScheduler;
+    private StorageProvider storageProvider;
+    private Jobs jobs;
+    private JobRunrService jobRunrService;
 
     public StartupRunner() {
     }
@@ -57,7 +69,8 @@ public class StartupRunner implements ApplicationRunner{
     public StartupRunner(Gson gson, SubMapper subMapper, InfoProperties infoProperties, UserMapper userMapper,
                          DownloaderMapper downloaderMapper, DataPathProperties dataPathProperties,
                          DownloadWebSocketServer downloadWebSocketServer, UserService userService,
-                         ItemsMapper itemsMapper, Task task, CronTaskManager cronTaskManager) {
+                         ItemsMapper itemsMapper, TaskRegistry taskRegistry, JobScheduler jobScheduler,
+                         StorageProvider storageProvider, Jobs jobs, JobRunrService jobRunrService) {
         this.gson = gson;
         this.subMapper = subMapper;
         this.infoProperties = infoProperties;
@@ -67,14 +80,16 @@ public class StartupRunner implements ApplicationRunner{
         this.downloadWebSocketServer = downloadWebSocketServer;
         this.userService = userService;
         this.itemsMapper = itemsMapper;
-        this.task = task;
-        this.cronTaskManager = cronTaskManager;
-
+        this.taskRegistry = taskRegistry;
+        this.jobScheduler = jobScheduler;
+        this.storageProvider = storageProvider;
+        this.jobs = jobs;
+        this.jobRunrService= jobRunrService;
     }
 
 
     @Override
-    public void run(ApplicationArguments args){
+    public void run(ApplicationArguments args) throws Exception {
 
         //记录启动时间
         SystemController.startTime = LocalDateTime.now();
@@ -223,89 +238,64 @@ public class StartupRunner implements ApplicationRunner{
     /**
      * 开始任务调度
      */
-    private void startTaskScheduling(){
-       log.info("开始任务调度");
+    private void startTaskScheduling() throws Exception {
+        //清空之前的任务
+        for (RecurringJob recurringJob : storageProvider.getRecurringJobs()) {
+            jobScheduler.deleteRecurringJob(recurringJob.getId());
+        }
+        log.info("开始任务调度");
 
-       UUID uuid = UUID.randomUUID();
-       String desc = "删除过期节目";
-       cronTaskManager.add(uuid.toString(), 3600, new Runnable() {
-           @Override
-           public void run() {
-               task.clearExpired();
-           }
-       }, TimeUnit.SECONDS, 60*30, desc, 0);
-       Task.backgroundTask.put(uuid, desc);
+        String desc = "删除过期节目";
+        UUID uuid = UUID.nameUUIDFromBytes(desc.getBytes(StandardCharsets.UTF_8));
+        jobScheduler.scheduleRecurrently(uuid.toString(),Duration.ofMinutes(30),
+                (JobLambda) () -> jobs.clearExpired(new JobTimeoutContext()));
+        jobRunrService.toScheduledJob(uuid.toString());
+        TaskRegistry.backgroundTask.put(uuid, desc);
 
-       uuid = UUID.randomUUID();
-       desc = "清除数据库未记录的文件";
-        cronTaskManager.add(uuid.toString(), 3600, new Runnable() {
-            @Override
-            public void run() {
-                task.clearNotFoundFile();
-            }
-        }, TimeUnit.SECONDS, 60*30, desc, 0);
-        Task.backgroundTask.put(uuid, desc);
+        desc = "清除数据库未记录的文件";
+        uuid = UUID.nameUUIDFromBytes(desc.getBytes(StandardCharsets.UTF_8));
+        jobScheduler.scheduleRecurrently(uuid.toString(),Duration.ofMinutes(30),
+                (JobLambda) () -> jobs.clearNotFoundFile(new JobTimeoutContext()));
+        jobRunrService.toScheduledJob(uuid.toString());
+        TaskRegistry.backgroundTask.put(uuid, desc);
 
-        uuid = UUID.randomUUID();
         desc = "更新yt-dlp";
-        cronTaskManager.add(uuid.toString(), 3600*10, new Runnable() {
-            @Override
-            public void run() {
-                task.updateYtDlp();
-            }
-        }, TimeUnit.SECONDS, 60*30, desc, 0);
-        Task.backgroundTask.put(uuid, desc);
+        uuid = UUID.nameUUIDFromBytes(desc.getBytes(StandardCharsets.UTF_8));
+        jobScheduler.scheduleRecurrently(uuid.toString(),Duration.ofMinutes(60),
+                (JobLambda) () -> jobs.updateYtDlp(new JobTimeoutContext()));
+        jobRunrService.toScheduledJob(uuid.toString());
+        TaskRegistry.backgroundTask.put(uuid, desc);
 
-        uuid = UUID.randomUUID();
         desc = "自动更新插件";
-        cronTaskManager.add(uuid.toString(), 120, new Runnable() {
-            @Override
-            public void run() {
-                task.autoUpdatePlugin();
-            }
-        }, TimeUnit.SECONDS, 60*30, desc, 0);
-        Task.backgroundTask.put(uuid, desc);
+        uuid = UUID.nameUUIDFromBytes(desc.getBytes(StandardCharsets.UTF_8));
+        jobScheduler.scheduleRecurrently(uuid.toString(),Duration.ofMinutes(30),
+                (JobLambda) () -> jobs.autoUpdatePlugin(new JobTimeoutContext()));
+        jobRunrService.toScheduledJob(uuid.toString());
+        TaskRegistry.backgroundTask.put(uuid, desc);
 
-        uuid = UUID.randomUUID();
         desc = "上传资源到alist";
-        cronTaskManager.add(uuid.toString(), 60, new Runnable() {
-            @Override
-            public void run() {
-                task.uploadResourcesToAList();
-            }
-        }, TimeUnit.SECONDS, 60*30, desc, 0);
-        Task.backgroundTask.put(uuid, desc);
+        uuid = UUID.nameUUIDFromBytes(desc.getBytes(StandardCharsets.UTF_8));
+        jobScheduler.scheduleRecurrently(uuid.toString(),Duration.ofMinutes(5),
+                (JobLambda) () -> jobs.uploadResourcesToAList(new JobTimeoutContext()));
+        jobRunrService.toScheduledJob(uuid.toString());
+        TaskRegistry.backgroundTask.put(uuid, desc);
 
-        uuid = UUID.randomUUID();
         desc = "刷新一次AList的token";
-        cronTaskManager.add(uuid.toString(), 24*60*60, new Runnable() {
-            @Override
-            public void run() {
-                task.refreshAListToken();
-            }
-        }, TimeUnit.SECONDS, 60*30, desc, 0);
-        Task.backgroundTask.put(uuid, desc);
+        uuid = UUID.nameUUIDFromBytes(desc.getBytes(StandardCharsets.UTF_8));
+        jobScheduler.scheduleRecurrently(uuid.toString(),Duration.ofHours(12),
+                (JobLambda) () -> jobs.refreshAListToken(new JobTimeoutContext()));
+        jobRunrService.toScheduledJob(uuid.toString());
+        TaskRegistry.backgroundTask.put(uuid, desc);
 
-        uuid = UUID.randomUUID();
         desc = "重新下载";
-        cronTaskManager.add(uuid.toString(), 60, new Runnable() {
-            @Override
-            public void run() {
-                task.reDownloadTask();
-            }
-        }, TimeUnit.SECONDS, 60*30, desc, 0);
-        Task.backgroundTask.put(uuid, desc);
+        uuid = UUID.nameUUIDFromBytes(desc.getBytes(StandardCharsets.UTF_8));
+        jobScheduler.scheduleRecurrently(uuid.toString(),Duration.ofMinutes(1),
+                (JobLambda) () -> jobs.reDownloadTaskList(new JobTimeoutContext()));
+        jobRunrService.toScheduledJob(uuid.toString());
+        TaskRegistry.backgroundTask.put(uuid, desc);
 
-        uuid = UUID.randomUUID();
-        desc = "下载追加节目";
-        cronTaskManager.add(uuid.toString(), 60, new Runnable() {
-            @Override
-            public void run() {
-                task.downloadAppendItemList();
-            }
-        }, TimeUnit.SECONDS, 60*30, desc, 0);
-
-       task.updateSub();
+        log.info("开始调度订阅");
+        jobs.updateSubList();
     }
 
     /**
@@ -369,10 +359,10 @@ public class StartupRunner implements ApplicationRunner{
         executor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                Set<DownloadProgressVO> downloadProgressVOSet = Task.getDownloadProgressVOSet();
+                Set<DownloadProgressVO> downloadProgressVOSet = TaskRegistry.getDownloadProgressVOSet();
                 for (DownloadProgressVO vo : downloadProgressVOSet) {
                     if (DownloaderUtils.endStatusCode().contains(vo.getStatus())){
-                        Task.getDownloadProgressVOSet().remove(vo);
+                        TaskRegistry.getDownloadProgressVOSet().remove(vo);
                     }
                 }
                 //排序

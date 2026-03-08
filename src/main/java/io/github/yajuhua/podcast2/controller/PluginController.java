@@ -19,7 +19,7 @@ import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.PluginDetailVO;
 import io.github.yajuhua.podcast2.pojo.vo.PluginVO;
 import io.github.yajuhua.podcast2.service.UserService;
-import io.github.yajuhua.podcast2.task.Task;
+import io.github.yajuhua.podcast2.task.TaskRegistry;
 import io.github.yajuhua.podcast2API.Params;
 import io.github.yajuhua.podcast2API.Podcast2;
 import io.github.yajuhua.podcast2API.setting.Setting;
@@ -30,12 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.File;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -355,61 +349,11 @@ public class PluginController {
     @Operation(summary = "更新插件")
     @PostMapping("/update")
     public Result update(@RequestParam List<String> names) throws Exception{
-        if(Task.updateStatus){
+        if(TaskRegistry.updateStatus){
             //避免订阅更新时更新插件
             throw new PluginOccupancyException(MessageConstant.SUB_UPDATE_ING);
         }
         log.info("更新插件names:{}",names);
-/*        List<PluginInfo> pluginInfos = PluginLoader.remoteRepoPluginList(repoProperties.getPluginUrl());
-        pluginInfos = pluginInfos.stream().filter(new Predicate<PluginInfo>() {
-            @Override
-            public boolean test(PluginInfo pluginInfo) {
-                return names.contains(pluginInfo.getName());
-            }
-        }).collect(Collectors.toList());
-
-        List<PluginInfo> pluginInfos1 = new ArrayList<>();
-
-        Map map = new HashMap();
-        for (PluginInfo info : pluginInfos) {
-            if (!map.containsKey(info.getName()) || PluginLoader.compareVersion(info.getVersion(),map.get(info.getName()).toString()) == 1){
-                pluginInfos1.removeIf(new Predicate<PluginInfo>() {
-                    @Override
-                    public boolean test(PluginInfo pluginInfo) {
-                        return pluginInfo.getName().equals(info.getName());
-                    }
-                });
-                map.put(info.getName(),info.getVersion());
-                pluginInfos1.add(info);
-            }
-        }
-
-        //安装插件
-        List<String> uuids= new ArrayList<>();
-        for (PluginInfo info : pluginInfos1) {
-            uuids.add(info.getUuid());
-        }
-        //先保留之前的
-        Map<String,List<Settings>> bak = new HashMap<>();
-        for (String name : names) {
-            List<Settings> settings = settingsMapper.selectByPluginName(name);
-            bak.put(name,settings);
-        }
-        //安装新的
-        install(uuids);
-
-        //清除安装的
-        for (String name : names) {
-            settingsMapper.deleteByPlugin(name);
-        }
-        //恢复之前的
-        Set<String> keys = bak.keySet();
-        for (String key : keys) {
-            List<Settings> settings = bak.get(key);
-            for (Settings setting : settings) {
-                settingsMapper.insert(setting);
-            }
-        }*/
         for (String name : names) {
             List<Settings> settingsFromDB = settingsMapper.selectByPluginName(name);
             pluginManager.update(name);

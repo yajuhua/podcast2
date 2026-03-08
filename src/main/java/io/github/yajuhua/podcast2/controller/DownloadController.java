@@ -19,7 +19,7 @@ import io.github.yajuhua.podcast2.pojo.entity.Downloader;
 import io.github.yajuhua.podcast2.pojo.entity.Items;
 import io.github.yajuhua.podcast2.pojo.entity.Sub;
 import io.github.yajuhua.podcast2.pojo.vo.*;
-import io.github.yajuhua.podcast2.task.Task;
+import io.github.yajuhua.podcast2.task.TaskRegistry;
 import io.github.yajuhua.podcast2API.extension.build.Input;
 import io.github.yajuhua.podcast2API.extension.build.Select;
 import io.github.yajuhua.podcast2API.extension.reception.InputAndSelectData;
@@ -235,7 +235,7 @@ public class DownloadController {
         else {
             //加入重新下载任务列表
             log.info("加入重新下载列表: {}",items.getTitle());
-           Task.reDownloadItems.add(items);
+           TaskRegistry.reDownloadItems.add(items);
         }
         return Result.success();
     }
@@ -290,7 +290,7 @@ public class DownloadController {
     public Result removeDownload(@RequestParam List<String> uuids){
         for (String uuid : uuids) {
             try {
-                for (DownloadManager dm : Task.downloadManagerList) {
+                for (DownloadManager dm : TaskRegistry.downloadManagerList) {
                     dm.killByUuid(uuid);
                 }
             } catch (Exception e) {

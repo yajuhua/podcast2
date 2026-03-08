@@ -1,4 +1,4 @@
-package io.github.yajuhua.podcast2.task;
+package io.github.yajuhua.podcast2.pojo.entity;
 
 import lombok.*;
 
