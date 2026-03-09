@@ -169,7 +169,9 @@ export default {
       taskStatus: {
         uuid: null,
         visible: false
-      }
+      },
+      subListLoading: false,
+      subListTimer: null
     }
   },
   computed: {
@@ -184,16 +186,23 @@ export default {
   },
   mounted() {
     this.getSubList();
+    this.subListTimer = setInterval(() => {
+    this.getSubList()
+  }, 5000)
   },
   methods: {
     //获取订阅列表
     getSubList() {
+      if(this.subListLoading) return;
+      this.subListLoading = true;
       var _this = this;
       axios({
         method: "get",
         url: "/api/sub/list"
       }).then(function (resp) {
         _this.subData = resp.data.data;
+      }).finally(() =>{
+        this.subListLoading = false;
       })
     },
     toggleSelection(rows) {
@@ -369,7 +378,11 @@ export default {
     handleSearchInput: debounce(function() {
       console.log('搜索关键词:', this.searchQuery);
     }, 500), 
-  }
+  },
+  beforeDestroy() {
+    clearInterval(this.timer)
+    this.subListTimer = null
+}
 }
 </script>
 
