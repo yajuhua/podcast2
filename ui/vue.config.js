@@ -20,5 +20,13 @@ module.exports = defineConfig({
         changeOrigin: true
       }
     },
-  }
+  },
+  productionSourceMap: false,
+  configureWebpack: {
+    optimization: {
+      splitChunks: {
+        chunks: 'all'
+      }
+    }
+  },
 })
