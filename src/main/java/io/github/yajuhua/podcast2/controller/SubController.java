@@ -1029,9 +1029,9 @@ public class SubController {
 
         //获取上一次执行时间
         Page<Job> succeededJobs = storageProvider.getJobs(StateName.SUCCEEDED,
-                new OffsetBasedPageRequest("updatedAt:ASC", 0, 100));
+                new OffsetBasedPageRequest("updatedAt:DESC", 0, 1000));
         Page<Job> failedJobs = storageProvider.getJobs(StateName.FAILED,
-                new OffsetBasedPageRequest("updateAt:ASC", 0, 100));
+                new OffsetBasedPageRequest("updateAt:DESC", 0, 1000));
 
         List<Job> jobs = new ArrayList<>();
         jobs.addAll(succeededJobs.getItems());
@@ -1056,11 +1056,11 @@ public class SubController {
 
         //获取当前任务状态
         Page<Job> scheduledJobs = storageProvider.getJobs(StateName.SCHEDULED,
-                new OffsetBasedPageRequest("updatedAt:ASC", 0, 100));
+                new OffsetBasedPageRequest("updatedAt:DESC", 0, 1000));
         Page<Job> enqueuedJobs = storageProvider.getJobs(StateName.ENQUEUED,
-                new OffsetBasedPageRequest("updatedAt:ASC", 0, 100));
+                new OffsetBasedPageRequest("updatedAt:DESC", 0, 1000));
         Page<Job> processingJobs = storageProvider.getJobs(StateName.PROCESSING,
-                new OffsetBasedPageRequest("updatedAt:ASC", 0, 100));
+                new OffsetBasedPageRequest("updatedAt:DESC", 0, 1000));
         jobs.addAll(scheduledJobs.getItems());
         jobs.addAll(enqueuedJobs.getItems());
         jobs.addAll(processingJobs.getItems());
