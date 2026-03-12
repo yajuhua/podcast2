@@ -9,6 +9,7 @@ import io.github.yajuhua.podcast2.common.utils.LogUtils;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
 import io.github.yajuhua.podcast2.pojo.vo.KeyValue;
 import io.github.yajuhua.podcast2.pojo.vo.TaskStatusVO;
+import io.github.yajuhua.podcast2.service.JobRunrService;
 import io.github.yajuhua.podcast2.service.UserService;
 import io.github.yajuhua.podcast2.task.TaskRegistry;
 import io.github.yajuhua.podcast2.update.ProjectUpdate;
@@ -54,6 +55,8 @@ public class SystemController {
     private StorageProvider storageProvider;
     @Autowired
     private  SubController subController;
+    @Autowired
+    private JobRunrService jobRunrService;
 
 
     /**
@@ -289,15 +292,13 @@ public class SystemController {
     @Operation(summary = "立即执行任务")
     @PostMapping("/backgroundTasks/{uuid}")
     public Result startNowTask(@PathVariable String uuid){
-        for (RecurringJob recurringJob : storageProvider.getRecurringJobs()) {
-            if (recurringJob.getId().equals(uuid)){
-                Job job = recurringJob.toEnqueuedJob();
-                storageProvider.save(job);
-                log.info("立即执行任务: {}", TaskRegistry.backgroundTask.get(UUID.fromString(uuid)));
-                return Result.success();
-            }
+        try {
+            jobRunrService.startNow(uuid);
+            log.info("立即执行任务: {}", TaskRegistry.backgroundTask.get(UUID.fromString(uuid)));
+            return Result.success();
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
         }
-        return Result.error("未找到该任务: " + TaskRegistry.backgroundTask.get(UUID.fromString(uuid)));
     }
 
 }

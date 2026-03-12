@@ -1101,11 +1101,15 @@ public class SubController {
     @Operation(summary = "立即执行任务")
     @PostMapping("/api/sub/status/{uuid}")
     public Result startNowTask(@PathVariable String uuid) throws Exception {
-        Sub sub = subMapper.selectByUuid(uuid);
-        if (sub != null &&  sub.getSubType().equalsIgnoreCase("empty")){
-            return Result.error("空订阅无需更新！");
+        try {
+            Sub sub = subMapper.selectByUuid(uuid);
+            if (sub != null &&  sub.getSubType().equalsIgnoreCase("empty")){
+                return Result.error("空订阅无需更新！");
+            }
+            jobRunrService.startNow(uuid);
+            return Result.success();
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
         }
-        jobRunrService.startNow(uuid);
-        return Result.success();
     }
 }

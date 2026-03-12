@@ -4,11 +4,15 @@ import io.github.yajuhua.podcast2.service.JobRunrService;
 import lombok.extern.slf4j.Slf4j;
 import org.jobrunr.jobs.Job;
 import org.jobrunr.jobs.RecurringJob;
+import org.jobrunr.jobs.states.StateName;
 import org.jobrunr.scheduling.JobScheduler;
+import org.jobrunr.storage.Page;
 import org.jobrunr.storage.StorageProvider;
+import org.jobrunr.storage.navigation.OffsetBasedPageRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -26,6 +30,16 @@ public class JobRunrServiceImpl implements JobRunrService {
      * @throws Exception
      */
     public Job startNow(String uuid) throws Exception {
+        //不支持处理中的任务立即执行
+        Page<Job> processingJobs = storageProvider.getJobs(StateName.PROCESSING,
+                new OffsetBasedPageRequest("updatedAt:DESC", 0, 1000));
+        for (Job job : processingJobs.getItems()) {
+            Optional<String> recurringJobId = job.getRecurringJobId();
+            if (recurringJobId.isPresent() && recurringJobId.get().equals(uuid)){
+                throw new Exception("正在处理中...");
+            }
+        }
+
         for (RecurringJob recurringJob : storageProvider.getRecurringJobs()) {
             if (recurringJob.getId()
                     .equals(uuid)){
