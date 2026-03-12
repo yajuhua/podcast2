@@ -530,6 +530,11 @@ public class Jobs {
         Sub sub = null;
         try {
             sub = subMapper.selectByUuid(uuid);
+            if (sub == null){
+                log.error("订阅: {} 不存在", uuid);
+                jobRunrService.deleteJob(uuid);
+                return;
+            }
             List<Extend> anExtends = extendMapper.selectByUuid(sub.getUuid());
             List<InputAndSelectData> inputAndSelectDataList = new ArrayList<>();
             Integer isFirst = sub.getIsFirst();
