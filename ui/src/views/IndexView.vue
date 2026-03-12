@@ -14,20 +14,19 @@
       <!-- 订阅列表展示 -->
       <div style="display: flex;justify-content: center; padding-left: 5%;padding-right: 5%">
         <el-table ref="multipleTable" :data="filteredSubListData" tooltip-effect="dark" style="width: 100%"
-          @selection-change="handleSelectionChange" :header-cell-style="{ textAlign: 'center' }"
-          :cell-style="{ 'text-align': 'center' }" empty-text="暂无订阅">
-          <el-table-column type="selection" width="auto" v-if="selectionVisible"></el-table-column>
+          @selection-change="handleSelectionChange" empty-text="暂无订阅" row-key="uuid">
+          <el-table-column type="selection" width="auto" v-if="selectionVisible" :reserve-selection="true"></el-table-column>
           <el-table-column type="index"></el-table-column>
-          <el-table-column label="更新">
+          <el-table-column label="更新" align="left">
             <template slot-scope="scope">
               <span class="status-dot" :style="{ background: scope.row.statusColor }"></span>
               {{scope.row.updateTime}}
             </template>
           </el-table-column>
-          <el-table-column label="名称" prop="title" show-overflow-tooltip></el-table-column>
+          <el-table-column label="名称" prop="title" show-overflow-tooltip align="center"></el-table-column>
 
           <!-- 相关操作 -->
-          <el-table-column label="操作">
+          <el-table-column label="操作" align="center">
             <template slot-scope="scope">
               <el-dropdown trigger="click">
                 <span class="el-dropdown-link">
