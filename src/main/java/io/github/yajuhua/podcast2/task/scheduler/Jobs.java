@@ -32,12 +32,14 @@ import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
 import io.github.yajuhua.podcast2.pojo.vo.PluginVO;
 import io.github.yajuhua.podcast2.service.DownloadService;
 import io.github.yajuhua.podcast2.service.JobRunrService;
+import io.github.yajuhua.podcast2.service.SystemService;
 import io.github.yajuhua.podcast2.service.UserService;
 import io.github.yajuhua.podcast2.task.TaskRegistry;
 import io.github.yajuhua.podcast2.task.runnable.Update;
 import io.github.yajuhua.podcast2.task.runnable.DownloadItem;
 import io.github.yajuhua.podcast2.task.runnable.ReConfDownload;
 import io.github.yajuhua.podcast2.task.runnable.ReDownload;
+import io.github.yajuhua.podcast2.websocket.SystemInfoWebSocketServer;
 import io.github.yajuhua.podcast2API.Channel;
 import io.github.yajuhua.podcast2API.Item;
 import io.github.yajuhua.podcast2API.Params;
@@ -50,6 +52,7 @@ import org.jobrunr.jobs.lambdas.JobLambda;
 import org.jobrunr.scheduling.JobScheduler;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -58,6 +61,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -101,6 +107,10 @@ public class Jobs {
     private JobScheduler jobScheduler;
     @Autowired
     private JobRunrService jobRunrService;
+    @Autowired
+    private SystemInfoWebSocketServer systemInfoWebSocketServer;
+    @Autowired
+    private SystemService systemService;
 
 
     /**
@@ -924,6 +934,34 @@ public class Jobs {
             //该订阅在本地还没节目
             return recentItems;
         }
+    }
+
+    /**
+     * ws推送系统信息
+     * @throws Exception
+     */
+    public void pushSystemInfoByWs() throws Exception {
+        log.info("ws推送系统信息...");
+        ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
+        executor.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    systemInfoWebSocketServer.sendToAllClient(gson.toJson(systemService.info()));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            //过快会导致无法获取到backgroundJobServers
+        },0, 1, TimeUnit.SECONDS);
+
+        executor.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                systemService.refreshJobRunrStatus();
+            }
+        }, 0, 10, TimeUnit.SECONDS);
+
     }
 
 }

@@ -7,9 +7,7 @@ import io.github.yajuhua.podcast2.common.constant.Default;
 import io.github.yajuhua.podcast2.common.context.JobTimeoutContext;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.properties.InfoProperties;
-import io.github.yajuhua.podcast2.common.utils.CronUtils;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
-import io.github.yajuhua.podcast2.controller.SystemController;
 import io.github.yajuhua.podcast2.controller.UserController;
 import io.github.yajuhua.podcast2.downloader.aria2.Aria2RPC;
 import io.github.yajuhua.podcast2.mapper.*;
@@ -92,7 +90,7 @@ public class StartupRunner implements ApplicationRunner{
     public void run(ApplicationArguments args) throws Exception {
 
         //记录启动时间
-        SystemController.startTime = LocalDateTime.now();
+        System.setProperty("springboot.startTime", String.valueOf(System.currentTimeMillis()));
 
         //设置JVM代理
         setJVMProxyByReadSystemProxy();
@@ -120,6 +118,11 @@ public class StartupRunner implements ApplicationRunner{
 
         //开启ws推送下载进度
         pullDownloadProgress();
+
+        setDenoVersion();
+
+        //ws推送系统信息
+        jobs.pushSystemInfoByWs();
     }
 
     /**
@@ -378,5 +381,16 @@ public class StartupRunner implements ApplicationRunner{
                 downloadWebSocketServer.sendToAllClient(gson.toJson(collect));
             }
         },0,300, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * 设置Deno版本信息到属性中
+     */
+    private void setDenoVersion(){
+        String version = DownloaderUtils.cmd("deno --version");
+        if (version == null || version.isEmpty()){
+            System.setProperty("deno.version", "未安装,yt-dlp依赖");
+        }
+        System.setProperty("deno.version", version);;
     }
 }

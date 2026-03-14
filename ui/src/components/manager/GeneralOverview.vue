@@ -97,6 +97,9 @@ export default {
       return adaptWidth();
     }
   },
+  mounted(){
+    this.setupInfoSocket();
+  },
   data() {
     return {
       infoList: [],
@@ -144,6 +147,40 @@ export default {
         console.error(err);
       } finally {
         this.loading = false;
+      }
+    },
+    setupInfoSocket() {
+      let clientId = Math.random().toString(36).substr(2);
+      let wsUrl = `/ws/system/${clientId}`;
+
+      if (!('WebSocket' in window)) {
+        alert('Not support websocket')
+        return
+      }
+        const websocket = new WebSocket(wsUrl);
+        websocket.onopen = () => {
+          console.log("概况信息ws连接成功");
+        };
+
+        websocket.onmessage = (event) => {
+          let message = event.data;
+          console.log("system ws" + message);
+          let object = JSON.parse(message);
+          if(object.length == this.infoList.length){
+            this.infoList = object;
+          }
+        };
+
+        websocket.onerror = () => {
+          console.error("概况信息ws错误");
+        };
+
+        websocket.onclose = () => {
+          console.warn("概况信息ws关闭");
+        };
+
+        window.onbeforeunload = function () {
+        websocket.close();
       }
     },
     handleRestart() {
