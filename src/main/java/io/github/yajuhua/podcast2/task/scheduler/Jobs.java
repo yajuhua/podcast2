@@ -23,6 +23,7 @@ import io.github.yajuhua.podcast2.common.utils.Http;
 import io.github.yajuhua.podcast2.controller.DownloadController;
 import io.github.yajuhua.podcast2.controller.PluginController;
 import io.github.yajuhua.podcast2.downloader.ytdlp.YtDlpUpdate;
+import io.github.yajuhua.podcast2.handler.ws.SystemInfoWebSocketHandler;
 import io.github.yajuhua.podcast2.mapper.*;
 import io.github.yajuhua.podcast2.plugin.PluginManager;
 import io.github.yajuhua.podcast2.pojo.dto.AppendItemDTO;
@@ -39,7 +40,6 @@ import io.github.yajuhua.podcast2.task.runnable.Update;
 import io.github.yajuhua.podcast2.task.runnable.DownloadItem;
 import io.github.yajuhua.podcast2.task.runnable.ReConfDownload;
 import io.github.yajuhua.podcast2.task.runnable.ReDownload;
-import io.github.yajuhua.podcast2.websocket.SystemInfoWebSocketServer;
 import io.github.yajuhua.podcast2API.Channel;
 import io.github.yajuhua.podcast2API.Item;
 import io.github.yajuhua.podcast2API.Params;
@@ -52,7 +52,6 @@ import org.jobrunr.jobs.lambdas.JobLambda;
 import org.jobrunr.scheduling.JobScheduler;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -108,7 +107,7 @@ public class Jobs {
     @Autowired
     private JobRunrService jobRunrService;
     @Autowired
-    private SystemInfoWebSocketServer systemInfoWebSocketServer;
+    private SystemInfoWebSocketHandler systemInfoWebSocketHandler;
     @Autowired
     private SystemService systemService;
 
@@ -947,7 +946,7 @@ public class Jobs {
             @Override
             public void run() {
                 try {
-                    systemInfoWebSocketServer.sendToAllClient(gson.toJson(systemService.info()));
+                    systemInfoWebSocketHandler.sendToAllClient(gson.toJson(systemService.info()));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

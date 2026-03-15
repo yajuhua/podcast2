@@ -10,6 +10,7 @@ import io.github.yajuhua.podcast2.common.properties.InfoProperties;
 import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.controller.UserController;
 import io.github.yajuhua.podcast2.downloader.aria2.Aria2RPC;
+import io.github.yajuhua.podcast2.handler.ws.DownloadWebSocketHandler;
 import io.github.yajuhua.podcast2.mapper.*;
 import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
@@ -17,7 +18,6 @@ import io.github.yajuhua.podcast2.service.JobRunrService;
 import io.github.yajuhua.podcast2.service.UserService;
 import io.github.yajuhua.podcast2.task.scheduler.Jobs;
 import io.github.yajuhua.podcast2.task.TaskRegistry;
-import io.github.yajuhua.podcast2.websocket.DownloadWebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.jobrunr.jobs.RecurringJob;
@@ -34,7 +34,6 @@ import java.io.File;
 import java.net.ProxySelector;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -51,7 +50,7 @@ public class StartupRunner implements ApplicationRunner{
     private UserMapper userMapper;
     private DownloaderMapper downloaderMapper;
     private DataPathProperties dataPathProperties;
-    private DownloadWebSocketServer downloadWebSocketServer;
+    private DownloadWebSocketHandler downloadWebSocketHandler;
     private UserService userService;
     private ItemsMapper itemsMapper;
     private TaskRegistry taskRegistry;
@@ -66,7 +65,7 @@ public class StartupRunner implements ApplicationRunner{
     @Autowired
     public StartupRunner(Gson gson, SubMapper subMapper, InfoProperties infoProperties, UserMapper userMapper,
                          DownloaderMapper downloaderMapper, DataPathProperties dataPathProperties,
-                         DownloadWebSocketServer downloadWebSocketServer, UserService userService,
+                         DownloadWebSocketHandler downloadWebSocketHandler, UserService userService,
                          ItemsMapper itemsMapper, TaskRegistry taskRegistry, JobScheduler jobScheduler,
                          StorageProvider storageProvider, Jobs jobs, JobRunrService jobRunrService) {
         this.gson = gson;
@@ -75,7 +74,7 @@ public class StartupRunner implements ApplicationRunner{
         this.userMapper = userMapper;
         this.downloaderMapper = downloaderMapper;
         this.dataPathProperties = dataPathProperties;
-        this.downloadWebSocketServer = downloadWebSocketServer;
+        this.downloadWebSocketHandler = downloadWebSocketHandler;
         this.userService = userService;
         this.itemsMapper = itemsMapper;
         this.taskRegistry = taskRegistry;
@@ -378,7 +377,7 @@ public class StartupRunner implements ApplicationRunner{
                     }
                 }).collect(Collectors.toList());
                 //清空前端
-                downloadWebSocketServer.sendToAllClient(gson.toJson(collect));
+                downloadWebSocketHandler.sendToAllClient(gson.toJson(collect));
             }
         },0,300, TimeUnit.MILLISECONDS);
     }

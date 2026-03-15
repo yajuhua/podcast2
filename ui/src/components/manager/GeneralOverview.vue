@@ -151,7 +151,8 @@ export default {
     },
     setupInfoSocket() {
       let clientId = Math.random().toString(36).substr(2);
-      let wsUrl = `/ws/system/${clientId}`;
+      const token = localStorage.getItem('token');
+      let wsUrl = `/ws/system/${clientId}?token=${token}`;
 
       if (!('WebSocket' in window)) {
         alert('Not support websocket')

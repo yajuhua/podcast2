@@ -48,8 +48,8 @@ export default {
     },
     setupLogsSocket() {
       const clientId = Math.random().toString(36).substr(2);
-      const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
-      const wsUrl = `${wsProtocol}://${window.location.host}/ws/logs/${clientId}`;
+      const token = localStorage.getItem('token');
+      const wsUrl = `/ws/logs/${clientId}?token=${token}`;
 
       let websocket = null;
       let reconnectTimer = null;

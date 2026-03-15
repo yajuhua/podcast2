@@ -417,7 +417,8 @@ export default {
     //下载进度展示
     setupDownloadSocket() {
       let clientId = Math.random().toString(36).substr(2);
-      let wsUrl = `/ws/download/${clientId}`;
+      const token = localStorage.getItem('token');
+      let wsUrl = `/ws/download/${clientId}?token=${token}`;
       let websocket = null;
 
       if ('WebSocket' in window) {
