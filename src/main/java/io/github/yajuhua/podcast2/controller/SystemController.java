@@ -47,8 +47,6 @@ public class SystemController {
     @Autowired
     private StorageProvider storageProvider;
     @Autowired
-    private  SubController subController;
-    @Autowired
     private JobRunrService jobRunrService;
     @Autowired
     private SystemService systemService;
@@ -216,10 +214,9 @@ public class SystemController {
         List<TaskStatusVO> taskStatusVOList = new ArrayList<>();
         for (UUID uuid : TaskRegistry.backgroundTask.keySet()) {
             String title = TaskRegistry.backgroundTask.get(uuid);
-            TaskStatusVO statusVO = subController.getTaskStatusByUUID(uuid.toString(), "backTask", title);
+            TaskStatusVO statusVO = jobRunrService.getTaskStatus(uuid.toString(), "backTask", title);
             taskStatusVOList.add(statusVO);
         }
-
         return Result.success(taskStatusVOList);
     }
 

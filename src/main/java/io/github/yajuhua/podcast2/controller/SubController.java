@@ -39,16 +39,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.jobrunr.jobs.Job;
-import org.jobrunr.jobs.RecurringJob;
 import org.jobrunr.jobs.lambdas.JobLambda;
-import org.jobrunr.jobs.states.StateName;
 import org.jobrunr.scheduling.JobScheduler;
 import org.jobrunr.storage.BackgroundJobServerStatus;
-import org.jobrunr.storage.Page;
-import org.jobrunr.storage.RecurringJobsResult;
 import org.jobrunr.storage.StorageProvider;
-import org.jobrunr.storage.navigation.OffsetBasedPageRequest;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -978,120 +972,8 @@ public class SubController {
     @GetMapping("/api/sub/status/{uuid}")
     public Result<TaskStatusVO> getTaskStatus(@PathVariable String uuid) throws Exception {
         Sub sub = subMapper.selectByUuid(uuid);
-        TaskStatusVO taskStatus = getTaskStatusByUUID(uuid, sub.getSubType(), sub.getTitle());
+        TaskStatusVO taskStatus = jobRunrService.getTaskStatus(uuid, sub.getSubType(), sub.getTitle());
         return Result.success(taskStatus);
-    }
-
-    /**
-     * 通过uuid获取任务状态
-     * @param uuid
-     * @return
-     */
-    public TaskStatusVO getTaskStatusByUUID(String uuid, String subType, String title){
-        List<String> supportType = Arrays.asList("empty", "plugin", "backTask");
-        if (!supportType.contains(subType)){
-            throw new IllegalArgumentException(subType);
-        }
-
-        String currentStatus = "UNKNOWN";
-        String latestUpdateTime = "unknown";
-        String nextRunTime = "unknown";
-        //状态映射
-        Map<String,String> statusMap = new HashMap();
-        statusMap.put("SCHEDULED", "已调度");
-        statusMap.put("ENQUEUED", "已入队");
-        statusMap.put("EMPTY", "空订阅");
-        statusMap.put("PROCESSING", "处理中");
-        statusMap.put("FAILED", "错误");
-        statusMap.put("SUCCEEDED", "成功");
-        statusMap.put("DELETED", "已删除");
-        statusMap.put("NONE", "未知");
-        statusMap.put("UNKNOWN", "未知");
-
-        Map<String,String> colorMap = new HashMap();
-        colorMap.put("SCHEDULED", "#28a745");//绿色
-        colorMap.put("ENQUEUED", "#28a745");//绿色
-        colorMap.put("EMPTY", "#28a745");//绿色
-        colorMap.put("PROCESSING", "#ff9300");//橙色
-        colorMap.put("FAILED", "#dc3545");//红色
-        colorMap.put("SUCCEEDED", "#28a745");//绿色
-        colorMap.put("DELETED", "#D3D3D3");//灰色
-        colorMap.put("NONE","#D3D3D3");//灰色
-        colorMap.put("UNKNOWN","#D3D3D3");//灰色
-
-        if (subType.equalsIgnoreCase("empty")){
-            currentStatus = "EMPTY";
-            latestUpdateTime = "无需更新";
-            nextRunTime = "无需更新";
-            return new TaskStatusVO(statusMap.get(currentStatus), latestUpdateTime, nextRunTime,
-                    colorMap.get(currentStatus), title, uuid);
-        }
-
-        //获取上一次执行时间
-        Page<Job> succeededJobs = storageProvider.getJobs(StateName.SUCCEEDED,
-                new OffsetBasedPageRequest("updatedAt:DESC", 0, 1000));
-        Page<Job> failedJobs = storageProvider.getJobs(StateName.FAILED,
-                new OffsetBasedPageRequest("updateAt:DESC", 0, 1000));
-
-        List<Job> jobs = new ArrayList<>();
-        jobs.addAll(succeededJobs.getItems());
-        jobs.addAll(failedJobs.getItems());
-
-        List<Job> suceeAndFailedjobs = jobs.stream().filter(new Predicate<Job>() {
-            @Override
-            public boolean test(Job job) {
-                boolean present = job.getRecurringJobId().isPresent();
-                if (!present){
-                    return false;
-                }
-                return job.getRecurringJobId().get().equals(uuid);
-            }
-        }).sorted(Comparator.comparing(Job::getUpdatedAt).reversed()).collect(Collectors.toList());
-
-        if (!suceeAndFailedjobs.isEmpty()){
-            Job job = suceeAndFailedjobs.get(0);
-            latestUpdateTime = LocalDateTime.ofInstant(job.getUpdatedAt(), ZoneId.systemDefault())
-                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        }
-
-        //获取当前任务状态
-        Page<Job> scheduledJobs = storageProvider.getJobs(StateName.SCHEDULED,
-                new OffsetBasedPageRequest("updatedAt:DESC", 0, 1000));
-        Page<Job> enqueuedJobs = storageProvider.getJobs(StateName.ENQUEUED,
-                new OffsetBasedPageRequest("updatedAt:DESC", 0, 1000));
-        Page<Job> processingJobs = storageProvider.getJobs(StateName.PROCESSING,
-                new OffsetBasedPageRequest("updatedAt:DESC", 0, 1000));
-        jobs.addAll(scheduledJobs.getItems());
-        jobs.addAll(enqueuedJobs.getItems());
-        jobs.addAll(processingJobs.getItems());
-        List<Job> otherStatusJobs = jobs.stream().filter(new Predicate<Job>() {
-                    @Override
-                    public boolean test(Job job) {
-                        boolean present = job.getRecurringJobId().isPresent();
-                        if (!present){
-                            return false;
-                        }
-                        return job.getRecurringJobId().get().equals(uuid);
-                    }
-                }).sorted(Comparator.comparing(Job::getUpdatedAt).reversed())
-                .collect(Collectors.toList());
-        if (!otherStatusJobs.isEmpty()){
-            currentStatus = otherStatusJobs.get(0).getState().toString();
-        }
-
-        //获取下次执行时间
-        RecurringJobsResult recurringJobs = storageProvider.getRecurringJobs();
-        for (RecurringJob recurringJob : recurringJobs) {
-            if (recurringJob.getId().equals(uuid)){
-                LocalDateTime localDateTime = LocalDateTime.ofInstant(recurringJob.getNextRun(),
-                        ZoneId.systemDefault());
-                nextRunTime = localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                break;
-            }
-        }
-
-        return new TaskStatusVO(statusMap.get(currentStatus), latestUpdateTime, nextRunTime,
-                colorMap.get(currentStatus), title, uuid);
     }
 
     /**
