@@ -48,8 +48,6 @@ org:
       worker-count: 1
     dashboard:
       enabled: false
-      database:
-        type: mem
 
 
 
