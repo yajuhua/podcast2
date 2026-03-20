@@ -15,6 +15,7 @@ import io.github.yajuhua.podcast2.common.utils.CertUtils;
 import io.github.yajuhua.podcast2.common.utils.JwtUtil;
 import io.github.yajuhua.podcast2.common.utils.NetWorkUtils;
 import io.github.yajuhua.podcast2.interceptor.JwtTokenInterceptor;
+import io.github.yajuhua.podcast2.interceptor.WSTokenInterceptor;
 import io.github.yajuhua.podcast2.mapper.ExtendMapper;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
@@ -39,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.socket.WebSocketSession;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
@@ -81,6 +83,8 @@ public class UserController {
     private TaskRegistry taskRegistry;
     @Autowired
     private Jobs jobs;
+    @Autowired
+    private WSTokenInterceptor wsTokenInterceptor;
 
     /**
      * 用户登录
@@ -126,6 +130,16 @@ public class UserController {
         String token = request.getHeader(jwtProperties.getUserTokenName());
         //加入黑名单
         jwtTokenInterceptor.banTokenList.add(token);
+        wsTokenInterceptor.banTokenList.add(token);
+        for (String key : WSTokenInterceptor.sessionMap.keySet()) {
+            try {
+                WebSocketSession session = WSTokenInterceptor.sessionMap.get(key);
+                session.close();
+            } catch (IOException e) {
+                log.error("session关闭异常: {}", e.getMessage());
+            }
+        }
+        WSTokenInterceptor.sessionMap.clear();
         return Result.success();
     }
 

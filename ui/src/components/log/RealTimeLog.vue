@@ -23,6 +23,7 @@
 <script>
 import LogMessage from "../log/LogMessage";
 import { copy } from "../../utils/utils";
+import { globalStore } from "@/store";
 export default {
   components: {
     LogMessage,
@@ -30,10 +31,28 @@ export default {
   data() {
     return {
       realTimeLogs: [],
+      websocket: null
     };
   },
   mounted() {
-    this.setupLogsSocket();
+    //this.setupLogsSocket();
+  },
+  computed: {
+    token() {
+      return globalStore.token
+    }
+  },
+  watch: {
+    token: {
+      handler(newToken) {
+        if (newToken) {
+          this.setupLogsSocket();
+        } else if(this.websocket) {
+          this.websocket.close();
+        }
+      },
+      immediate: true
+    }
   },
   methods: {
     //格式化日志，避免过长
@@ -51,32 +70,32 @@ export default {
       const token = localStorage.getItem('token');
       const wsUrl = `/ws/logs/${clientId}?token=${token}`;
 
-      let websocket = null;
+      this.websocket = null;
       let reconnectTimer = null;
 
       const createWS = () => {
-        websocket = new WebSocket(wsUrl);
+        this.websocket = new WebSocket(wsUrl);
 
-        websocket.onopen = () => {
+        this.websocket.onopen = () => {
           console.log("日志ws连接成功");
         };
 
-        websocket.onmessage = (event) => {
+        this.websocket.onmessage = (event) => {
           this.realTimeLogs.push(event.data);
         };
 
-        websocket.onerror = () => {
+        this.websocket.onerror = () => {
           console.error("日志ws错误");
           reconnect();
         };
 
-        websocket.onclose = () => {
-          console.warn("日志ws关闭");
-          reconnect();
+        this.websocket.onclose = () => {
+          console.log("日志ws关闭");
         };
       };
 
       const reconnect = () => {
+        if(token == null) return;
         if (reconnectTimer) return;
         reconnectTimer = setTimeout(() => {
           console.log("尝试重连日志ws");
@@ -88,7 +107,7 @@ export default {
       createWS();
 
       // 页面关闭时断开
-      window.addEventListener("beforeunload", () => websocket.close());
+      window.addEventListener("beforeunload", () => this.websocket.close());
     },
     //清空实时日志
     clearRealTimeLog() {

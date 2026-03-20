@@ -91,14 +91,30 @@
 <script>
 import axios from "axios";
 import { adaptWidth } from '@/utils/utils';
+import { globalStore } from "@/store";
 export default {
   computed: {
     adaptWidth() {
       return adaptWidth();
+    },
+    token() {
+      return globalStore.token;
+    }
+  },
+  watch: {
+    token: {
+      handler(newToken) {
+        if (newToken) {
+          this.setupInfoSocket();
+        } else if(this.websocket){
+          this.websocket.close();
+        }
+      },
+      immediate: true
     }
   },
   mounted(){
-    this.setupInfoSocket();
+    // this.setupInfoSocket();
   },
   data() {
     return {
@@ -126,6 +142,7 @@ export default {
           loadingTip: ''
         }
       },
+      websocket: null
     };
   },
   created() {
@@ -158,12 +175,12 @@ export default {
         alert('Not support websocket')
         return
       }
-        const websocket = new WebSocket(wsUrl);
-        websocket.onopen = () => {
+        this.websocket = new WebSocket(wsUrl);
+        this.websocket.onopen = () => {
           console.log("概况信息ws连接成功");
         };
 
-        websocket.onmessage = (event) => {
+        this.websocket.onmessage = (event) => {
           let message = event.data;
           console.log("system ws" + message);
           let object = JSON.parse(message);
@@ -172,16 +189,16 @@ export default {
           }
         };
 
-        websocket.onerror = () => {
+        this.websocket.onerror = () => {
           console.error("概况信息ws错误");
         };
 
-        websocket.onclose = () => {
-          console.warn("概况信息ws关闭");
+        this.websocket.onclose = () => {
+          console.log("概况信息ws关闭");
         };
 
         window.onbeforeunload = function () {
-        websocket.close();
+          this.websocket.close();
       }
     },
     handleRestart() {

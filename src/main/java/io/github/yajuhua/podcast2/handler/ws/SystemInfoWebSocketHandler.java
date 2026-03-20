@@ -7,19 +7,16 @@ import org.springframework.web.socket.*;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+
+import static io.github.yajuhua.podcast2.interceptor.WSTokenInterceptor.sessionMap;
 
 @Slf4j
 @Component
 public class SystemInfoWebSocketHandler implements WebSocketHandler {
 
-    //存放会话对象
-    private static Map<String, WebSocketSession> sessionMap = new HashMap();
-
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        log.info("客户端：{} 建立连接", session.getId());
+        log.info("客户端：{} 建立连接", session.getUri().getPath());
         sessionMap.put(session.getId(), session);
     }
 
@@ -31,9 +28,9 @@ public class SystemInfoWebSocketHandler implements WebSocketHandler {
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
         if ((exception instanceof EOFException) && exception.getCause() == null) {
-            log.warn("客户端异常退出：{}", session.getId());
+            log.warn("客户端异常退出：{}", session.getUri().getPath());
         } else {
-            log.error("socket发生异常：{}", session.getId());
+            log.error("socket发生异常：{}", session.getUri().getPath());
             log.error("异常信息", exception);
         }
 
@@ -46,7 +43,7 @@ public class SystemInfoWebSocketHandler implements WebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
-        log.info("连接断开:" + session.getId());
+        log.info("客户端: {} 连接断开:", session.getUri().getPath());
         sessionMap.remove(session.getId());
     }
 
@@ -64,10 +61,12 @@ public class SystemInfoWebSocketHandler implements WebSocketHandler {
         Collection<WebSocketSession> sessions = sessionMap.values();
         for (WebSocketSession session : sessions) {
             try {
-                //服务器向客户端发送消息
-                if (session != null && session.isOpen() && message != null){
-                    synchronized (session){
-                        session.sendMessage(new TextMessage(new StringBuilder(message)));
+                if (session.getUri().getPath().startsWith("/ws/system/")){
+                    //服务器向客户端发送消息
+                    if (session != null && session.isOpen() && message != null){
+                        synchronized (session){
+                            session.sendMessage(new TextMessage(new StringBuilder(message)));
+                        }
                     }
                 }
             } catch (Exception e) {

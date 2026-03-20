@@ -27,13 +27,24 @@
 </template>
 
 <script>
+import { setGlobalStore } from '../../store'
+import axios from 'axios';
 export default {
   methods: {
     //登出
     logout() {
-      //删除token
-      localStorage.removeItem("token");
-      this.$router.push("/login");
+      axios
+          .post('/api/user/logout')
+          .then(response => {
+            console.log(response.data); 
+            //删除token
+            localStorage.removeItem("token");
+            setGlobalStore("token", null);    
+            this.$router.push("/login");
+          })
+          .catch(error => {
+            console.error(error);
+          });
     },
   },
 };

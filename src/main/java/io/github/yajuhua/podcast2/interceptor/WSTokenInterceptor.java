@@ -14,12 +14,12 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.socket.WebSocketHandler;
+import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Component
@@ -29,6 +29,8 @@ public class WSTokenInterceptor implements HandshakeInterceptor {
     private UserMapper userMapper;
     @Autowired
     private UserService userService;
+    public Set<String> banTokenList = new HashSet<>();
+    public static Map<String, WebSocketSession> sessionMap = new ConcurrentHashMap<>();
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
                                    WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
@@ -42,6 +44,10 @@ public class WSTokenInterceptor implements HandshakeInterceptor {
             }
                 //2.校验令牌
                 String token = params.get("token");
+                if (banTokenList.contains(token)){
+                    response.setStatusCode(HttpStatus.UNAUTHORIZED);
+                    return false;
+                }
                 log.debug("jwt校验:{}", token);
                 User user = userMapper.list().get(0);
                 String secretKey = DigestUtils
