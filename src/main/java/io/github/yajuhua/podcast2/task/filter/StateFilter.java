@@ -3,6 +3,7 @@ package io.github.yajuhua.podcast2.task.filter;
 import org.jobrunr.jobs.Job;
 import org.jobrunr.jobs.filters.ApplyStateFilter;
 import org.jobrunr.jobs.states.JobState;
+import org.jobrunr.jobs.states.StateName;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -20,7 +21,8 @@ public class StateFilter implements ApplyStateFilter{
      */
     @Override
     public void onStateApplied(Job job, JobState jobState, JobState jobState1) {
-        if (job.getRecurringJobId().isPresent()){
+        //排除StateName.DELETED，这个是JobRunr自动删除过期的
+        if (job.getRecurringJobId().isPresent() && !jobState1.getName().equals(StateName.DELETED)){
             latestJobStateMap.put(job.getRecurringJobId().get(), jobState1);
         }
     }
