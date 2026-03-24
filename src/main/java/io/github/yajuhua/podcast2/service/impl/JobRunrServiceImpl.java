@@ -84,7 +84,7 @@ public class JobRunrServiceImpl implements JobRunrService {
      */
     public boolean deleteJob(String uuid){
         try {
-            jobScheduler.delete(UUID.fromString(uuid));
+            jobScheduler.deleteRecurringJob(uuid);
             return true;
         } catch (Exception e) {
             return false;
