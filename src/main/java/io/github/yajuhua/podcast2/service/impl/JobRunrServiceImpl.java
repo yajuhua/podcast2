@@ -12,6 +12,7 @@ import org.jobrunr.scheduling.JobScheduler;
 import org.jobrunr.storage.Page;
 import org.jobrunr.storage.RecurringJobsResult;
 import org.jobrunr.storage.StorageProvider;
+import org.jobrunr.storage.navigation.AmountRequest;
 import org.jobrunr.storage.navigation.OffsetBasedPageRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -84,6 +85,21 @@ public class JobRunrServiceImpl implements JobRunrService {
      */
     public boolean deleteJob(String uuid){
         try {
+            List<Job> enqueuedJobList = storageProvider
+                    .getJobList(StateName.ENQUEUED, new AmountRequest("updatedAt:DESC", 1000));
+            List<Job> processingJobList = storageProvider
+                    .getJobList(StateName.PROCESSING, new AmountRequest("updatedAt:DESC", 1000));
+            List<Job> enqueuedAndProcessingJobList = new ArrayList<>();
+            enqueuedAndProcessingJobList.addAll(enqueuedJobList);
+            enqueuedAndProcessingJobList.addAll(processingJobList);
+
+            //删除已经被创建的Job
+            for (Job job : enqueuedAndProcessingJobList) {
+                Optional<String> recurringJobId = job.getRecurringJobId();
+                if (recurringJobId.isPresent() && recurringJobId.get().equals(uuid.toString())) {
+                    job.delete("订阅已被删除: " + uuid);
+                }
+            }
             jobScheduler.deleteRecurringJob(uuid);
             return true;
         } catch (Exception e) {
