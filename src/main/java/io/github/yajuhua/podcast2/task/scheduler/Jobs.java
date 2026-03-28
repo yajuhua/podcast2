@@ -826,13 +826,15 @@ public class Jobs {
         } catch (Exception e) {
             log.error("{}:更新异常",sub.getTitle(),e);
         }finally {
-            //更新sub表
-            sub.setIsFirst(StatusCode.NO);
-            //加入当前时间浮动，让每次检查时间不一样 往后
-            sub.setCheckTime(nowTimeFloat(1,1,10, Update.Units.Minutes));
-            subMapper.update(sub);
-            TaskRegistry.updateStatus = false;
-            log.info("{}:更新完成",sub.getTitle());
+            if (sub != null) {
+                //更新sub表
+                sub.setIsFirst(StatusCode.NO);
+                //加入当前时间浮动，让每次检查时间不一样 往后
+                sub.setCheckTime(nowTimeFloat(1,1,10, Update.Units.Minutes));
+                subMapper.update(sub);
+                TaskRegistry.updateStatus = false;
+                log.info("{}:更新完成",sub.getTitle());
+            }
         }
     }
 
