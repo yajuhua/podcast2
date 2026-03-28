@@ -52,16 +52,25 @@ public class JobTimeoutAspect {
         });
 
         try {
-            // 阻塞等待超时时间内完成，这里的超时时间可以被执行方法修改
-            return future.get(ctx.getTimeout().toMillis(), TimeUnit.MILLISECONDS);
+            long startTime = System.currentTimeMillis();
+            while (true){
+                long duration = System.currentTimeMillis() - startTime;
+                long remaining = ctx.getTimeout().toMillis() - duration;
+                if (future.isDone()){
+                    return future.get();
+                }else if (remaining <= 0){
+                    future.cancel(true);
+                    throw new TimeoutException();
+                }
+                Thread.sleep(Math.min(remaining, 100));
+            }
         } catch (TimeoutException e) {
             // 超时处理
             String msg = customMessage.isEmpty()
                     ? String.format("%s 执行超时，超过 %s", taskName, ctx.getTimeout())
                     : customMessage;
-
             future.cancel(defaultInterrupt);
-            throw new JobTimeoutException(msg,e);
+            throw new JobTimeoutException(msg, e.getCause());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException(taskName + " 被中断", e);
