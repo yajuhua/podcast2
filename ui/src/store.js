@@ -5,5 +5,10 @@ export const globalStore = Vue.observable({
   operationButton:{
     realTimelogVisible: false,
     historyLogVisible: false
-  }
+  },
+  "token": localStorage.getItem("token")
 })
+
+export const setGlobalStore = (key, value) => {
+  Vue.set(globalStore, key, value)
+}

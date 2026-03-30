@@ -179,6 +179,7 @@
 <script>
 import axios from 'axios';
 import DownloadConf from "@/components/manager/DownloadConf.vue";
+import { globalStore } from '@/store';
 export default {
   components: {
     DownloadConf
@@ -192,13 +193,27 @@ export default {
     },
     doneLabel() {
       return this.download.done.length > 0 ? '完成 ' + this.download.done.length : '完成';
+    },
+    token() {
+      return globalStore.token
     }
   },
   mounted() {
     this.getDownloaderInfo();
     this.getDownloadDone();
     this.getDownloadError();
-    this.setupDownloadSocket();
+  },
+  watch: {
+    token: {
+      handler(newToken) {
+        if (newToken) {
+          this.setupDownloadSocket();
+        } else if(this.websocket){
+          this.websocket.close();
+        }
+      },
+      immediate: true
+    }
   },
   data() {
     return {
@@ -219,6 +234,7 @@ export default {
       upload: {
         progress: [],
       },
+      websocket: null
     };
   },
   methods: {
@@ -417,28 +433,28 @@ export default {
     //下载进度展示
     setupDownloadSocket() {
       let clientId = Math.random().toString(36).substr(2);
-      let wsUrl = `/ws/download/${clientId}`;
-      let websocket = null;
+      const token = localStorage.getItem('token');
+      let wsUrl = `/ws/download/${clientId}?token=${token}`;
 
       if ('WebSocket' in window) {
-        websocket = new WebSocket(wsUrl);
+        this.websocket = new WebSocket(wsUrl);
       } else {
         alert('Not support websocket')
       }
 
       //连接发生错误的回调方法
-      websocket.onerror = function () {
+      this.websocket.onerror = function () {
         console.log('下载ws连接错误')
       };
 
       //连接成功建立的回调方法
-      websocket.onopen = function () {
+      this.websocket.onopen = function () {
         console.log('下载ws连接成功')
       }
 
       //接收到消息的回调方法
       var vm = this;
-      websocket.onmessage = function (event) {
+      this.websocket.onmessage = function (event) {
         let message = event.data;
         let object = JSON.parse(message);
         console.log(object);
@@ -450,12 +466,12 @@ export default {
       }
 
       //连接关闭的回调方法
-      websocket.onclose = function () {
+      this.websocket.onclose = function () {
         console.log('下载ws关闭')
       }
 
       window.onbeforeunload = function () {
-        websocket.close();
+        this.websocket.close();
       }
     },
   },

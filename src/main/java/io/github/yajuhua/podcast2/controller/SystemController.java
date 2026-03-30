@@ -4,30 +4,23 @@ import io.github.yajuhua.podcast2.Podcast2Application;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.common.properties.InfoProperties;
 import io.github.yajuhua.podcast2.common.result.Result;
-import io.github.yajuhua.podcast2.common.utils.DownloaderUtils;
 import io.github.yajuhua.podcast2.common.utils.LogUtils;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
-import io.github.yajuhua.podcast2.pojo.entity.Sub;
-import io.github.yajuhua.podcast2.pojo.vo.KeyValue;
 import io.github.yajuhua.podcast2.pojo.vo.TaskStatusVO;
+import io.github.yajuhua.podcast2.service.JobRunrService;
+import io.github.yajuhua.podcast2.service.SystemService;
 import io.github.yajuhua.podcast2.service.UserService;
-import io.github.yajuhua.podcast2.task.CronTaskManager;
-import io.github.yajuhua.podcast2.task.Task;
+import io.github.yajuhua.podcast2.task.TaskRegistry;
 import io.github.yajuhua.podcast2.update.ProjectUpdate;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.quartz.SchedulerException;
+import org.jobrunr.storage.StorageProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.core.io.Resource;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
-import java.io.InputStream;
-import java.text.SimpleDateFormat;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -35,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 @RestController
 @Slf4j
-@Api(tags = "系统相关接口")
+@Tag(name = "系统相关接口")
 @RequestMapping("/api/system")
 public class SystemController {
 
@@ -52,14 +45,18 @@ public class SystemController {
     @Autowired
     private UserService userService;
     @Autowired
-    private CronTaskManager cronTaskManager;
+    private StorageProvider storageProvider;
+    @Autowired
+    private JobRunrService jobRunrService;
+    @Autowired
+    private SystemService systemService;
 
 
     /**
      * 重启项目
      * @return
      */
-    @ApiOperation("重启项目")
+    @Operation(summary = "重启项目")
     @GetMapping("/restart")
     public Result restart() {
 
@@ -91,7 +88,7 @@ public class SystemController {
      * 检查更新
      * @return
      */
-    @ApiOperation("检查更新")
+    @Operation(summary = "检查更新")
     @GetMapping("/update/has")
     public Result<ProjectUpdate.UpdateInfo> hasUpdate() throws Exception {
         ProjectUpdate.UpdateInfo updateInfo = ProjectUpdate.getUpdateInfo(infoProperties.getVersion());
@@ -102,7 +99,7 @@ public class SystemController {
      * 下载最新jar包
      * @return
      */
-    @ApiOperation("下载最新版本的Jar包")
+    @Operation(summary = "下载最新版本的Jar包")
     @GetMapping("/update/download")
     public Result downloadLatestJarFile(@RequestParam String version) throws Exception {
         try {
@@ -127,7 +124,7 @@ public class SystemController {
      * @param version
      * @return
      */
-    @ApiOperation("删除最新版本的Jar文件")
+    @Operation(summary = "删除最新版本的Jar文件")
     @GetMapping("/update/delete")
     public Result<Boolean> deleteDownloadLatestJarFile(@RequestParam String version){
         projectUpdate = null;
@@ -139,7 +136,7 @@ public class SystemController {
      * 获取Jar包下载状态
      * @return
      */
-    @ApiOperation("获取Jar包下载状态")
+    @Operation(summary = "获取Jar包下载状态")
     @GetMapping("/update/jarStatus")
     public Result<ProjectUpdate.DownloadStatus> downloadJarFileStatus(@RequestParam String version) throws Exception {
         if (projectUpdate != null){
@@ -157,7 +154,7 @@ public class SystemController {
      * 取消下载Jar文件
      * @return
      */
-    @ApiOperation("取消下载Jar包")
+    @Operation(summary = "取消下载Jar包")
     @GetMapping("/update/cancel")
     public Result cancelDownloadJarFile(){
         if (projectUpdate != null){
@@ -175,36 +172,10 @@ public class SystemController {
      * 系统概况信息
      * @return
      */
-    @ApiOperation("系统概况信息")
+    @Operation(summary = "系统概况信息")
     @GetMapping("/info")
-    public Result info() throws Exception{
-        Duration duration = Duration.between(startTime, LocalDateTime.now());
-        long millis = duration.toMillis();
-        long totalSecond = millis / 1000;
-        long days = totalSecond / (24 * 3600);
-        long hours = (totalSecond % (24 * 3600)) / 3600;
-        long minutes = ((totalSecond % (24 * 3600)) % 3600) / 60;
-        long seconds = ((totalSecond % (24 * 3600)) % 3600) % 60;
-
-        String runningTime = days + "天 " + hours + "小时 " + minutes + "分钟 " + seconds + "秒";
-
-        List<KeyValue> keyValueList = new ArrayList<>();
-        keyValueList.add(new KeyValue("版本",infoProperties.getVersion()));
-        keyValueList.add(new KeyValue("更新时间",infoProperties.getUpdate()));
-        keyValueList.add(new KeyValue("运行时间",runningTime));
-        keyValueList.add(new KeyValue("commit",getCommitID()));
-        keyValueList.add(new KeyValue("Java版本", System.getProperty("java.vendor")
-                +" "+ System.getProperty("java.runtime.version")));
-        keyValueList.add(new KeyValue("Deno版本", getDenoVersion()));
-        return Result.success(keyValueList);
-    }
-
-    private String getDenoVersion(){
-        String version = DownloaderUtils.cmd("deno --version");
-        if (version == null || version.isEmpty()){
-            return "未安装,yt-dlp依赖";
-        }
-        return version;
+    public Result info() throws Exception {
+        return Result.success(systemService.info());
     }
 
 
@@ -212,7 +183,7 @@ public class SystemController {
      * 根据时间区间获取历史日志
      * @return
      */
-    @ApiOperation("根据时间区间获取历史日志")
+    @Operation(summary = "根据时间区间获取历史日志")
     @GetMapping("/logs/history/between")
     public Result<List<String>> historyLogsByDate(@RequestParam String start, @RequestParam String end, @RequestParam String level) throws Exception{
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -226,7 +197,7 @@ public class SystemController {
      * 根据时间区间获取历史日志
      * @return
      */
-    @ApiOperation("获取最近日志")
+    @Operation(summary = "获取最近日志")
     @GetMapping("/logs/history/latest")
     public Result<List<String>> historyLogsByLatest(@RequestParam Long minutes, @RequestParam String level) throws Exception{
         List<String> logs = LogUtils.getRecent(minutes, TimeUnit.MINUTES, new File(dataPathProperties.getLogsPath()), level);
@@ -234,87 +205,18 @@ public class SystemController {
     }
 
     /**
-     * 获取git提交信息
-     * @return
-     * @throws Exception
-     */
-    public Properties getCommit() throws Exception{
-        Resource resource = new DefaultResourceLoader().getResource("classpath:git.properties");
-        if (resource.exists()) {
-            InputStream inputStream = resource.getInputStream();
-            Properties properties = new Properties();
-            properties.load(inputStream);
-            inputStream.close();
-            return properties;
-        } else {
-            return new Properties();
-        }
-    }
-
-    /**
-     * 获取git提交ID
-     * @return
-     * @throws Exception
-     */
-    public String getCommitID() throws Exception{
-        if (getCommit().containsKey("git.commit.id.abbrev")){
-            return getCommit().get("git.commit.id.abbrev").toString();
-        }else {
-            return "none";
-        }
-    }
-
-    /**
      * 获取后台任务列表
      * @return
      */
-    @ApiOperation("获取后台任务列表")
+    @Operation(summary = "获取后台任务列表")
     @GetMapping("/backgroundTasks")
-    public Result<List<TaskStatusVO>> backgroundTasks() throws SchedulerException {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        String lastFireTime = "未知";
-        String nextFireTime = "未知";
-
-        Map<String,String> statusMap = new HashMap();
-        statusMap.put("NONE", "无状态");
-        statusMap.put("NORMAL", "正常");
-        statusMap.put("EMPTY", "空订阅");
-        statusMap.put("PAUSED", "暂停");
-        statusMap.put("COMPLETE", "完成");
-        statusMap.put("ERROR", "错误");
-        statusMap.put("BLOCKED", "被阻塞");
-
-        Map<String,String> colorMap = new HashMap();
-        colorMap.put("NONE","#D3D3D3");//灰色
-        colorMap.put("NORMAL", "#28a745");//绿色
-        colorMap.put("EMPTY", "#28a745");//绿色
-        colorMap.put("PAUSED", "#ffc107");//黄色
-        colorMap.put("COMPLETE", "#007bff");//蓝色
-        colorMap.put("ERROR", "#dc3545");//红色
-        colorMap.put("BLOCKED", "#8a2be2");//紫色
-
-        String taskStatusName;
+    public Result<List<TaskStatusVO>> backgroundTasks(){
         List<TaskStatusVO> taskStatusVOList = new ArrayList<>();
-        for (UUID uuid : Task.backgroundTask.keySet()) {
-            CronTaskManager.TaskStatus taskStatus = cronTaskManager.getTaskStatus(uuid.toString());
-            taskStatusName = taskStatus.getStatus().name();
-            if (taskStatus.getLastFireTime() != null){
-                lastFireTime = sdf.format(taskStatus.getLastFireTime());
-            }
-            if (taskStatus.getNextFireTime() != null){
-                nextFireTime = sdf.format(taskStatus.getNextFireTime());
-            }
-            TaskStatusVO statusVO = TaskStatusVO.builder()
-                    .status(statusMap.get(taskStatusName))
-                    .lastFireTime(lastFireTime)
-                    .nextFireTime(nextFireTime)
-                    .statusColor(colorMap.get(taskStatusName))
-                    .title(Task.backgroundTask.get(uuid))
-                    .uuid(uuid.toString())
-                    .build();
+        for (UUID uuid : TaskRegistry.backgroundTask.keySet()) {
+            String title = TaskRegistry.backgroundTask.get(uuid);
+            TaskStatusVO statusVO = jobRunrService.getTaskStatus(uuid.toString(), "backTask", title);
             taskStatusVOList.add(statusVO);
         }
-
         return Result.success(taskStatusVOList);
     }
 
@@ -322,12 +224,16 @@ public class SystemController {
      * 立即执行任务
      * @return
      */
-    @ApiOperation("立即执行任务")
+    @Operation(summary = "立即执行任务")
     @PostMapping("/backgroundTasks/{uuid}")
     public Result startNowTask(@PathVariable String uuid){
-        cronTaskManager.startNow(uuid);
-        log.info("立即执行任务: {}", Task.backgroundTask.get(UUID.fromString(uuid)));
-        return Result.success();
+        try {
+            jobRunrService.startNow(uuid);
+            log.info("立即执行任务: {}", TaskRegistry.backgroundTask.get(UUID.fromString(uuid)));
+            return Result.success();
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
     }
 
 }

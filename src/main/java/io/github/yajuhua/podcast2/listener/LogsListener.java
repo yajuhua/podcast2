@@ -1,7 +1,9 @@
 package io.github.yajuhua.podcast2.listener;
 
 import org.apache.commons.io.input.TailerListenerAdapter;
-import javax.websocket.Session;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+
 import java.io.IOException;
 
 /**
@@ -11,9 +13,9 @@ import java.io.IOException;
 public class LogsListener extends TailerListenerAdapter {
 
 
-    private Session session;
+    private WebSocketSession session;
 
-    public LogsListener(Session session) {
+    public LogsListener(WebSocketSession session) {
         this.session = session;
     }
 
@@ -21,7 +23,7 @@ public class LogsListener extends TailerListenerAdapter {
     public void handle(String line) {
         try {
             if (session.isOpen()){
-                session.getBasicRemote().sendText(line);
+                session.sendMessage(new TextMessage(new StringBuilder(line)));
             }
         } catch (IOException e) {
             e.printStackTrace();

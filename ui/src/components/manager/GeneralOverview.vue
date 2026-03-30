@@ -91,11 +91,30 @@
 <script>
 import axios from "axios";
 import { adaptWidth } from '@/utils/utils';
+import { globalStore } from "@/store";
 export default {
   computed: {
     adaptWidth() {
       return adaptWidth();
+    },
+    token() {
+      return globalStore.token;
     }
+  },
+  watch: {
+    token: {
+      handler(newToken) {
+        if (newToken) {
+          this.setupInfoSocket();
+        } else if(this.websocket){
+          this.websocket.close();
+        }
+      },
+      immediate: true
+    }
+  },
+  mounted(){
+    // this.setupInfoSocket();
   },
   data() {
     return {
@@ -123,6 +142,7 @@ export default {
           loadingTip: ''
         }
       },
+      websocket: null
     };
   },
   created() {
@@ -144,6 +164,41 @@ export default {
         console.error(err);
       } finally {
         this.loading = false;
+      }
+    },
+    setupInfoSocket() {
+      let clientId = Math.random().toString(36).substr(2);
+      const token = localStorage.getItem('token');
+      let wsUrl = `/ws/system/${clientId}?token=${token}`;
+
+      if (!('WebSocket' in window)) {
+        alert('Not support websocket')
+        return
+      }
+        this.websocket = new WebSocket(wsUrl);
+        this.websocket.onopen = () => {
+          console.log("概况信息ws连接成功");
+        };
+
+        this.websocket.onmessage = (event) => {
+          let message = event.data;
+          console.log("system ws" + message);
+          let object = JSON.parse(message);
+          if(object.length == this.infoList.length){
+            this.infoList = object;
+          }
+        };
+
+        this.websocket.onerror = () => {
+          console.error("概况信息ws错误");
+        };
+
+        this.websocket.onclose = () => {
+          console.log("概况信息ws关闭");
+        };
+
+        window.onbeforeunload = function () {
+          this.websocket.close();
       }
     },
     handleRestart() {

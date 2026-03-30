@@ -23,6 +23,7 @@
 
 <script>
 import axios from 'axios';
+import { setGlobalStore } from '../store'
 
 export default {
   data() {
@@ -49,6 +50,7 @@ export default {
               });
               //将token写入LocalStorage
               localStorage.setItem('token',response.data.data.token);
+              setGlobalStore("token", response.data.data.token);
               this.$router.push('/')
             } else if (response.data.code == '0') {
               this.$message.error(response.data.msg);

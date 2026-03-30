@@ -8,7 +8,7 @@
     <name>podcast2</name>
     <description>podcast2</description>
     <properties>
-        <podcast2Version>v2.6.1</podcast2Version>
+        <podcast2Version>beta-2026-03-12</podcast2Version>
         <commit.id>none</commit.id>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -95,9 +95,16 @@
 
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
-            <artifactId>knife4j-spring-boot-starter</artifactId>
-            <version>${knife4j.version}</version>
+            <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
+            <version>4.4.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>30.1.1-jre</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -148,11 +155,6 @@
             <version>1.1.6</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-quartz</artifactId>
-        </dependency>
-
         <!-- https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-core -->
         <dependency>
             <groupId>com.twelvemonkeys.imageio</groupId>
@@ -164,6 +166,18 @@
             <groupId>com.twelvemonkeys.imageio</groupId>
             <artifactId>imageio-webp</artifactId>
             <version>3.11.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cronutils</groupId>
+            <artifactId>cron-utils</artifactId>
+            <version>9.2.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jobrunr</groupId>
+            <artifactId>jobrunr-spring-boot-2-starter</artifactId>
+            <version>7.5.0</version>
         </dependency>
 
     </dependencies>

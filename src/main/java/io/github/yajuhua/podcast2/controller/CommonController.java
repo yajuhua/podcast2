@@ -9,8 +9,8 @@ import io.github.yajuhua.podcast2.pojo.entity.Settings;
 import io.github.yajuhua.podcast2API.Params;
 import io.github.yajuhua.podcast2API.Podcast2;
 import io.github.yajuhua.podcast2API.setting.Setting;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -28,7 +28,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/common")
-@Api(tags = "通用接口")
+@Tag(name = "通用接口")
 @Slf4j
 public class CommonController {
     @Autowired
@@ -43,7 +43,7 @@ public class CommonController {
      * @return
      */
     @PostMapping("/upload/{desc}")
-    @ApiOperation("文件上传")
+    @Operation(summary = "文件上传")
     @Transactional
     public Result<String> upload(@PathVariable("desc") String desc,@RequestParam("files") MultipartFile file) throws Exception {
         log.info("文件上传：{}",file);

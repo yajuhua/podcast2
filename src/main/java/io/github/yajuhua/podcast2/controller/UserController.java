@@ -15,6 +15,7 @@ import io.github.yajuhua.podcast2.common.utils.CertUtils;
 import io.github.yajuhua.podcast2.common.utils.JwtUtil;
 import io.github.yajuhua.podcast2.common.utils.NetWorkUtils;
 import io.github.yajuhua.podcast2.interceptor.JwtTokenInterceptor;
+import io.github.yajuhua.podcast2.interceptor.WSTokenInterceptor;
 import io.github.yajuhua.podcast2.mapper.ExtendMapper;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
@@ -26,9 +27,10 @@ import io.github.yajuhua.podcast2.pojo.vo.ApiTokenVO;
 import io.github.yajuhua.podcast2.pojo.vo.UserLoginVO;
 import io.github.yajuhua.podcast2.service.ExtendService;
 import io.github.yajuhua.podcast2.service.UserService;
-import io.github.yajuhua.podcast2.task.Task;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.github.yajuhua.podcast2.task.TaskRegistry;
+import io.github.yajuhua.podcast2.task.scheduler.Jobs;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -38,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.socket.WebSocketSession;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
@@ -47,7 +50,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @Slf4j
-@Api(tags = "用户相关接口")
+@Tag(name = "用户相关接口")
 @RequestMapping("/api/user")
 public class UserController {
 
@@ -77,13 +80,17 @@ public class UserController {
     @Autowired
     private JwtTokenInterceptor jwtTokenInterceptor;
     @Autowired
-    private Task task;
+    private TaskRegistry taskRegistry;
+    @Autowired
+    private Jobs jobs;
+    @Autowired
+    private WSTokenInterceptor wsTokenInterceptor;
 
     /**
      * 用户登录
      * @return
      */
-    @ApiOperation("用户登录")
+    @Operation(summary = "用户登录")
     @PostMapping("login")
     public Result<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO){
         log.debug("用户登录:{}",userLoginDTO);
@@ -117,12 +124,22 @@ public class UserController {
      * 登出
      * @return
      */
-    @ApiOperation("登出")
+    @Operation(summary = "登出")
     @PostMapping("/logout")
     public Result<String> logout(HttpServletRequest request){
         String token = request.getHeader(jwtProperties.getUserTokenName());
         //加入黑名单
         jwtTokenInterceptor.banTokenList.add(token);
+        wsTokenInterceptor.banTokenList.add(token);
+        for (String key : WSTokenInterceptor.sessionMap.keySet()) {
+            try {
+                WebSocketSession session = WSTokenInterceptor.sessionMap.get(key);
+                session.close();
+            } catch (IOException e) {
+                log.error("session关闭异常: {}", e.getMessage());
+            }
+        }
+        WSTokenInterceptor.sessionMap.clear();
         return Result.success();
     }
 
@@ -132,7 +149,7 @@ public class UserController {
      * @param userLoginDTO
      * @return
      */
-    @ApiOperation("修改用户名和密码")
+    @Operation(summary = "修改用户名和密码")
     @PostMapping("/change")
     @Transactional
     public Result change(@RequestBody UserLoginDTO userLoginDTO){
@@ -152,7 +169,7 @@ public class UserController {
      * @param domain
      * @return
      */
-    @ApiOperation("更新自定义附件域名")
+    @Operation(summary = "更新自定义附件域名")
     @PostMapping("/enclosureDomain")
     @Transactional
     public Result enclosureDomain(@RequestParam String domain){
@@ -169,7 +186,7 @@ public class UserController {
      * 获取自定义附件域名
      * @return
      */
-    @ApiOperation("获取自定义附件域名")
+    @Operation(summary = "获取自定义附件域名")
     @GetMapping("/enclosureDomain")
     @Transactional
     public Result getEnclosureDomain(){
@@ -185,7 +202,7 @@ public class UserController {
      * 删除自定义附件域名
      * @return
      */
-    @ApiOperation("删除自定义附件域名")
+    @Operation(summary = "删除自定义附件域名")
     @DeleteMapping("/enclosureDomain")
     @Transactional
     public Result delEnclosureDomain(){
@@ -201,7 +218,7 @@ public class UserController {
      * @param uuids
      * @return
      */
-    @ApiOperation("订阅数据导出")
+    @Operation(summary = "订阅数据导出")
     @GetMapping("/dataExport")
     public Result<List<DataExport>> dataExport(@RequestParam List<String> uuids){
         log.info("数据导出:{}",uuids);
@@ -223,10 +240,10 @@ public class UserController {
      * @param dataExportList
      * @return
      */
-    @ApiOperation("数据导入")
+    @Operation(summary = "数据导入")
     @PostMapping("/dataImport")
     @Transactional
-    public Result dataImport(@RequestBody List<DataExport> dataExportList){
+    public Result dataImport(@RequestBody List<DataExport> dataExportList) throws Exception {
         log.info("数据导入");
         List<Sub> subList = subMapper.list();
         int noExist = dataExportList.stream().filter(dataExport -> {
@@ -248,7 +265,8 @@ public class UserController {
             extendService.batchExtend(export.getExtendList());
         }
         //加入任务队列
-        task.updateSub();
+        List<Sub> exportSubList = dataExportList.stream().map(DataExport::getSub).collect(Collectors.toList());
+        jobs.updateSubList(exportSubList);
         return Result.success();
     }
 
@@ -256,7 +274,7 @@ public class UserController {
      * 是否有证书
      * @return
      */
-    @ApiOperation("证书列表")
+    @Operation(summary = "证书列表")
     @GetMapping("/cert")
     public Result certificateVO(){
         List<Boolean> list = new ArrayList<>();
@@ -271,7 +289,7 @@ public class UserController {
      * 添加证书和密钥
      * @return
      */
-    @ApiOperation("添加证书和密钥")
+    @Operation(summary = "添加证书和密钥")
     @Transactional
     @PostMapping("/cert")
     public Result addCert(@RequestParam("files") MultipartFile[] files) throws Exception {
@@ -339,7 +357,7 @@ public class UserController {
      * 删除证书或密钥
      * @return
      */
-    @ApiOperation("删除证书或密钥")
+    @Operation(summary = "删除证书或密钥")
     @DeleteMapping("/cert")
     @Transactional
     public Result deleteCert(){
@@ -368,7 +386,7 @@ public class UserController {
      * @param status
      * @return
      */
-    @ApiOperation("开关ssl")
+    @Operation(summary = "开关ssl")
     @PostMapping("/switchSsl")
     @Transactional
     public Result switchSsl(@RequestParam Boolean status){
@@ -389,7 +407,7 @@ public class UserController {
      * 获取ssl状态
      * @return
      */
-    @ApiOperation("获取ssl状态")
+    @Operation(summary = "获取ssl状态")
     @GetMapping("/sslStatus")
     public Result isSsl(){
         return Result.success(userMapper.list().get(0).getIsSsl());
@@ -400,7 +418,7 @@ public class UserController {
      * @param path
      * @return
      */
-    @ApiOperation("更新登录页面访问路径")
+    @Operation(summary = "更新登录页面访问路径")
     @PostMapping("/path")
     public Result updatePath(@RequestParam String path){
         if (path == null){
@@ -416,7 +434,7 @@ public class UserController {
      * 移除登录页面访问路径
      * @return
      */
-    @ApiOperation("移除登录页面访问路径")
+    @Operation(summary = "移除登录页面访问路径")
     @DeleteMapping("/path")
     public Result removePath(){
         updatePath(null);
@@ -427,7 +445,7 @@ public class UserController {
      * 获取面板访问路径
      * @return
      */
-    @ApiOperation("获取面板访问路径")
+    @Operation(summary = "获取面板访问路径")
     @GetMapping("/path")
     public Result getPath(){
         return Result.success(userService.getExtendInfo().getPath());
@@ -437,7 +455,7 @@ public class UserController {
      * 获取github加速站
      * @return
      */
-    @ApiOperation("获取github加速站")
+    @Operation(summary = "获取github加速站")
     @GetMapping("/github")
     public Result getGithubProxyUrl(){
         return Result.success(userService.getExtendInfo().getGithubProxyUrl());
@@ -447,7 +465,7 @@ public class UserController {
      * 更新github加速站
      * @return
      */
-    @ApiOperation("更新github加速站")
+    @Operation(summary = "更新github加速站")
     @PostMapping("/github")
     public Result updateGithubProxyUrl(@RequestParam String githubProxyUrl){
         userService.updateExtendInfo(ExtendInfo.builder().githubProxyUrl(githubProxyUrl).build());
@@ -458,7 +476,7 @@ public class UserController {
      * 删除github加速站
      * @return
      */
-    @ApiOperation("删除github加速站")
+    @Operation(summary = "删除github加速站")
     @DeleteMapping("/github")
     public Result deleteGithubProxyUrl(){
         userService.deleteExtendInfo(ExtendInfo.builder().githubProxyUrl("").build());
@@ -469,7 +487,7 @@ public class UserController {
      * 获取插件仓库链接
      * @return
      */
-    @ApiOperation("获取插件仓库链接")
+    @Operation(summary = "获取插件仓库链接")
     @GetMapping("/plugin")
     public Result getPluginUrl(){
         return Result.success(userService.getExtendInfo().getPluginUrl());
@@ -479,7 +497,7 @@ public class UserController {
      * 更新插件仓库链接
      * @return
      */
-    @ApiOperation("更新插件仓库链接")
+    @Operation(summary = "更新插件仓库链接")
     @PostMapping("/plugin")
     public Result updatePluginUrl(@RequestParam String pluginUrl){
         if (pluginUrl == null || pluginUrl.isEmpty()){
@@ -495,7 +513,7 @@ public class UserController {
      * 删除插件仓库链接
      * @return
      */
-    @ApiOperation("删除插件仓库链接")
+    @Operation(summary = "删除插件仓库链接")
     @DeleteMapping("/plugin")
     public Result deletePluginUrl(){
         userService.deleteExtendInfo(ExtendInfo.builder().pluginUrl("").build());
@@ -507,7 +525,7 @@ public class UserController {
      * 获取Alist状态
      * @return
      */
-    @ApiOperation("获取Alist状态")
+    @Operation(summary = "获取Alist状态")
     @GetMapping("/alist/status")
     public Result aListStatus(){
         AlistInfo alistInfo = userService.getExtendInfo().getAlistInfo();
@@ -525,7 +543,7 @@ public class UserController {
      * 更新Alist配置
      * @return
      */
-    @ApiOperation("更新Alist配置")
+    @Operation(summary = "更新Alist配置")
     @PostMapping("/alist/update")
     public Result aListUpdate(@RequestBody AlistInfo submitAlist){
         AlistInfo alistInfo = submitAlist;
@@ -566,7 +584,7 @@ public class UserController {
      * 获取alist配置信息
      * @return
      */
-    @ApiOperation("获取alist配置信息")
+    @Operation(summary = "获取alist配置信息")
     @GetMapping("/alist/info")
     public Result<AlistInfo> aListInfo(){
         AlistInfo alistInfo = userService.getExtendInfo().getAlistInfo();
@@ -584,7 +602,7 @@ public class UserController {
      * 添加黑名单
      * @return
      */
-    @ApiOperation("更新黑白名单")
+    @Operation(summary = "更新黑白名单")
     @PostMapping("/addressFilter/update")
     public Result updateWhiteBlacklist(@RequestBody AddressFilter addressFilter){
         List<String> blacklist = addressFilter.getBlacklist();
@@ -616,7 +634,7 @@ public class UserController {
      * 获取地址过滤
      * @return
      */
-    @ApiOperation("获取黑白名单")
+    @Operation(summary = "获取黑白名单")
     @GetMapping("/addressFilter")
     public Result<AddressFilter> getAddressFilter(){
         return Result.success(userService.getExtendInfo().getAddressFilter());
@@ -626,7 +644,7 @@ public class UserController {
      * 获取apiToken
      * @return
      */
-    @ApiOperation("获取apiToken")
+    @Operation(summary = "获取apiToken")
     @GetMapping("/apiToken")
     public Result<String> getApiToken(){
         try {
@@ -642,7 +660,7 @@ public class UserController {
      * 是否有apiToken
      * @return
      */
-    @ApiOperation("是否有apiToken")
+    @Operation(summary = "是否有apiToken")
     @GetMapping("/hasApiToken")
     public Result<Boolean> hasApiToken(){
         String data = getApiToken().getData();
@@ -660,7 +678,7 @@ public class UserController {
      * 创建apiToken
      * @return
      */
-    @ApiOperation("创建apiToken")
+    @Operation(summary = "创建apiToken")
     @GetMapping("/createApiToken")
     public Result<String> createApiToken(){
         String uuid = UUID.randomUUID().toString();
@@ -679,7 +697,7 @@ public class UserController {
      * 删除apiToken
      * @return
      */
-    @ApiOperation("删除apiToken")
+    @Operation(summary = "删除apiToken")
     @DeleteMapping("/apiToken")
     public Result deleteApiToken(){
         try {
@@ -697,7 +715,7 @@ public class UserController {
      * 获取apiToken信息
      * @return
      */
-    @ApiOperation("获取apiToken信息")
+    @Operation(summary = "获取apiToken信息")
     @GetMapping("/apiTokenInfo")
     public Result<ApiTokenVO> getApiTokenInfo(){
         ApiTokenVO apiTokenVO = ApiTokenVO.builder()
@@ -711,7 +729,7 @@ public class UserController {
      * 获取api文档状态
      * @return
      */
-    @ApiOperation("获取api文档状态")
+    @Operation(summary = "获取api文档状态")
     @GetMapping("/apiDocStatus")
     public Result<Boolean> getApiDocStatus(){
         Boolean apiDoc = userMapper.list().get(0).getApiDoc();
@@ -723,7 +741,7 @@ public class UserController {
      * @param apiDocStatus
      * @return
      */
-    @ApiOperation("更新api文档状态")
+    @Operation(summary = "更新api文档状态")
     @PostMapping("/apiDocStatus")
     public Result updateApiDocStatus(@RequestBody ApiDocStatusDTO apiDocStatus){
         userMapper.update(User.builder().apiDoc(apiDocStatus.getStatus()).build());

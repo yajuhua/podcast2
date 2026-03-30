@@ -5,8 +5,8 @@ import io.github.yajuhua.podcast2.common.utils.NetWorkUtils;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
 import io.github.yajuhua.podcast2.pojo.entity.UserMoreInfo;
 import io.github.yajuhua.podcast2.service.UserService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 @RestController
-@Api(tags = "视图页面控制")
+@Tag(name = "视图页面控制")
 @Slf4j
 public class ViewController {
 
@@ -35,7 +35,7 @@ public class ViewController {
      * @return
      * @throws IOException
      */
-    @ApiOperation("转发到index.html页面")
+    @Operation(summary = "转发到index.html页面")
     @GetMapping("/")
     public Resource index(HttpServletRequest request) throws IOException {
         boolean ban = NetWorkUtils.isBan(request.getRemoteAddr(), userService.getExtendInfo().getAddressFilter());
@@ -54,7 +54,7 @@ public class ViewController {
      * @return
      * @throws IOException
      */
-    @ApiOperation("设置路径访问")
+    @Operation(summary = "设置路径访问")
     @GetMapping("/p/{path}")
     public Resource path(@PathVariable String path, HttpServletRequest request) throws IOException {
         boolean ban = NetWorkUtils.isBan(request.getRemoteAddr(), userService.getExtendInfo().getAddressFilter());

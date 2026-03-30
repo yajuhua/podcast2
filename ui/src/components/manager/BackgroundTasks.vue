@@ -70,11 +70,17 @@ export default {
   name: "BackgroundTasks",
   data() {
     return {
-      list: []
+      list: [],
+      loading: false,
+      timer: null
     };
   },
   created() {
     this.getList();
+    //每五秒刷新一下状态
+    this.timer = setInterval(() => {
+    this.getList()
+  }, 5000)
   },
   methods: {
     //立即执行
@@ -133,6 +139,8 @@ export default {
       }
     },
     getList(){
+      if (this.loading) return;
+      this.loading = true;
       axios.get('/api/system/backgroundTasks/')
           .then(res => {
             if (res.data.code == '1'){
@@ -143,8 +151,14 @@ export default {
           }).catch(error => {
         console.log(error)
         this.$message.error('无法获取后台任务列表！')
+      }).finally(() => {
+        this.loading = false
       })
     }
-  }
+  },
+  beforeDestroy() {
+    clearInterval(this.timer)
+    this.timer = null
+}
 };
 </script>

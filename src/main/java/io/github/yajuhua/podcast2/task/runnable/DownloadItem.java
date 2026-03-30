@@ -1,4 +1,4 @@
-package io.github.yajuhua.podcast2.task;
+package io.github.yajuhua.podcast2.task.runnable;
 
 import com.google.gson.Gson;
 import io.github.yajuhua.download.commons.Context;
@@ -18,6 +18,7 @@ import io.github.yajuhua.podcast2.pojo.entity.Items;
 import io.github.yajuhua.podcast2.pojo.entity.Settings;
 import io.github.yajuhua.podcast2.pojo.entity.Sub;
 import io.github.yajuhua.podcast2.pojo.vo.DownloadProgressVO;
+import io.github.yajuhua.podcast2.task.TaskRegistry;
 import io.github.yajuhua.podcast2API.Item;
 import io.github.yajuhua.podcast2API.Params;
 import io.github.yajuhua.podcast2API.Podcast2;
@@ -66,7 +67,7 @@ public class DownloadItem implements Runnable{
     public void run() {
 
         DownloadManager downloadManager = new DownloadManager();
-        Task.downloadManagerList.add(downloadManager);
+        TaskRegistry.downloadManagerList.add(downloadManager);
 
         Item item;
         try {
@@ -157,8 +158,8 @@ public class DownloadItem implements Runnable{
                         .itemName(item.getTitle())
                         .build();
 
-                Task.getDownloadProgressVOSet().remove(build);//去重
-                Task.getDownloadProgressVOSet().add(build);
+                TaskRegistry.getDownloadProgressVOSet().remove(build);//去重
+                TaskRegistry.getDownloadProgressVOSet().add(build);
 
                 //remove操作
                 if (progress.getStatus().equals(Context.REMOVE)) {

@@ -1,10 +1,17 @@
 package io.github.yajuhua.podcast2.config;
 
 
+import com.github.xiaoymin.knife4j.core.model.OpenAPIInfo;
+import com.github.xiaoymin.knife4j.spring.annotations.EnableKnife4j;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
 import io.github.yajuhua.podcast2.interceptor.JwtTokenInterceptor;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.info.License;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.GroupedOpenApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,13 +21,6 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
-import springfox.documentation.builders.ApiInfoBuilder;
-import springfox.documentation.builders.PathSelectors;
-import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.spi.DocumentationType;
-import springfox.documentation.spring.web.plugins.Docket;
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -30,7 +30,7 @@ import java.util.List;
  */
 @Configuration
 @Slf4j
-@EnableSwagger2
+@EnableKnife4j
 public class WebMvcConfiguration extends WebMvcConfigurationSupport {
 
     @Autowired
@@ -62,25 +62,36 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
     }
 
     /**
-     * 通过knife4j生成接口文档
+     * openapi接口文档信息配置
      * @return
      */
     @Bean
-    public Docket docket() {
-        ApiInfo apiInfo = new ApiInfoBuilder()
-                .title("Podcast2接口文档")
-                .version("2.0")
-                .description("Podcast2接口文档")
-                .build();
-        Docket docket = new Docket(DocumentationType.SWAGGER_2)
-                .groupName("全部接口")
-                .apiInfo(apiInfo)
-                .select()
-                .apis(RequestHandlerSelectors.basePackage("io.github.yajuhua.podcast2.controller"))
-                .paths(PathSelectors.any())
-                .build();
-        return docket;
+    public OpenAPI openAPI(){
+        OpenAPI openAPI = new OpenAPI();
+
+        Contact contact = new Contact();
+        contact.setUrl("https://github.com/yajuhua/podcast2");
+        contact.setEmail("yajuhua@outlook.com");
+        contact.setName("yajuhua@outlook.com");
+
+        Info info = new Info();
+        info.setTitle("Podcast2接口文档");
+        info.setContact(contact);
+        info.setDescription("Podcast2接口文档");
+        info.setVersion("v2.0");
+        openAPI.setInfo(info);
+        return openAPI;
     }
+
+    @Bean
+    public GroupedOpenApi groupedOpenApi(){
+        return GroupedOpenApi.builder()
+                .group("all")
+                .displayName("全部接口")
+                .pathsToMatch("/**")
+                .build();
+    }
+
 
     /**
      * 设置静态资源映射

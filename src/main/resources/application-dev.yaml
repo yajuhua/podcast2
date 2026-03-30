@@ -1,6 +1,13 @@
+org:
+  jobrunr:
+    background-job-server:
+      enabled: true
+      worker-count: 1
+    dashboard:
+      enabled: true
 podcast2:
   data:
-      data-path: "E:\\BaiduSyncdisk\\Windows\\item\\podcast2-2.0\\data"
+    data-path: "D:/Tmp"
 
 
 

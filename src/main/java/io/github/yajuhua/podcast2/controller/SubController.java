@@ -9,6 +9,7 @@ import io.github.yajuhua.download.manager.DownloadManager;
 import io.github.yajuhua.podcast2.alist.Alist;
 import io.github.yajuhua.podcast2.common.constant.MessageConstant;
 import io.github.yajuhua.podcast2.common.constant.StatusCode;
+import io.github.yajuhua.podcast2.common.context.JobTimeoutContext;
 import io.github.yajuhua.podcast2.common.exception.BaseException;
 import io.github.yajuhua.podcast2.common.exception.SubNotFoundException;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
@@ -19,15 +20,11 @@ import io.github.yajuhua.podcast2.mapper.*;
 import io.github.yajuhua.podcast2.plugin.PluginManager;
 import io.github.yajuhua.podcast2.pojo.dto.*;
 import io.github.yajuhua.podcast2.pojo.entity.*;
+import io.github.yajuhua.podcast2.pojo.entity.LogMessage;
 import io.github.yajuhua.podcast2.pojo.vo.*;
-import io.github.yajuhua.podcast2.service.ExtendService;
-import io.github.yajuhua.podcast2.service.ItemsService;
-import io.github.yajuhua.podcast2.service.SubService;
-import io.github.yajuhua.podcast2.service.UserService;
-import io.github.yajuhua.podcast2.task.CronTaskManager;
-import io.github.yajuhua.podcast2.task.LogMessage;
-import io.github.yajuhua.podcast2.task.Task;
-import io.github.yajuhua.podcast2.task.Update;
+import io.github.yajuhua.podcast2.service.*;
+import io.github.yajuhua.podcast2.task.*;
+import io.github.yajuhua.podcast2.task.scheduler.Jobs;
 import io.github.yajuhua.podcast2API.Channel;
 import io.github.yajuhua.podcast2API.Item;
 import io.github.yajuhua.podcast2API.Params;
@@ -38,12 +35,14 @@ import io.github.yajuhua.podcast2API.extension.build.Select;
 import io.github.yajuhua.podcast2API.extension.reception.InputAndSelectData;
 import io.github.yajuhua.podcast2API.setting.Setting;
 import io.github.yajuhua.podcast2API.utils.TimeFormat;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.quartz.SchedulerException;
-import org.quartz.Trigger;
+import org.jobrunr.jobs.lambdas.JobLambda;
+import org.jobrunr.scheduling.JobScheduler;
+import org.jobrunr.storage.BackgroundJobServerStatus;
+import org.jobrunr.storage.StorageProvider;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,20 +54,18 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @RestController
 @Slf4j
-@Api(tags = "订阅相关接口")
+@Tag(name = "订阅相关接口")
 public class SubController {
 
     @Autowired
@@ -101,14 +98,20 @@ public class SubController {
     @Autowired
     private PluginManager pluginManager;
     @Autowired
-    private CronTaskManager cronTaskManager;
+    private StorageProvider storageProvider;
+    @Autowired
+    private JobScheduler jobScheduler;
+    @Autowired
+    private Jobs jobs;
+    @Autowired
+    private JobRunrService jobRunrService;
 
 
     /**
      * 获取订阅列表
      * @return
      */
-    @ApiOperation("获取订阅列表")
+    @Operation(summary = "获取订阅列表")
     @GetMapping("/api/sub/list")
     public Result<List<SubVO>> list() throws Exception {
         List<Sub> list = subService.list();
@@ -133,7 +136,7 @@ public class SubController {
      * @param keywords
      * @return
      */
-    @ApiOperation("搜索订阅")
+    @Operation(summary = "搜索订阅")
     @GetMapping("/api/sub/search")
     public Result<List<SubVO>> search(String keywords) throws Exception {
         List<Sub> list = subService.list();
@@ -168,7 +171,7 @@ public class SubController {
      * @param uuid
      * @return
      */
-    @ApiOperation("根据uuid获取订阅xml")
+    @Operation(summary = "根据uuid获取订阅xml")
     @GetMapping(value = "/sub/xml/{uuid}", produces = {MediaType.APPLICATION_XML_VALUE})
     public String xml(@PathVariable String uuid, HttpServletRequest request){
         Sub sub = subService.selectByUuid(uuid);
@@ -221,7 +224,7 @@ public class SubController {
      * @param uuids group
      * @return
      */
-    @ApiOperation("获取组xml")
+    @Operation(summary = "获取组xml")
     @GetMapping(value = "/sub/xml", produces = {MediaType.APPLICATION_XML_VALUE})
     public String groupXml(@RequestParam("uuids") List<String> uuids, @RequestParam("group") String group, HttpServletRequest request, @RequestParam("xmlConfName") String xmlConfName)
             throws Exception{
@@ -307,27 +310,11 @@ public class SubController {
      */
     public List<Item> serviceStatus(String enclosureDomain,User user,List<String> subUuids) {
         List<Sub> subList = subMapper.list();
-        int subErrorSize = subList.stream().filter(new Predicate<Sub>() {
-            @Override
-            public boolean test(Sub sub) {
-                try {
-                    if (sub.getSubType().equalsIgnoreCase("empty")){
-                        //空订阅
-                        return false;
-                    }
-                    CronTaskManager.TaskStatus taskStatus = cronTaskManager.getTaskStatus(sub.getUuid());
-                    Date nextTime = taskStatus.getNextFireTime();
-                    Trigger.TriggerState state = taskStatus.getStatus();
-                    if ((state == Trigger.TriggerState.NORMAL || state == Trigger.TriggerState.BLOCKED)
-                            && nextTime != null) {
-                        return false;
-                    }
-                    return true;
-                } catch (SchedulerException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }).collect(Collectors.toList()).size();
+
+        //worker-count 数量
+        List<BackgroundJobServerStatus> backgroundJobServers = storageProvider.getBackgroundJobServers();
+        int workerCount = backgroundJobServers.stream()
+                .map(BackgroundJobServerStatus::getWorkerPoolSize).mapToInt(Integer::intValue).sum();
 
         //下载错误的
         List<Items> itemsDownloadError = itemsMapper.list().stream().filter(new Predicate<Items>() {
@@ -350,10 +337,10 @@ public class SubController {
         List<Item> serveStatusItems = new ArrayList<>();
         Item item;
 
-        if (subErrorSize != 0) {
+        if (workerCount < 1){
             item = new Item();
-            item.setTitle("服务异常");
-            item.setDescription("订阅检查更新异常,详细情况请查看日志");
+            item.setTitle("JobRunr无活跃Worker! 请尝试重启解决。");
+            item.setDescription("JobRunr无活跃Worker! 请尝试重启解决。");
             item.setDuration(10);
             item.setCreateTime(System.currentTimeMillis());
             item.setLink("https://github.com/yajuhua/podcast2");
@@ -362,6 +349,7 @@ public class SubController {
             item.setEnclosureType("audio/mp3");
             serveStatusItems.add(item);
         }
+
         if (!itemsDownloadError.isEmpty()) {
             //将节目标题拼接到描述区
             StringBuilder desc = new StringBuilder("节目标题：");
@@ -412,7 +400,7 @@ public class SubController {
      * @return
      */
     private Item updateErrorLogMessges(Sub sub){
-        List<LogMessage> logMessages = Task.collectUpdateLogMessagesMap.get(sub.getUuid());
+        List<LogMessage> logMessages = TaskRegistry.collectUpdateLogMessagesMap.get(sub.getUuid());
         if (logMessages == null){
             return null;
         }
@@ -450,26 +438,24 @@ public class SubController {
      * @return
      */
     @DeleteMapping("/api/sub")
-    @ApiOperation("删除订阅")
+    @Operation(summary = "删除订阅")
     @Transactional
     public Result delete(@RequestParam List<String> uuids) throws Exception {
         log.info("delete uuids:{}",uuids);
         for (String uuid : uuids) {
             //删除任务队列
-            if (cronTaskManager.has(uuid)){
-                cronTaskManager.remove(uuid);
-            }
+            jobRunrService.deleteJob(uuid);
             //删除订阅资源线程
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
                         //结束下载如果有的话
-                        for (DownloadManager dm : Task.downloadManagerList) {
+                        for (DownloadManager dm : TaskRegistry.downloadManagerList) {
                             //dm.killByChannelUuid(uuid);
                             //更新是单线程,在同一时间只有一个订阅在更新下载
                             dm.killAll();
-                            Task.getDownloadProgressVOSet().clear();
+                            TaskRegistry.getDownloadProgressVOSet().clear();
                         }
 
                         //删除相关资源
@@ -520,7 +506,7 @@ public class SubController {
      * 添加订阅
      * @return
      */
-    @ApiOperation("添加订阅")
+    @Operation(summary = "添加订阅")
     @PostMapping("/api/sub/add")
     @Transactional
     public Result add(@RequestBody AddSubDTO addSubDTO){
@@ -591,15 +577,13 @@ public class SubController {
                 //加入任务队列
                 String scheduleType = sub.getScheduleType();
                 if (scheduleType.equalsIgnoreCase("cron")){
-                    Runnable task = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
-                            settingsMapper,pluginManager);
-                    cronTaskManager.add(sub.getUuid(), sub.getCron(), task, TimeUnit.SECONDS,
-                            Task.calculateUpdateSubTimeout(sub), "更新: " + sub.getTitle(), 0);
+                    jobScheduler.scheduleRecurrently(sub.getUuid(), Duration.ofSeconds(sub.getCron()),
+                            (JobLambda) () -> jobs.updateSub(sub.getUuid(), new JobTimeoutContext()));
+                    jobRunrService.startNow(sub.getUuid());
                 }else if (scheduleType.equalsIgnoreCase("cron_expression")){
-                    Runnable task = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
-                            settingsMapper,pluginManager);
-                    cronTaskManager.add(sub.getUuid(), sub.getCronExpression(),
-                            task, TimeUnit.SECONDS, Task.calculateUpdateSubTimeout(sub), "更新: " + sub.getTitle());
+                    jobScheduler.scheduleRecurrently(sub.getUuid(), CronUtils.fromQuartzToUnix(sub.getCronExpression()),
+                            (JobLambda) () -> jobs.updateSub(sub.getUuid(), new JobTimeoutContext()));
+                    jobRunrService.startNow(sub.getUuid());
                 }else {
                     throw new Exception("未知scheduleType: " + scheduleType);
                 }
@@ -627,7 +611,7 @@ public class SubController {
         }catch (Exception e) {
             throw new BaseException(e.getMessage());
         }finally {
-            Task.addSubStatus = false;
+            TaskRegistry.addSubStatus = false;
         }
     }
 
@@ -637,7 +621,7 @@ public class SubController {
      * @return
      */
     @GetMapping("/api/sub/extendList")
-    @ApiOperation("获取插件扩展")
+    @Operation(summary = "获取插件扩展")
     public Result<ExtendListVO> extendList(GetExtendListDTO getExtendListDTO) throws Exception {
         log.info("getExtendListDTO:{}",getExtendListDTO);
         Params params = new Params();
@@ -662,7 +646,7 @@ public class SubController {
      * 提交编辑订阅
      * @return
      */
-    @ApiOperation("提交编辑订阅")
+    @Operation(summary = "提交编辑订阅")
     @PutMapping("/api/sub")
     @Transactional
     public Result editSub(@RequestBody EditSubVO editSubVO) throws Exception{
@@ -692,15 +676,15 @@ public class SubController {
             //更新任务队列
             String scheduleType = sub.getScheduleType();
             if (scheduleType.equalsIgnoreCase("cron")){
-                Runnable task = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
-                        settingsMapper,pluginManager);
-                cronTaskManager.update(sub.getUuid(), sub.getCron(), task, TimeUnit.SECONDS,
-                        Task.calculateUpdateSubTimeout(sub), "更新: " + sub.getTitle(), 0L);
+                jobRunrService.deleteJob(sub.getUuid());
+                jobScheduler.scheduleRecurrently(sub.getUuid(), Duration.ofSeconds(sub.getCron()),
+                        (JobLambda) () -> jobs.updateSub(sub.getUuid(), new JobTimeoutContext()));
+                jobRunrService.toScheduledJob(sub.getUuid());
             }else if (scheduleType.equalsIgnoreCase("cron_expression")){
-                Runnable task = new Update(sub, subService, extendMapper, dataPathProperties, subMapper, itemsMapper,
-                        settingsMapper,pluginManager);
-                cronTaskManager.update(sub.getUuid(), sub.getCronExpression(),
-                        task, TimeUnit.SECONDS, Task.calculateUpdateSubTimeout(sub), "更新: " + sub.getTitle());
+                jobRunrService.deleteJob(sub.getUuid());
+                jobScheduler.scheduleRecurrently(sub.getUuid(), CronUtils.fromQuartzToUnix(sub.getCronExpression()),
+                        (JobLambda) () -> jobs.updateSub(sub.getUuid(), new JobTimeoutContext()));
+                jobRunrService.toScheduledJob(sub.getUuid());
             }else {
                 throw new Exception("未知scheduleType: " + scheduleType);
             }
@@ -716,7 +700,7 @@ public class SubController {
      * 获取编辑订阅信息
      * @return
      */
-    @ApiOperation("获取编辑订阅信息")
+    @Operation(summary = "获取编辑订阅信息")
     @GetMapping("/api/sub/edit/{uuid}")
     public Result<EditSubVO> getEditSubInfo(@PathVariable String uuid)throws Exception{
         //1.获取sub
@@ -880,7 +864,7 @@ public class SubController {
      * @param uuid
      * @return
      */
-    @ApiOperation("获取订阅详细信息")
+    @Operation(summary = "获取订阅详细信息")
     @GetMapping("/api/sub/detail/{uuid}")
     public Result<SubDetailVO> subDetail(@PathVariable String uuid){
         Sub sub = subMapper.selectByUuid(uuid);
@@ -904,10 +888,10 @@ public class SubController {
      * 订阅追加节目
      * @return
      */
-    @ApiOperation("订阅追加节目")
+    @Operation(summary = "订阅追加节目")
     @PostMapping("/api/sub/appendItem")
     public Result appendItem(@RequestBody AppendItemDTO appendItemDTO){
-        Task.appendItemList.add(appendItemDTO);
+        jobScheduler.enqueue((JobLambda) () -> jobs.downloadAppendItemList(appendItemDTO, new JobTimeoutContext()));
         log.info("追加节目已加入列表: {}",appendItemDTO.getUrl());
         return Result.success();
     }
@@ -916,7 +900,7 @@ public class SubController {
      * 获取xml配置数据
      * @return
      */
-    @ApiOperation("获取xml配置数据")
+    @Operation(summary = "获取xml配置数据")
     @GetMapping("/api/sub/xmlConfData")
     public Result<String> getXmlConfData(){
         String xmlConfData = userMapper.list().get(0).getXmlConfData();
@@ -927,7 +911,7 @@ public class SubController {
      * 获取xml配置数据
      * @return
      */
-    @ApiOperation("更新xml配置数据")
+    @Operation(summary = "更新xml配置数据")
     @PostMapping("/api/sub/xmlConfData")
     public Result updateXmlConfData(@RequestBody XmlConfDataDTO xmlConfData){
         User user = User.builder()
@@ -941,7 +925,7 @@ public class SubController {
      * 获取xml配置名称
      * @return
      */
-    @ApiOperation("获取xml配置名称")
+    @Operation(summary = "获取xml配置名称")
     @GetMapping("/api/sub/xmlConfName")
     public Result getXmlConfNames(){
         try {
@@ -984,72 +968,30 @@ public class SubController {
      * 获取任务状态
      * @return
      */
-    @ApiOperation("获取任务状态")
+    @Operation(summary = "获取任务状态")
     @GetMapping("/api/sub/status/{uuid}")
     public Result<TaskStatusVO> getTaskStatus(@PathVariable String uuid) throws Exception {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        String lastFireTime = "未知";
-        String nextFireTime = "未知";
-
-        Map<String,String> statusMap = new HashMap();
-        statusMap.put("NONE", "无状态");
-        statusMap.put("NORMAL", "正常");
-        statusMap.put("EMPTY", "空订阅");
-        statusMap.put("PAUSED", "暂停");
-        statusMap.put("COMPLETE", "完成");
-        statusMap.put("ERROR", "错误");
-        statusMap.put("BLOCKED", "被阻塞");
-
-        Map<String,String> colorMap = new HashMap();
-        colorMap.put("NONE","#D3D3D3");//灰色
-        colorMap.put("NORMAL", "#28a745");//绿色
-        colorMap.put("EMPTY", "#28a745");//绿色
-        colorMap.put("PAUSED", "#ffc107");//黄色
-        colorMap.put("COMPLETE", "#007bff");//蓝色
-        colorMap.put("ERROR", "#dc3545");//红色
-        colorMap.put("BLOCKED", "#8a2be2");//紫色
-
-        String taskStatusName = null;
         Sub sub = subMapper.selectByUuid(uuid);
-        if (sub.getSubType().equalsIgnoreCase("plugin")) {
-            CronTaskManager.TaskStatus taskStatus = cronTaskManager.getTaskStatus(uuid);
-            taskStatusName = taskStatus.getStatus().name();
-            if (taskStatus.getLastFireTime() != null){
-                lastFireTime = sdf.format(taskStatus.getLastFireTime());
-            }
-            if (taskStatus.getNextFireTime() != null){
-                nextFireTime = sdf.format(taskStatus.getNextFireTime());
-            }
-        }else if (sub.getSubType().equalsIgnoreCase("empty")){
-            //空订阅
-            taskStatusName = "EMPTY";
-            lastFireTime = "无需更新";
-            nextFireTime = "无需更新";
-        }else {
-            return Result.error("未知订阅类型: " + sub.getSubType());
-        }
-        TaskStatusVO statusVO = TaskStatusVO.builder()
-                .status(statusMap.get(taskStatusName))
-                .lastFireTime(lastFireTime)
-                .nextFireTime(nextFireTime)
-                .statusColor(colorMap.get(taskStatusName))
-                .title(sub.getTitle())
-                .build();
-        return Result.success(statusVO);
+        TaskStatusVO taskStatus = jobRunrService.getTaskStatus(uuid, sub.getSubType(), sub.getTitle());
+        return Result.success(taskStatus);
     }
 
     /**
      * 立即执行任务
      * @return
      */
-    @ApiOperation("立即执行任务")
+    @Operation(summary = "立即执行任务")
     @PostMapping("/api/sub/status/{uuid}")
-    public Result startNowTask(@PathVariable String uuid){
-        Sub sub = subMapper.selectByUuid(uuid);
-        if (sub != null &&  sub.getSubType().equalsIgnoreCase("empty")){
-            return Result.error("空订阅无需更新！");
+    public Result startNowTask(@PathVariable String uuid) throws Exception {
+        try {
+            Sub sub = subMapper.selectByUuid(uuid);
+            if (sub != null &&  sub.getSubType().equalsIgnoreCase("empty")){
+                return Result.error("空订阅无需更新！");
+            }
+            jobRunrService.startNow(uuid);
+            return Result.success();
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
         }
-        cronTaskManager.startNow(uuid);
-        return Result.success();
     }
 }
