@@ -112,7 +112,11 @@ public class CustomXml {
      * @throws Exception
      */
     public static String custom(Channel channel, List<Item> items, String jsonStr, String confName){
-        if (confName.equalsIgnoreCase("default")){
+        if (confName == null
+                || confName.equalsIgnoreCase("default")
+                || jsonStr == null
+                || jsonStr.equalsIgnoreCase("null")
+                || jsonStr.isEmpty()){
             return Xml.build(channel, items);
         }
         try {
@@ -340,6 +344,8 @@ public class CustomXml {
                     value = TimeFormat.duration(t);
                 }
                 s = s.replace("{" + field.getName() + "}", value.toString());
+            }else {
+                s= s.replace("{" + field.getName() + "}", "null");
             }
         }
         return s;

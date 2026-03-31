@@ -226,9 +226,8 @@ public class SubController {
      */
     @Operation(summary = "获取组xml")
     @GetMapping(value = "/sub/xml", produces = {MediaType.APPLICATION_XML_VALUE})
-    public String groupXml(@RequestParam("uuids") List<String> uuids, @RequestParam("group") String group, HttpServletRequest request, @RequestParam("xmlConfName") String xmlConfName)
+    public String groupXml(@RequestParam("uuids") List<String> uuids, @RequestParam("group") String group, HttpServletRequest request, @RequestParam(value = "xmlConfName", required = false) String xmlConfName)
             throws Exception{
-
         String requestURL = request.getRequestURL() + "?" + request.getQueryString();
 
         if (uuids != null && !uuids.isEmpty() && group != null){
