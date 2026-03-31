@@ -8,7 +8,10 @@ import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.*;
 import java.util.List;
 
@@ -94,8 +97,23 @@ public class ImageGrid {
      从 HTTP URL 下载图片
      */
     private static BufferedImage downloadImage(String imageUrl) throws IOException {
-        URL url = new URL(imageUrl);
-        return ImageIO.read(url);
+        HttpURLConnection conn = null;
+        try {
+            URL url = new URL(imageUrl);
+            conn = (HttpURLConnection)url.openConnection();
+            conn.setRequestProperty("User-Agent",
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+                            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+            conn.setRequestProperty("Accept", "image/webp,image/apng,image/*,*/*;q=0.8");
+            conn.setRequestProperty("Accept-Language", "zh-CN,zh;q=0.9");
+            try(InputStream in = conn.getInputStream();) {
+                return ImageIO.read(in);
+            }
+        } finally {
+            if (conn != null){
+                conn.disconnect();
+            }
+        }
     }
 
     /**
