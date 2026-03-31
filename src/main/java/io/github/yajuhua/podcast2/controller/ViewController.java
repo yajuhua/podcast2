@@ -61,7 +61,7 @@ public class ViewController {
         if (ban){
             return new ClassPathResource("static/403.html");
         }
-        log.info("path:{}",path);
+        log.debug("path:{}",path);
         String path1 = userService.getExtendInfo().getPath();
         if (path1 == null || path1.equals(path)){
             return new ClassPathResource("static/index.html");
