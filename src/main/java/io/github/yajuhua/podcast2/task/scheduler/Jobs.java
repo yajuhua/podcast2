@@ -544,6 +544,10 @@ public class Jobs {
                 jobRunrService.deleteJob(uuid);
                 return;
             }
+            if (!sub.getIsUpdate().equals(1)){
+                log.info("{} - 订阅状态为无需更新", sub.getTitle());
+                return;
+            }
             List<Extend> anExtends = extendMapper.selectByUuid(sub.getUuid());
             List<InputAndSelectData> inputAndSelectDataList = new ArrayList<>();
             Integer isFirst = sub.getIsFirst();
@@ -831,6 +835,12 @@ public class Jobs {
                 sub.setIsFirst(StatusCode.NO);
                 //加入当前时间浮动，让每次检查时间不一样 往后
                 sub.setCheckTime(nowTimeFloat(1,1,10, Update.Units.Minutes));
+
+                //如果原先已经设置了"不更新",那保持
+                Sub before = subMapper.selectByUuid(uuid);
+                if (before.getIsUpdate().equals(0)){
+                    sub.setIsUpdate(0);
+                }
                 subMapper.update(sub);
                 TaskRegistry.updateStatus = false;
                 log.info("{}:更新完成",sub.getTitle());
