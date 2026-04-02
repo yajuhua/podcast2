@@ -860,6 +860,12 @@ public class Jobs {
                         (JobLambda) () -> updateSub(sub.getUuid(), new JobTimeoutContext()));
                 jobRunrService.toScheduledJob(sub.getUuid());
             }else if (scheduleType.equalsIgnoreCase("cron_expression")){
+                try {
+                    CronUtils.fromQuartzToUnix(sub.getCronExpression());
+                } catch (Exception e) {
+                    log.error("订阅: {} - {}  Cron表达式解析失败: {} 仅支持Unix Cron", sub.getTitle(), sub.getCronExpression(), e.getMessage());
+                    continue;
+                }
                 jobScheduler.scheduleRecurrently(sub.getUuid(), CronUtils.fromQuartzToUnix(sub.getCronExpression()),
                         (JobLambda) () -> updateSub(sub.getUuid(), new JobTimeoutContext()));
                 jobRunrService.toScheduledJob(sub.getUuid());
