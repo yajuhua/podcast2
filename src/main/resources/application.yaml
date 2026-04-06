@@ -46,6 +46,8 @@ org:
     background-job-server:
       enabled: true
       worker-count: 1
+      delete-succeeded-jobs-after: 1
+      permanently-delete-deleted-jobs-after: 2
     dashboard:
       enabled: false
 
