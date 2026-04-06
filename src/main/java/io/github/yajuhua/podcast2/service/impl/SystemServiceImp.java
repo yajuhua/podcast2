@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jobrunr.jobs.Job;
 import org.jobrunr.jobs.states.StateName;
 import org.jobrunr.storage.BackgroundJobServerStatus;
+import org.jobrunr.storage.JobStats;
 import org.jobrunr.storage.Page;
 import org.jobrunr.storage.StorageProvider;
 import org.jobrunr.storage.navigation.OffsetBasedPageRequest;
@@ -58,18 +59,15 @@ public class SystemServiceImp implements SystemService {
         }
         if (!backgroundJobServers.isEmpty()){
             BackgroundJobServerStatus serverStatus = backgroundJobServers.get(0);
-            Page<Job> processingJobs = storageProvider.getJobs(StateName.PROCESSING,
-                    new OffsetBasedPageRequest("updatedAt:DESC", 0, 1000));
-            Page<Job> failedJobs = storageProvider.getJobs(StateName.FAILED,
-                    new OffsetBasedPageRequest("updatedAt:DESC", 0, 1000));
-            Page<Job> enqueuedJobs = storageProvider.getJobs(StateName.ENQUEUED,
-                    new OffsetBasedPageRequest("updatedAt:DESC", 0, 1000));
+            JobStats jobStats = storageProvider.getJobStats();
             StringBuilder sb = new StringBuilder();
             sb.append("name=").append(serverStatus.getName()).append(" | ");
             sb.append("workerPoolSize=").append(serverStatus.getWorkerPoolSize()).append(" | ");
-            sb.append("PROCESSING=").append(processingJobs.getItems().size()).append(" | ");
-            sb.append("FAILED=").append(failedJobs.getItems().size()).append(" | ");
-            sb.append("ENQUEUED=").append(enqueuedJobs.getItems().size()).append(" | ");
+            sb.append("PROCESSING=").append(jobStats.getProcessing()).append(" | ");
+            sb.append("FAILED=").append(jobStats.getFailed()).append(" | ");
+            sb.append("ENQUEUED=").append(jobStats.getEnqueued()).append(" | ");
+            sb.append("SCHEDULED=").append(jobStats.getScheduled()).append(" | ");
+            sb.append("TOTAL=").append(jobStats.getTotal()).append(" | ");
             return sb.toString();
         }
         return "需要重启";
