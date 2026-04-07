@@ -7,6 +7,7 @@ import org.jobrunr.jobs.Job;
 public interface JobRunrService {
     Job startNow(String uuid) throws Exception;
     Job toScheduledJob(String uuid) throws Exception;
+    Job toEnqueuedJob(String uuid) throws Exception;
     boolean deleteJob(String uuid);
     TaskStatusVO getTaskStatus(String uuid, String subType, String title);
 }

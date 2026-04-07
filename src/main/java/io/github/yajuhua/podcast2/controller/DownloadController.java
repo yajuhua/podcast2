@@ -7,6 +7,7 @@ import io.github.yajuhua.download.manager.DownloadManager;
 import io.github.yajuhua.podcast2.alist.Alist;
 import io.github.yajuhua.podcast2.common.constant.MessageConstant;
 import io.github.yajuhua.podcast2.common.constant.Unit;
+import io.github.yajuhua.podcast2.common.context.JobTimeoutContext;
 import io.github.yajuhua.podcast2.common.exception.DeleteException;
 import io.github.yajuhua.podcast2.common.exception.ItemNotFoundException;
 import io.github.yajuhua.podcast2.common.properties.DataPathProperties;
@@ -19,7 +20,9 @@ import io.github.yajuhua.podcast2.pojo.entity.Downloader;
 import io.github.yajuhua.podcast2.pojo.entity.Items;
 import io.github.yajuhua.podcast2.pojo.entity.Sub;
 import io.github.yajuhua.podcast2.pojo.vo.*;
+import io.github.yajuhua.podcast2.service.JobRunrService;
 import io.github.yajuhua.podcast2.task.TaskRegistry;
+import io.github.yajuhua.podcast2.task.scheduler.Jobs;
 import io.github.yajuhua.podcast2API.extension.build.Input;
 import io.github.yajuhua.podcast2API.extension.build.Select;
 import io.github.yajuhua.podcast2API.extension.reception.InputAndSelectData;
@@ -28,6 +31,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.jobrunr.jobs.lambdas.JobLambda;
+import org.jobrunr.scheduling.JobScheduler;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +41,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -71,6 +77,12 @@ public class DownloadController {
     private PluginManager pluginManager;
     @Autowired
     private SubController subController;
+    @Autowired
+    private JobScheduler jobScheduler;
+    @Autowired
+    private Jobs jobs;
+    @Autowired
+    private JobRunrService jobRunrService;
 
 
     /**
@@ -219,7 +231,7 @@ public class DownloadController {
      */
     @Operation(summary = "重新下载和上传")
     @GetMapping("/reDownload/{uuid}")
-    public Result reDownload(@PathVariable String uuid){
+    public Result reDownload(@PathVariable String uuid) throws Exception {
         Items items = itemsMapper.selectByUuid(uuid);
         if (items == null){
             throw new ItemNotFoundException(MessageConstant.ITEMS_NOT_FOUND_FAILED);
@@ -228,6 +240,8 @@ public class DownloadController {
         if (DownloaderUtils.aListErrStatusCode().contains(items.getStatus())){
             //加入上传列表任务
             reUploadItems.add(items);
+            String s = UUID.nameUUIDFromBytes("上传资源到alist".getBytes(StandardCharsets.UTF_8)).toString();
+            jobRunrService.toEnqueuedJob(s);
             log.info("加入重新上传列表: {}",items.getTitle());
             return Result.success();
         }
@@ -235,7 +249,7 @@ public class DownloadController {
         else {
             //加入重新下载任务列表
             log.info("加入重新下载列表: {}",items.getTitle());
-           TaskRegistry.reDownloadItems.add(items);
+            jobScheduler.enqueue((JobLambda) () -> jobs.reDownloadTask(uuid, new JobTimeoutContext()));
         }
         return Result.success();
     }

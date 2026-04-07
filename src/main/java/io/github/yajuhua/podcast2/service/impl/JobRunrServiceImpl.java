@@ -79,6 +79,23 @@ public class JobRunrServiceImpl implements JobRunrService {
     }
 
     /**
+     * 转入Enqueued状态
+     * @param uuid
+     * @return
+     * @throws Exception
+     */
+    public Job toEnqueuedJob(String uuid) throws Exception {
+        for (RecurringJob recurringJob : storageProvider.getRecurringJobs()) {
+            if (recurringJob.getId().equals(uuid)){
+                Job job = recurringJob.toEnqueuedJob();
+                storageProvider.save(job);
+                return job;
+            }
+        }
+        throw new Exception("未找到: " + uuid);
+    }
+
+    /**
      * 删除Job
      * @param uuid
      * @return

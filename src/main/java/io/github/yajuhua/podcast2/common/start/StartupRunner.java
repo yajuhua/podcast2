@@ -289,13 +289,6 @@ public class StartupRunner implements ApplicationRunner{
         jobRunrService.toScheduledJob(uuid.toString());
         TaskRegistry.backgroundTask.put(uuid, desc);
 
-        desc = "重新下载";
-        uuid = UUID.nameUUIDFromBytes(desc.getBytes(StandardCharsets.UTF_8));
-        jobScheduler.scheduleRecurrently(uuid.toString(),Duration.ofMinutes(1),
-                (JobLambda) () -> jobs.reDownloadTaskList(new JobTimeoutContext()));
-        jobRunrService.toScheduledJob(uuid.toString());
-        TaskRegistry.backgroundTask.put(uuid, desc);
-
         log.info("开始调度订阅");
         jobs.updateSubList(subMapper.list());
     }
