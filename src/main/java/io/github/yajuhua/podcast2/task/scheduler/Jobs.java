@@ -499,6 +499,16 @@ public class Jobs {
         PluginManager.closeAllClassLoader();
     }
 
+    /**
+     * 重新下载
+     * @param uuid
+     * @param jobTimeoutContext
+     */
+    @JobTimeout("PT30M")
+    public void reDownloadTask(String uuid, JobTimeoutContext jobTimeoutContext){
+        reDownloadTask(uuid);
+    }
+
 
     /**
      * 重新下载
