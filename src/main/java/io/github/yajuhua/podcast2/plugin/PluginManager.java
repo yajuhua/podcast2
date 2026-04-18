@@ -6,7 +6,6 @@ import io.github.yajuhua.podcast2.annotation.DatabaseAndPluginFileSync;
 import io.github.yajuhua.podcast2.common.exception.BaseException;
 import io.github.yajuhua.podcast2.common.properties.InfoProperties;
 import io.github.yajuhua.podcast2.common.utils.Http;
-import io.github.yajuhua.podcast2.controller.PluginController;
 import io.github.yajuhua.podcast2.mapper.ExtendMapper;
 import io.github.yajuhua.podcast2.mapper.PluginMapper;
 import io.github.yajuhua.podcast2.mapper.SettingsMapper;
@@ -24,7 +23,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
 import java.io.*;
@@ -50,8 +48,6 @@ public class PluginManager extends ClassLoader{
     private File pluginDir;
 
     private static String PROPERTIES_FILE_NAME = "plugin.properties";
-
-    private static Map<String,List<URLClassLoader>> fileLoaderMap = new ConcurrentHashMap();
     private Gson gson = new Gson();
     private String remotePluginRepoUrl;
     private PluginMapper pluginMapper;
@@ -61,6 +57,8 @@ public class PluginManager extends ClassLoader{
     private UserService userService;
     private InfoProperties infoProperties;
     private PluginService pluginService;
+    private static Map<String, URLClassLoader> loaderCache = new ConcurrentHashMap<>();
+    private static Map<String, Properties> jarPathPropertiesMap = new ConcurrentHashMap<>();
 
     public PluginManager(File pluginDir) {
         this.pluginDir = pluginDir;
@@ -456,16 +454,28 @@ public class PluginManager extends ClassLoader{
      */
     private URLClassLoader getClassLoader(String jarPath) throws MalformedURLException {
         URL jarUrl = new File(jarPath).toURI().toURL();
-        // 使用当前线程的上下文类加载器作为父类加载器
-        URLClassLoader classLoader = new URLClassLoader(new URL[]{jarUrl},Thread.currentThread().getContextClassLoader());
-        if (fileLoaderMap.containsKey(jarPath)){
-            fileLoaderMap.get(jarPath).add(classLoader);
-        }else {
-            List<URLClassLoader> urlClassLoaders = new ArrayList<>();
-            urlClassLoaders.add(classLoader);
-            fileLoaderMap.put(jarPath,urlClassLoaders);
+        URLClassLoader loader = loaderCache.get(jarPath);
+
+        if (loader == null) {
+            synchronized (loaderCache) {
+                // 使用当前线程的上下文类加载器作为父类加载器
+                loader = new URLClassLoader(new URL[]{jarUrl}, Thread.currentThread().getContextClassLoader());
+                loaderCache.put(jarPath, loader);
+            }
         }
-        return classLoader;
+        return loader;
+    }
+
+    /**
+     * 获取类加载器 供提取属性文件 设置父级加载器为null
+     * @param jarPath Jar文件路径
+     * @return
+     * @throws MalformedURLException
+     */
+    private URLClassLoader getClassLoaderForProperty(String jarPath) throws MalformedURLException {
+        URL jarUrl = new File(jarPath).toURI().toURL();
+        URLClassLoader loader = new URLClassLoader(new URL[]{jarUrl}, null);
+        return loader;
     }
 
     /**
@@ -474,17 +484,33 @@ public class PluginManager extends ClassLoader{
      * @return
      */
     private Properties getPluginProperties(String jarPath, String propertiesFileName) {
+        Properties cache = jarPathPropertiesMap.get(jarPath);
+        if (cache != null && new File(jarPath).exists()){
+            return cache;
+        }
+        URLClassLoader classLoader = null;
         try {
-            URLClassLoader classLoader = getClassLoader(jarPath);
-            InputStream inputStream = classLoader.getResourceAsStream(propertiesFileName);
-            if (inputStream == null) {
-                throw new IOException("Property file not found in the jar: " + jarPath);
+            classLoader = getClassLoaderForProperty(jarPath);
+            Properties properties;
+            try (InputStream inputStream = classLoader.getResourceAsStream(propertiesFileName)){
+                if (inputStream == null) {
+                    throw new IOException("Property file not found in the jar: " + jarPath);
+                }
+                properties = new Properties();
+                properties.load(inputStream);
             }
-            Properties properties = new Properties();
-            properties.load(inputStream);
+            jarPathPropertiesMap.put(jarPath, properties);
             return properties;
         } catch (IOException e) {
             throw new RuntimeException("Failed to load properties from jar: " + jarPath, e);
+        }finally {
+            try {
+                if (classLoader != null){
+                    classLoader.close();
+                }
+            } catch (IOException e) {
+                log.warn(e.getMessage());
+            }
         }
     }
 
@@ -595,14 +621,12 @@ public class PluginManager extends ClassLoader{
      */
     private boolean closeUrlClassLoader(String jarPath){
         try {
-            if (fileLoaderMap.containsKey(jarPath)){
-                List<URLClassLoader> loaders = fileLoaderMap.get(jarPath);
-                for (URLClassLoader loader : loaders) {
-                    loader.close();
-                    loaders= null;
-                }
-                fileLoaderMap.remove(jarPath);
+            URLClassLoader loader = loaderCache.get(jarPath);
+            if (loader != null){
+                loader.close();
             }
+            jarPathPropertiesMap.remove(jarPath);
+            loaderCache.remove(jarPath);
             return true;
         } catch (Exception e) {
             return false;
@@ -614,24 +638,21 @@ public class PluginManager extends ClassLoader{
      */
     public static void closeAllClassLoader(){
         try {
-            for (String path : fileLoaderMap.keySet()) {
-                if (path != null){
-                    List<URLClassLoader> loaders = fileLoaderMap.get(path);
-                    if (loaders != null){
-                        for (URLClassLoader loader : loaders) {
-                            if (loader != null){
-                                loader.close();
-                            }
-                        }
-                    }
+            for (String jarPath : loaderCache.keySet()) {
+                URLClassLoader loader = loaderCache.get(jarPath);
+                if (loader != null){
+                    loader.close();
                 }
             }
         } catch (Exception e) {
             log.error("关闭全部插件失败: {}",e.getMessage());
             e.printStackTrace();
         }finally {
-            if (fileLoaderMap != null){
-                fileLoaderMap.clear();
+            if (loaderCache != null){
+                loaderCache.clear();
+            }
+            if (jarPathPropertiesMap != null){
+                jarPathPropertiesMap.clear();
             }
         }
     }
