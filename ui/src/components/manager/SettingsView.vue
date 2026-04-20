@@ -235,18 +235,7 @@ export default {
     }
   },
   mounted() {
-    this.getEnclosureDomain();
-    this.getSslList();
-    this.getSslStatus()
-    this.getPath();
-    this.getOpenListInfo();
-    this.getGithubProxyUrl();
-    this.getApiTokenInfo();
-    this.getApiDocStatus();
-    this.getPluginUrl();
-    this.getAutoUpdateStatus();
-    this.getYtDlpUpdataTo();
-    this.getXmlConfData();
+    this.getSettingsData();
   },
   data() {
     return {
@@ -1014,6 +1003,31 @@ export default {
         console.log(err);
         this.$message.error('XML配置数据失败！')
       })
+    },
+    //获取设置初始化数据
+    getSettingsData(){
+      axios.get('/api/user/settingsData')
+        .then(res => {
+          if (res.data.code == '1') {
+            let settingsData = res.data.data;
+            this.domain.value = settingsData.domain;
+            this.cert.list = settingsData.cert.list;
+            this.cert.switchSsl = settingsData.cert.switchSsl;
+            this.path = settingsData.path;
+            this.openListInfo = settingsData.openListInfo;
+            this.githubProxy = settingsData.githubProxy;
+            this.apiToken = settingsData.apiToken;
+            this.apiDoc = settingsData.apiDoc;
+            this.plugin = settingsData.plugin;
+            this.ytDlp = settingsData.ytDlp;
+            this.xmlConfData = settingsData.xmlConfData || '';
+          } else {
+            this.$message.error(res.data.msg);
+          }
+        }).catch(err => {
+          console.log(err);
+          this.$message.error('获取设置初始化数据失败!')
+        })
     }
   }
 };
