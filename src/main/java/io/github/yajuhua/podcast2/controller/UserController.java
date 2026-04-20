@@ -16,6 +16,7 @@ import io.github.yajuhua.podcast2.common.utils.JwtUtil;
 import io.github.yajuhua.podcast2.common.utils.NetWorkUtils;
 import io.github.yajuhua.podcast2.interceptor.JwtTokenInterceptor;
 import io.github.yajuhua.podcast2.interceptor.WSTokenInterceptor;
+import io.github.yajuhua.podcast2.mapper.DownloaderMapper;
 import io.github.yajuhua.podcast2.mapper.ExtendMapper;
 import io.github.yajuhua.podcast2.mapper.SubMapper;
 import io.github.yajuhua.podcast2.mapper.UserMapper;
@@ -24,6 +25,7 @@ import io.github.yajuhua.podcast2.pojo.dto.ApiDocStatusDTO;
 import io.github.yajuhua.podcast2.pojo.dto.UserLoginDTO;
 import io.github.yajuhua.podcast2.pojo.entity.*;
 import io.github.yajuhua.podcast2.pojo.vo.ApiTokenVO;
+import io.github.yajuhua.podcast2.pojo.vo.SettingsVO;
 import io.github.yajuhua.podcast2.pojo.vo.UserLoginVO;
 import io.github.yajuhua.podcast2.service.ExtendService;
 import io.github.yajuhua.podcast2.service.UserService;
@@ -35,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
@@ -85,6 +88,8 @@ public class UserController {
     private Jobs jobs;
     @Autowired
     private WSTokenInterceptor wsTokenInterceptor;
+    @Autowired
+    private DownloaderMapper downloaderMapper;
 
     /**
      * 用户登录
@@ -748,6 +753,65 @@ public class UserController {
         return Result.success();
     }
 
+    /**
+     * 获取用户设置数据
+     * @return
+     */
+    @Operation(summary = "初始化设置数据")
+    @GetMapping("/settingsData")
+    public Result<SettingsVO> settingsData(){
+        User user = userMapper.list().get(0);
+        ExtendInfo extendInfo = userService.getExtendInfo();
 
+        SettingsVO settingsVO = new SettingsVO();
+        settingsVO.setDomain(user.getHostname() == null ? "" : user.getHostname());
 
+        SettingsVO.Cert cert = new SettingsVO.Cert();
+        cert.setList(Arrays.asList(user.getHasSsl()));
+        cert.setSwitchSsl(user.getIsSsl());
+        List<Boolean> certList =new ArrayList<>();
+        if (user.getHasSsl()){
+            certList.add(true);
+        }
+        cert.setList(certList);
+        settingsVO.setCert(cert);
+
+        SettingsVO.Path path = new SettingsVO.Path();
+        path.setValue(extendInfo.getPath() == null ? "" : extendInfo.getPath());
+        settingsVO.setPath(path);
+
+        AlistInfo alistInfo = extendInfo.getAlistInfo();
+        SettingsVO.OpenListInfo openListInfo = new SettingsVO.OpenListInfo();
+        BeanUtils.copyProperties(alistInfo, openListInfo);
+        openListInfo.setPassword("******");
+        openListInfo.setUsername("******");
+        settingsVO.setOpenListInfo(openListInfo);
+
+        SettingsVO.GithubProxy githubProxy = new SettingsVO.GithubProxy();
+        githubProxy.setUrl(extendInfo.getGithubProxyUrl() == null ? "" : extendInfo.getGithubProxyUrl());
+        settingsVO.setGithubProxy(githubProxy);
+
+        SettingsVO.ApiToken apiToken = new SettingsVO.ApiToken();
+        apiToken.setApiToken(user.getApiToken());
+        apiToken.setHasApiToken(user.getApiToken() != null && !user.getApiToken().isEmpty());
+        settingsVO.setApiToken(apiToken);
+
+        SettingsVO.ApiDoc apiDoc = new SettingsVO.ApiDoc();
+        apiDoc.setStatus(user.getApiDoc());
+        settingsVO.setApiDoc(apiDoc);
+
+        SettingsVO.Plugin plugin = new SettingsVO.Plugin();
+        plugin.setUrl(extendInfo.getPluginUrl());
+        plugin.setAutoUpdate(user.getAutoUpdatePlugin());
+        settingsVO.setPlugin(plugin);
+
+        SettingsVO.YtDlp ytDlp = new SettingsVO.YtDlp();
+        String updateArgs = downloaderMapper.selectByName("YtDlp").getUpdateArgs();
+        ytDlp.setUpdateArgs(updateArgs == null ? "" : updateArgs);
+        settingsVO.setYtDlp(ytDlp);
+
+        settingsVO.setXmlConfData(user.getXmlConfData());
+
+        return Result.success(settingsVO);
+    }
 }
