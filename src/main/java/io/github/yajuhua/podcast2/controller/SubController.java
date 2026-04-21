@@ -732,6 +732,47 @@ public class SubController {
             List<InputAndSelectData> inputListData = new ArrayList<>();
             List<InputAndSelectData> selectListData = new ArrayList<>();
 
+            //更新后插件变更的选项
+            List<Input> pluginNewInputOptions = extendListVO.getExtendList().getInputList().stream().filter(new Predicate<Input>() {
+                @Override
+                public boolean test(Input input) {
+                    for (Extend extend : anExtends) {
+                        if (input.getName().equals(extend.getName())) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }).collect(Collectors.toList());
+
+            List<Select> pluginNewSelectOptions = extendListVO.getExtendList().getSelectList().stream().filter(new Predicate<Select>() {
+                @Override
+                public boolean test(Select select) {
+                    for (Extend extend : anExtends) {
+                        if (select.getName().equals(extend.getName())) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }).collect(Collectors.toList());
+            for (Select selectOption : pluginNewSelectOptions) {
+                Extend extend = new Extend();
+                extend.setChannelUuid(uuid);
+                extend.setPlugin(sub.getPlugin());
+                extend.setName(selectOption.getName());
+                extend.setContent(null);
+                anExtends.add(extend);
+            }
+            for (Input inputOption : pluginNewInputOptions) {
+                Extend extend = new Extend();
+                extend.setChannelUuid(uuid);
+                extend.setPlugin(sub.getPlugin());
+                extend.setName(inputOption.getName());
+                extend.setContent(null);
+                anExtends.add(extend);
+            }
+
             //获取扩展选项时仅使用用户设置的,兼容旧版选项
             //input类型
             List<Input> filterInputDataList = editSubVO.getExtendList().getInputList().stream().filter(new Predicate<Input>() {
@@ -797,6 +838,7 @@ public class SubController {
             editSubVO.setSelectListData(selectListData);
             editSubVO.setInputListData(inputListData);
             editSubVO.setUuid(uuid);
+            editSubVO.setIsExtend(1);
 
             //返回VO
             return Result.success(editSubVO);
