@@ -14,11 +14,7 @@
     "github-markdown-css": "^5.8.1",
     "highlight": "^0.2.4",
     "marked": "^16.1.2",
-    "qrcode": "^1.5.3",
     "vue": "^2.6.14",
-    "vue-cron": "^1.0.9",
-    "vue-iframe": "^0.0.0",
-    "vue-iframes": "^0.0.20",
     "vue-qr": "^4.0.9",
     "vue-router": "^3.5.1"
   },
@@ -32,6 +28,7 @@
     "babel-plugin-component": "^1.1.1",
     "eslint": "^7.32.0",
     "eslint-plugin-vue": "^8.0.3",
+    "unplugin-vue-components": "^0.25.2",
     "vue-template-compiler": "^2.6.14"
   },
   "eslintConfig": {

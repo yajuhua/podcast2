@@ -93,7 +93,10 @@
                 cron_expression = #{cronExpression},
             </if>
             <if test="xmlConfName != null">
-                xml_conf_name = #{xmlConfName}
+                xml_conf_name = #{xmlConfName},
+            </if>
+            <if test="unixCronExpression != null">
+                unix_cron_expression = #{unixCronExpression}
             </if>
         </set>
         WHERE uuid = #{uuid}
