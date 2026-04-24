@@ -5,7 +5,11 @@
 
 <script>
 import { marked } from "marked";
-import hljs from "highlight.js";
+import hljs from "highlight.js/lib/core";
+import json from "highlight.js/lib/languages/json";
+import bash from "highlight.js/lib/languages/bash";
+hljs.registerLanguage("json", json);
+hljs.registerLanguage("bash", bash);
 import "github-markdown-css/github-markdown.css";
 import "highlight.js/styles/github.css";
 

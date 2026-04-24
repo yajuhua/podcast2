@@ -2,10 +2,8 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import ElementUI from 'element-ui';
-import 'element-ui/lib/theme-chalk/index.css';
 import AxiosHander from './axios';
 import { globalStore } from './store'
-import { MessageBox } from 'element-ui'
 import './styles/mobile-confirm.css'
 
 // 获取设备类型
@@ -27,10 +25,10 @@ window.addEventListener('resize', () => {
 });
 
 // 保存原始 confirm 方法
-const originConfirm = MessageBox.confirm
+const originConfirm = ElementUI.MessageBox.confirm
 
 // 重写 confirm
-MessageBox.confirm = function(message, title, options = {}) {
+ElementUI.MessageBox.confirm = function(message, title, options = {}) {
   const isMobile = window.innerWidth <= 768
 
   return originConfirm.call(this, message, title, {
@@ -50,7 +48,7 @@ Vue.prototype.$http = AxiosHander;
 Vue.use(ElementUI);
 // 挂载全局变量
 Vue.prototype.$store = globalStore
-Vue.prototype.$confirm = MessageBox.confirm
+Vue.prototype.$confirm = ElementUI.MessageBox.confirm
 
 new Vue({
   router,
