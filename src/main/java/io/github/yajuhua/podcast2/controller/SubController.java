@@ -1,5 +1,6 @@
 package io.github.yajuhua.podcast2.controller;
 
+import com.cronutils.model.Cron;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -509,6 +510,10 @@ public class SubController {
     @PostMapping("/api/sub/add")
     @Transactional
     public Result add(@RequestBody AddSubDTO addSubDTO){
+        //校验UnixCron格式
+        if (addSubDTO.getScheduleType().equalsIgnoreCase("cron_expression")){
+            CronUtils.validateUnix(addSubDTO.getUnixCronExpression());
+        }
         Sub sub;
         try {
             if (addSubDTO.getSubType().equalsIgnoreCase("plugin")){
@@ -563,7 +568,9 @@ public class SubController {
                         .subType(addSubDTO.getSubType())
                         .syncWay(addSubDTO.getSyncWay())
                         .scheduleType(addSubDTO.getScheduleType())
-                        .cronExpression(addSubDTO.getCronExpression())
+                        .cronExpression(addSubDTO.getScheduleType().equalsIgnoreCase("cron_expression")?
+                                CronUtils.fromUnixToQuartz(addSubDTO.getUnixCronExpression()) : null)
+                        .unixCronExpression(addSubDTO.getUnixCronExpression())
                         .xmlConfName(addSubDTO.getXmlConfName())
                         .build();
 
@@ -580,7 +587,7 @@ public class SubController {
                             (JobLambda) () -> jobs.updateSub(sub.getUuid(), new JobTimeoutContext()));
                     jobRunrService.startNow(sub.getUuid());
                 }else if (scheduleType.equalsIgnoreCase("cron_expression")){
-                    jobScheduler.scheduleRecurrently(sub.getUuid(), CronUtils.fromQuartzToUnix(sub.getCronExpression()),
+                    jobScheduler.scheduleRecurrently(sub.getUuid(), sub.getUnixCronExpression(),
                             (JobLambda) () -> jobs.updateSub(sub.getUuid(), new JobTimeoutContext()));
                     jobRunrService.startNow(sub.getUuid());
                 }else {
@@ -650,9 +657,14 @@ public class SubController {
     @Transactional
     public Result editSub(@RequestBody EditSubVO editSubVO) throws Exception{
         log.info("editSubVO:{}",editSubVO);
+        //校验UnixCron格式
+        if (editSubVO.getScheduleType().equalsIgnoreCase("cron_expression")) {
+            CronUtils.validateUnix(editSubVO.getUnixCronExpression());
+        }
         //1.更新sub表
         Sub sub = subMapper.selectByUuid(editSubVO.getUuid());
         BeanUtilsEx.copyNonNullProperties(editSubVO, sub);
+        sub.setCronExpression(CronUtils.fromUnixToQuartz(sub.getUnixCronExpression()));
         if (editSubVO.getSubType().equalsIgnoreCase("plugin")){
             String titleKeywords = String.join(",", editSubVO.getTitleKeywords());
             String descKeywords = String.join(",", editSubVO.getDescKeywords());
@@ -681,7 +693,7 @@ public class SubController {
                 jobRunrService.toScheduledJob(sub.getUuid());
             }else if (scheduleType.equalsIgnoreCase("cron_expression")){
                 jobRunrService.deleteJob(sub.getUuid());
-                jobScheduler.scheduleRecurrently(sub.getUuid(), CronUtils.fromQuartzToUnix(sub.getCronExpression()),
+                jobScheduler.scheduleRecurrently(sub.getUuid(), sub.getUnixCronExpression(),
                         (JobLambda) () -> jobs.updateSub(sub.getUuid(), new JobTimeoutContext()));
                 jobRunrService.toScheduledJob(sub.getUuid());
             }else {

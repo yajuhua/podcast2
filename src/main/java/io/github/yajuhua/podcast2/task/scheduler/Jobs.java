@@ -870,13 +870,18 @@ public class Jobs {
                         (JobLambda) () -> updateSub(sub.getUuid(), new JobTimeoutContext()));
                 jobRunrService.toScheduledJob(sub.getUuid());
             }else if (scheduleType.equalsIgnoreCase("cron_expression")){
+                String finalCron;
                 try {
-                    CronUtils.fromQuartzToUnix(sub.getCronExpression());
+                        //默认使用旧的Quartz Cron
+                        finalCron = CronUtils.fromQuartzToUnix(sub.getCronExpression());
+                    if (sub.getUnixCronExpression() != null && !sub.getUnixCronExpression().isEmpty()){
+                        finalCron = sub.getUnixCronExpression();
+                    }
                 } catch (Exception e) {
                     log.error("订阅: {} - {}  Cron表达式解析失败: {} 仅支持Unix Cron", sub.getTitle(), sub.getCronExpression(), e.getMessage());
                     continue;
                 }
-                jobScheduler.scheduleRecurrently(sub.getUuid(), CronUtils.fromQuartzToUnix(sub.getCronExpression()),
+                jobScheduler.scheduleRecurrently(sub.getUuid(), finalCron,
                         (JobLambda) () -> updateSub(sub.getUuid(), new JobTimeoutContext()));
                 jobRunrService.toScheduledJob(sub.getUuid());
             }else {

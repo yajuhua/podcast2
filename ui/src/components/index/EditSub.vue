@@ -132,10 +132,10 @@
                         </div>
                     </el-form-item>
                     <!-- cron表达式 -->
-                    <el-form-item label="Cron表达式" v-if="editSubData.scheduleType == 'cron_expression'">
+                    <el-form-item label="Unix Cron表达式" v-if="editSubData.scheduleType == 'cron_expression'">
                        <el-popover v-model="cronPopover">
-                            <cron @change="changeCronExpression" @close="cronPopover=false" i18n="cn"></cron>
-                            <el-input slot="reference" @click="cronPopover=true" v-model="editSubData.cronExpression" placeholder="请输入定时策略"></el-input>
+                            <cron @change="changeUnixCronExpression" @close="cronPopover=false" i18n="cn"></cron>
+                            <el-input slot="reference" @click="cronPopover=true" v-model="editSubData.unixCronExpression" placeholder="请输入定时策略"></el-input>
                         </el-popover>
                     </el-form-item>
                     <el-form-item label="继续更新">
@@ -318,7 +318,7 @@
 <script>
 import axios from 'axios'
 import { adaptWidth } from '@/utils/utils';
-import {cron} from 'vue-cron'
+import cron from './VueCron.vue'
 export default {
     components: { cron },
     computed: {
@@ -388,7 +388,7 @@ export default {
                 subType: '',//创建订阅方式
                 syncWay: '',//同步方式
                 scheduleType: 'cron',
-                cronExpression: '',
+                unixCronExpression: '',
                 xmlConfName: 'default'
             },
             //初始数据结构
@@ -425,7 +425,7 @@ export default {
                 subType: '',//创建订阅方式
                 syncWay: '',//同步方式
                 scheduleType: 'cron',
-                cronExpression: '',
+                unixCronExpression: '',
                 xmlConfName: 'default'
             },
             cronPopover: false,
@@ -543,8 +543,8 @@ export default {
         execForceUpdate() {
             this.$forceUpdate();
         },
-        changeCronExpression(val){
-            this.editSubData.cronExpression=val;
+        changeUnixCronExpression(val){
+            this.editSubData.unixCronExpression=val;
         },
     }
 }

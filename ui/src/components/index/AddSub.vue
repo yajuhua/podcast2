@@ -128,10 +128,10 @@
             </div>
           </el-form-item>
           <!-- cron表达式 -->
-          <el-form-item label="Cron表达式" v-if="addSub.scheduleType == 'cron_expression'">
+          <el-form-item label="Unix Cron表达式" v-if="addSub.scheduleType == 'cron_expression'">
             <el-popover v-model="cronPopover">
-              <cron @change="changeCronExpression" @close="cronPopover=false" i18n="cn"></cron>
-              <el-input slot="reference" @click="cronPopover=true" v-model="addSub.cronExpression" placeholder="请输入定时策略"></el-input>
+              <cron @change="changeUnixCronExpression" @close="cronPopover=false"></cron>
+              <el-input slot="reference" @click="cronPopover=true" v-model="addSub.unixCronExpression" placeholder="请输入定时策略"></el-input>
             </el-popover>
           </el-form-item>
           <el-form-item label="过滤器">
@@ -320,7 +320,7 @@
 </template>
 <script>
 import axios from 'axios'
-import {cron} from 'vue-cron'
+import cron from './VueCron.vue'
 export default {
   name: 'AddSub',
   components: { cron },
@@ -373,7 +373,7 @@ export default {
         description: '',
         syncWay: 'latest',//同步方式
         scheduleType: 'cron',
-        cronExpression: '',
+        unixCronExpression: '',
         xmlConfName: 'default'
       },
       //初始数据
@@ -406,7 +406,7 @@ export default {
         subType: 'plugin',//创建订阅方式，默认是plugin
         syncWay: '',//同步方式
         scheduleType: 'cron',
-        cronExpression: '',
+        unixCronExpression: '',
         xmlConfName: 'default'
       },
       loading: false,
@@ -611,8 +611,8 @@ export default {
         return '40%';
       }
     },
-    changeCronExpression(val){
-      this.addSub.cronExpression=val;
+    changeUnixCronExpression(val){
+      this.addSub.unixCronExpression=val;
     },
   }
 }

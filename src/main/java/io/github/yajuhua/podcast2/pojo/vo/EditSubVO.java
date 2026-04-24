@@ -45,6 +45,6 @@ public class EditSubVO {
     private String subType;
     private String syncWay;
     private String scheduleType;//轮询方式
-    private String cronExpression;
+    private String unixCronExpression;
     private String xmlConfName;
 }

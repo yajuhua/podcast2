@@ -44,4 +44,5 @@ public class Sub implements Serializable {
     private String scheduleType;//轮询方式
     private String cronExpression;
     private String xmlConfName;//xml配置名称
+    private String unixCronExpression;
 }
